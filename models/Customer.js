@@ -11,6 +11,7 @@ const CustomerSchema = new mongoose.Schema({
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
     emailStatus: { type: String },
     projects: [{ type: String, ref: 'Project' }],
+    subscriptions: [{ type: mongoose.Types.ObjectId }],
     inviteToken: String,
     inviteExpires: Date,
     resetPasswordToken: String,

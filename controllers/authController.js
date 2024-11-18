@@ -57,6 +57,7 @@ exports.registerCustomer = async (req,res) => {
 
     customer.name = name;
     customer.password = password;
+    customer.role = 'viewer';
     customer.emailStatus = 'Invite Accepted';
     customer.inviteToken = undefined;
     customer.inviteExpires = undefined;
