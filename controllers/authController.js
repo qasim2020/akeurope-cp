@@ -1,11 +1,12 @@
 require('dotenv').config();
 
 const Customer = require('../models/Customer');
+const Project = require("../models/Project");
 
 exports.login = async (req, res) => {
   const { email, password, rememberMe } = req.body;
   const customer = await Customer.findOne({ email });
-  console.log(customer);
+
   if (customer && (await customer.comparePassword(password))) {
     req.session.customer = customer;
     if (rememberMe) {
