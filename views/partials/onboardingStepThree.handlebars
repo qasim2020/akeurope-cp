@@ -1,0 +1,37 @@
+ <div class="col-lg-12 m-auto" id="onboarding-steps">
+    <div class="card" id="data-container">
+        <div class="card-header d-flex flex-column">
+            <h3 class="col-auto">Customer Onboarding</h3>
+            <div class="text-secondary">Once you are onboarded you will be taken to akeurope's dashboard where you can monitor progress reports and manage payments on your contributions.</div>
+        </div>
+        <div class="card-body">
+            <ul class="steps steps-dark-green steps-counter my-4">
+                <li class="step-item">Select a project</li>
+                <li class="step-item">Select subscriptions</li>
+                <li class="step-item active">Add payment details</li>
+                <li class="step-item">Confirmation</li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+            Payment
+            </div>
+        </div>
+        <div class="card-body">
+            <ul class="pagination ">
+                <li class="page-item page-prev ">
+                    <a class="page-link next cursor-pointer" data-url="/onboardingStepTwo" onclick="changeStep(this)">
+                        <div class="page-item-subtitle">prev</div>
+                        <div class="page-item-title">Select subscriptions</div>
+                    </a>
+                </li>
+                <li class="page-item page-next ">
+                    <a class="page-link next cursor-pointer" data-url="/onboardingStepFour" onclick="changeStep(this)">
+                        <div class="page-item-subtitle">next</div>
+                        <div class="page-item-title">Confirmation</div>
+                    </a>
+                </li>
+            </ul>
+        </div>       
+    </div>
+</div>

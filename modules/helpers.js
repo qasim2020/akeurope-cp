@@ -56,7 +56,9 @@ const findInArray = function(array, item) {
 
 const getFirstTwoLetters = function (name) {
     if (!name) return ''; 
-    return name.slice(0, 2).toUpperCase();
+    const words = name.trim().split(' '); 
+    const firstLetters = words.slice(0, 2).map(word => word.charAt(0).toUpperCase()); 
+    return firstLetters.join(''); 
 }
 
 module.exports = { eq , inc, formatDate, browserDate, resizeCloudinaryUrl, neq, capitalizeFirstLetter, checkInputType, findInArray, getFirstTwoLetters};

@@ -9,6 +9,7 @@ const MongoStore = require('connect-mongo');
 
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const onboardingRoutes = require('./routes/onboardingRoutes');
 
 require('dotenv').config();
 mongoose();
@@ -41,6 +42,7 @@ app.use('/static', express.static(path.join(__dirname, 'static')));
 
 app.use(authRoutes);
 app.use(dashboardRoutes);
+app.use(onboardingRoutes);
 
 
 // Home route

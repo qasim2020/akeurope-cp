@@ -1,0 +1,69 @@
+<div class="page justify-content-md-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <a href="." class="navbar-brand navbar-brand-autodark">
+            <img src="/static/images/logo.png" width="110" height="32" alt="Tabler" class="navbar-brand-image">
+            </a>
+        </div>
+        {{#if (eq data.showStep 'one')}}
+            {{> onboardingStepOne}}
+        {{/if}}
+        {{#if (eq data.showStep 'two')}}
+            {{> onboardingStepTwo}}
+        {{/if}}
+        {{#if (eq data.showStep 'three')}}
+            {{> onboardingStepThree}}
+        {{/if}}
+        {{#if (eq data.showStep 'four')}}
+            {{> onboardingStepFour}}
+        {{/if}}
+  </div>
+</div>
+
+
+<script>
+    const changeStep = function (elem) {
+        url = $(elem).attr("data-url");
+        containerId = '#onboarding-steps';
+        replacePartialWithContainer(url, containerId);
+    }
+
+    const selectSubscriptions = function (elem) {
+        const project = $("[name='select-project'").val();
+        console.log(project);
+        url = $(elem).attr("data-url") + project;
+        replacePartialWithContainer(url, "#onboarding-steps");
+    }
+
+    const replacePartialWithContainer = function (url, containerId) {
+        console.log(url, containerId);
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function (response) {
+                $(containerId).replaceWith(response);
+                history.pushState({ path: url, containerId }, '', `/steps${url}`);
+            },
+            error: function (error) {
+                alert(error.responseText);
+            }
+        });
+    }
+
+    window.onpopstate = function (event) {
+        console.log('back, fwd btn clicked')
+        if (event.state && event.state.path) {
+            console.log(event.state)
+            $.ajax({
+                url: event.state.path,
+                method: 'GET',
+                success: function (data) {
+                    $(event.state.containerId).replaceWith(data);
+                },
+                error: function () {
+                    alert('Failed to load the content.');
+                }
+            });
+        }
+    };
+</script>

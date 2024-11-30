@@ -21,4 +21,16 @@ const authorize = (permission) => {
   };
 };
 
-module.exports = { authenticate, authorize };
+const isBoarded = (req,res) => {
+  if (req.session.customer.isBoarded) {
+    return next();
+  }
+
+  if (req.session.customer.isBoardingAtStep) {
+    res.redirect(req.session.customer.isBoardingAtStep);
+  }
+
+  res.redirect('/onboardingStepOne');
+}
+
+module.exports = { authenticate, authorize, isBoarded };

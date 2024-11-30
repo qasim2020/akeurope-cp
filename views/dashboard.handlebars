@@ -1,56 +1,14 @@
 <!-- Page header -->
 <div class="page-header d-print-none">
   <div class="container-xl">
-    <div class="col-lg-12 m-auto">
-        <div class="col text-center">
-            <p class="text-secondary">Onboarding</p>
-            <h2 class="">Step 1</h2>
-        </div>
-        <div class="card" id="data-container">
-            <div class="card-body">
-                <ul class="steps steps-blue steps-counter my-4">
-                    <li class="step-item active">Select a project</li>
-                    <li class="step-item">Select subscriptions</li>
-                    <li class="step-item">Choose payment amount</li>
-                    <li class="step-item">Add payment details</li>
-                    <li class="step-item">Confirmation</li>
-                </ul>
-            </div>
-            <div class="card-body">
-              <div class="mb-3">
-                <label class="form-label">Our currently active projects</label>
-                <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
-                  {{#each data.projects}}
-                  <label class="form-selectgroup-item flex-fill">
-                    <input type="checkbox" name="{{this.slug}}" value="{{this.slug}}" class="form-selectgroup-input" checked="">
-                    <div class="form-selectgroup-label d-flex align-items-center p-3">
-                      <div class="me-3">
-                        <span class="form-selectgroup-check"></span>
-                      </div>
-                      <div class="form-selectgroup-label-content d-flex align-items-center">
-                        <span class="avatar me-3">{{getFirstTwoLetters this.name}}</span>
-                        <div>
-                          <div class="font-weight-medium">{{this.name}}</div>
-                          <div class="text-secondary">{{this.location}}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
-                  {{/each}}
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-                <ul class="pagination ">
-                    <li class="page-item page-next ">
-                        <a class="page-link next cursor-pointer" data-url="/uploadExcel/step-2/palestine-orphans">
-                            <div class="page-item-subtitle">next</div>
-                            <div class="page-item-title">Select subscriptions</div>
-                        </a>
-                    </li>
-                </ul>
-            </div>       
-        </div>
+  <div class="card">
+    <div class="card-header">
+      <h1>In progress</h1>
     </div>
   </div>
+  </div>
 </div>
+
+<script>
+  
+</script>

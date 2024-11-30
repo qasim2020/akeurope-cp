@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 const Customer = require('../models/Customer');
-const Project = require("../models/Project");
 
 exports.login = async (req, res) => {
   const { email, password, rememberMe } = req.body;

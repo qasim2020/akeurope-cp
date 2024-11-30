@@ -16,6 +16,8 @@ const CustomerSchema = new mongoose.Schema({
     inviteExpires: Date,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    isBoarded: { type: String, defualt: false },
+    isBoardingAtStep: String
 });
 
 // Hash the password before saving it

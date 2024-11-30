@@ -1,0 +1,94 @@
+ <div class="col-lg-12 m-auto" id="onboarding-steps">
+    <div class="card" id="data-container">
+        <div class="card-header d-flex flex-column">
+            <h3 class="col-auto">Customer Onboarding</h3>
+            <div class="text-secondary">Once you are onboarded you will be taken to akeurope's dashboard where you can monitor progress reports and manage payments on your contributions.</div>
+        </div>
+        <div class="card-body">
+            <ul class="steps steps-dark-green steps-counter my-4">
+                <li class="step-item">Select a project</li>
+                <li class="step-item active">Select subscriptions</li>
+                <li class="step-item">Add payment details</li>
+                <li class="step-item">Confirmation</li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="select-project" value="10" class="form-selectgroup-input">
+                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                    <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                    </div>
+                    <div class="form-selectgroup-label-content d-flex align-items-center">
+                    <div>
+                        <div class="font-weight-medium">10 Children</div>
+                        <div class="text-secondary">1000 USD/ month</div>
+                    </div>
+                    </div>
+                </div>
+                </label>
+                <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="select-project" value="50" class="form-selectgroup-input">
+                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                    <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                    </div>
+                    <div class="form-selectgroup-label-content d-flex align-items-center">
+                    <div>
+                        <div class="font-weight-medium">50 Children</div>
+                        <div class="text-secondary">5000 USD/ month</div>
+                    </div>
+                    </div>
+                </div>
+                </label>
+                <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="select-project" value="100" class="form-selectgroup-input">
+                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                    <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                    </div>
+                    <div class="form-selectgroup-label-content d-flex align-items-center">
+                    <div>
+                        <div class="font-weight-medium">100 Children</div>
+                        <div class="text-secondary">10000 USD/ month</div>
+                    </div>
+                    </div>
+                </div>
+                </label>
+                <label class="form-selectgroup-item flex-fill">
+                <input type="radio" name="select-project" value="500" class="form-selectgroup-input">
+                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                    <div class="me-3">
+                    <span class="form-selectgroup-check"></span>
+                    </div>
+                    <div class="form-selectgroup-label-content d-flex align-items-center">
+                    <div>
+                        <div class="font-weight-medium">500 Children</div>
+                        <div class="text-secondary">50000 USD/ month</div>
+                    </div>
+                    </div>
+                </div>
+                </label>
+            </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <ul class="pagination ">
+                <li class="page-item page-prev ">
+                    <a class="page-link next cursor-pointer" data-url="/onboardingStepOne" onclick="changeStep(this)">
+                        <div class="page-item-subtitle">prev</div>
+                        <div class="page-item-title">Select project</div>
+                    </a>
+                </li>
+                <li class="page-item page-next ">
+                    <a class="page-link next cursor-pointer" data-url="/onboardingStepThree" onclick="changeStep(this)">
+                        <div class="page-item-subtitle">next</div>
+                        <div class="page-item-title">Select payment method</div>
+                    </a>
+                </li>
+            </ul>
+        </div>       
+    </div>
+</div>
