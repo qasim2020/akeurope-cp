@@ -30,7 +30,7 @@ const isBoarded = (req,res) => {
     res.redirect(req.session.customer.isBoardingAtStep);
   }
 
-  res.redirect('/onboardingStepOne');
+  res.redirect('/onboarding/stepOne');
 }
 
 module.exports = { authenticate, authorize, isBoarded };

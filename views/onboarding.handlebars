@@ -1,4 +1,4 @@
-<div class="page justify-content-md-center">
+<div class="page mt-4">
     <div class="container container-tight py-4">
         <div class="text-center mb-4">
             <a href="." class="navbar-brand navbar-brand-autodark">
@@ -23,26 +23,28 @@
 
 <script>
     const changeStep = function (elem) {
-        url = $(elem).attr("data-url");
+        const step = $(elem).attr("data-url");
+        const url = `/onboarding/partial/${step}`;
+        const pageUrl = `/onboarding/${step}`;
         containerId = '#onboarding-steps';
-        replacePartialWithContainer(url, containerId);
+        replacePartialWithContainer(url, pageUrl, containerId);
     }
 
     const selectSubscriptions = function (elem) {
         const project = $("[name='select-project'").val();
-        console.log(project);
-        url = $(elem).attr("data-url") + project;
-        replacePartialWithContainer(url, "#onboarding-steps");
+        const url = `/onboarding/partial/stepTwo/${project}`;
+        const pageUrl = `/onboarding/stepTwo/${project}`;
+        replacePartialWithContainer(url, pageUrl, "#onboarding-steps");
     }
 
-    const replacePartialWithContainer = function (url, containerId) {
+    const replacePartialWithContainer = function (url, pageUrl, containerId) {
         console.log(url, containerId);
         $.ajax({
             url: url,
             method: 'GET',
             success: function (response) {
                 $(containerId).replaceWith(response);
-                history.pushState({ path: url, containerId }, '', `/steps${url}`);
+                history.pushState({ path: url, containerId }, '', pageUrl);
             },
             error: function (error) {
                 alert(error.responseText);
