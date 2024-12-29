@@ -1,0 +1,104 @@
+<div class="modal modal-blur fade" id="{{#if data.order}}modal-{{data.order._id}}{{else}}modal-new-order{{/if}}"
+  tabindex="-1" style="display: none; padding-left: 0px;" role="dialog" {{#if data.order}}order-id="{{data.order._id}}"
+  {{/if}}>
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Invoice Management</h5>
+        <button class="btn ms-auto" onclick="toggleInvoice(this)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-square-toggle">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M12 2l0 20"></path>
+            <path d="M14 20h-8a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h8"></path>
+            <path d="M20 6a2 2 0 0 0 -2 -2"></path>
+            <path d="M18 20a2 2 0 0 0 2 -2"></path>
+            <path d="M20 10l0 4"></path>
+          </svg>
+          Toggle Invoice
+        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-xl-6 col-12 opposite-invoice">
+            {{#unless (regexMatch data.order.status 'pending payment|processing|paid')}}
+            <div class="search-mode">
+              <div class="mb-3">
+                <label class="form-label">Select Currency</label>
+                <select name="currency" class="form-select order-change">
+                  <option value="USD" {{#if (eq data.order.currency 'USD' )}}selected{{/if}}>USD ($)</option>
+                  <option value="NOK" {{#if (eq data.order.currency 'NOK' )}}selected{{/if}}>NOK (kr)</option>
+                  <option value="GBP" {{#if (eq data.order.currency 'GBP' )}}selected{{/if}}>GBP (£)</option>
+                  <option value="EUR" {{#if (eq data.order.currency 'EUR' )}}selected{{/if}}>EUR (€)</option>
+                  <option value="PKR" {{#if (eq data.order.currency 'PKR' )}}selected{{/if}}>PKR (₨)</option>
+                  <option value="ILS" {{#if (eq data.order.currency 'ILS' )}}selected{{/if}}>ILS (₪)</option>
+                  <option value="EGP" {{#if (eq data.order.currency 'EGP' )}}selected{{/if}}>EGP (£)</option>
+                </select>
+              </div>
+              <div class="mb-3 search-beneficiaries">
+                <label class="form-label">Select Beneficiaries</label>
+                <div class="input-group mb-2">
+                  <span class="input-group-text">Select</span>
+                  <input type="number" class="form-control" style="min-width: 60px;" value="10" min="1"
+                    onkeydown="if (event.key === 'Enter') searchBeneficiaries(this)" name="randomBeneficiaries"
+                    placeholder="Number of beneficiaries" />
+                  <span class="input-group-text">beneficiaries randomly</span>
+                </div>
+                <div class="input-group">
+                  <span class="input-group-text">or</span>
+                  <input type="text" class="form-control" placeholder="search specific beneficiaries..."
+                    onkeydown="if (event.key === 'Enter') searchBeneficiaries(this)" name="specificBeneficiaries" />
+                  <span class="input-group-text">from</span>
+                  <select name="projectSlug" class="form-control form-select" style="min-width: 200px;">
+                    {{#each data.projects}}
+                    <option value="{{this.slug}}">{{this.name}}</option>
+                    {{/each}}
+                  </select>
+                  <button class="input-group-btn btn btn-icon submit-btn" onclick="searchBeneficiaries(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart-plus">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                      <path d="M12.5 17h-6.5v-14h-2" />
+                      <path d="M6 5l14 1l-.86 6.017m-2.64 .983h-10.5" />
+                      <path d="M16 19h6" />
+                      <path d="M19 16v6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            {{/unless}}
+            <div class="search-results-payment-modal-entries">
+              {{#if data.order}}
+              {{#each data.order.projects}}
+              {{> components/paymentModalEntriesInDraftOrder project=this order=../data.order}}
+              {{/each}}
+              {{> components/afterProjectCards}}
+              {{/if}}
+            </div>
+          </div>
+          <div class="col-xl-6 col-12 invoice">
+            <iframe class="invoice-frame" width="100%" height="755px" style="border: none;"
+              src="/invoice/{{#if data.order}}{{data.order._id}}{{else}}blank{{/if}}"></iframe>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="ms-auto">
+          <a href="#" class="btn btn-link link-default cancel-btn" data-bs-dismiss="modal"> Close </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" class="file-input" accept=".png,.jpg,.jpeg,.pdf" style="display: none;" />
+</div>
+
+{{#if data.order}}
+<button href="#" class="btn btn-primary d-none" id="button-{{data.order._id}}" data-bs-toggle="modal"
+  data-bs-target="#modal-{{data.order._id}}"></button>
+{{/if}}

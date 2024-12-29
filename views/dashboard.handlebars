@@ -1,14 +1,54 @@
-<!-- Page header -->
 <div class="page-header d-print-none">
   <div class="container-xl">
   <div class="card">
     <div class="card-header">
-      <h1>In progress</h1>
+      {{> showOrders}}
     </div>
   </div>
   </div>
 </div>
-
+{{> emptyOrderModal}}
+<script src="/static/orders.js"></script>
 <script>
-  
+
+  const loadOrderInContainer = function (elem, href) {
+    if (!href) {
+      href = $(elem).attr("my-href");
+    }
+    const url = `/getOrdersData/${href}`;
+    $.ajax({
+      url,
+      method: 'GET',
+      success: function (response) {
+        $(`#data-container`).html(response);
+      },
+      error: function (error) {
+        alert(error.responseText);
+      }
+    });
+  }
+
+  const getEditOrderModal = function (elem) {
+    const orderId = $(elem).attr("order-id");
+
+    const modalExists = $(document).find(`#button-${orderId}`).length > 0;
+
+    if (modalExists) {
+      return $(`#button-${orderId}`).trigger("click");
+    }
+
+    $.ajax({
+      url: `/getEditOrderModal/${orderId}`,
+      type: 'GET',
+      contentType: 'application/json',
+      success: function (response) {
+        $("footer").before(response);
+        $(`#button-${orderId}`).trigger("click");
+      },
+      error: function (xhr, status, error) {
+        alert(xhr.responseText);
+      }
+    });
+  }
+
 </script>

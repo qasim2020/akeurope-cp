@@ -1,0 +1,49 @@
+<ul class="steps steps-vertical">
+    {{#if (eq data.order.status 'draft')}}
+    <li class="step-item active">
+        <div class="h4 m-0">Editable</div>
+        <div class="text-secondary">Editable mode. Invoices can't be edited after they are checked out.
+            Once invoice is ready,
+            <a class="cursor-pointer text-primary" onclick="orderStatusPendingPayment(this)">click here to checkout</a>.
+        </div>
+    </li>
+    {{else}}
+    <li class="step-item">
+        <div class="h4 m-0">Editable</div>
+        <div class="text-secondary">Editable mode. Invoices can't be edited after they are checked out.
+            Once invoice is ready,
+            <span class="text-decoration-line-through">click here to checkout</span>.
+        </div>
+    </li>
+    {{/if}}
+    {{#if (eq data.order.status 'pending payment')}}
+    <li class="step-item active">
+        <div class="h4 m-0">Locked</div>
+        <div class="text-secondary"><a class="cursor-pointer text-primary" onclick="uploadPaymentProof(this)">Click here
+                to upload proof of payment</a>.</div>
+    </li>
+    {{else}}
+    {{#if (eq data.order.status 'draft')}}
+    <li class="step-item">
+        <div class="h4 m-0">Locked</div>
+        <div class="text-secondary">Upload proof of payment.</div>
+    </li>
+    {{else}}
+    <li class="step-item">
+        <div class="h4 m-0">Locked</div>
+        <div class="text-secondary"><span class="text-decoration-line-through">Click here to upload proof of
+                payment</span>.</div>
+    </li>
+    {{/if}}
+    {{/if}}
+    <li class="step-item {{#if (eq data.order.status 'processing')}}active{{/if}}">
+        <div class="h4 m-0">Processing</div>
+        <div class="text-secondary">Pending payment confirmation from akeurope team.</div>
+    </li>
+    <li class="step-item {{#if (eq data.order.status 'paid')}}active{{/if}}">
+        <div class="h4 m-0">Paid</div>
+        <div class="text-secondary">Invoice is paid. Subscribed beneficiaries are added to your
+            portfolio.
+        </div>
+    </li>
+</ul>

@@ -2,41 +2,20 @@ const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema(
     {
-        customerId: {
+        orderId: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        projectId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        entryId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        subscriptionId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        stripePaymentIntentId: {
-            type: String, // Stripe Payment Intent ID for tracking
             required: true,
         },
         amount: {
-            type: Number, // Payment amount in the smallest currency unit (e.g., cents for USD)
+            type: Number,
             required: true,
         },
         currency: {
-            type: String, // e.g., 'usd'
+            type: String,
             required: true,
         },
-        status: {
-            type: String,
-            enum: ['succeeded', 'failed', 'pending', 'refunded'],
-            default: 'pending',
-        },
         receiptUrl: {
-            type: String, // Stripe-generated URL for the payment receipt
+            type: String,
         },
         createdAt: {
             type: Date,
@@ -48,7 +27,7 @@ const paymentSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: true, // Automatically adds createdAt and updatedAt fields
+        timestamps: true, 
     }
 );
 

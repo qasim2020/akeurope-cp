@@ -16,11 +16,9 @@ const CustomerSchema = new mongoose.Schema({
     inviteExpires: Date,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
-    isBoarded: { type: String, defualt: false },
-    isBoardingAtStep: String
 });
 
-// Hash the password before saving it
+
 CustomerSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     this.password = await bcrypt.hash(this.password, 10);
@@ -30,5 +28,7 @@ CustomerSchema.pre('save', async function (next) {
 CustomerSchema.methods.comparePassword = function (password) {
     return bcrypt.compare(password, this.password);
 };
+
+
 
 module.exports = mongoose.model('Customer', CustomerSchema);

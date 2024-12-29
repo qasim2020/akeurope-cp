@@ -10,6 +10,9 @@ const MongoStore = require('connect-mongo');
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const onboardingRoutes = require('./routes/onboardingRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
+const orderRoutes = require('./routes/ordersRoutes');
+const entryRoutes = require('./routes/entryRoutes');
 
 require('dotenv').config();
 mongoose();
@@ -21,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(
   session({
+    name: 'akeurope-cp-id',
     secret: process.env.SESSION_SECRET, 
     resave: false,
     saveUninitialized: false,
@@ -43,6 +47,9 @@ app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use(authRoutes);
 app.use(dashboardRoutes);
 app.use(onboardingRoutes);
+app.use(invoiceRoutes);
+app.use(entryRoutes);
+app.use(orderRoutes);
 
 
 // Home route

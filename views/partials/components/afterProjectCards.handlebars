@@ -1,0 +1,19 @@
+{{#if data.order.projects}}
+<div class="total-cost">
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between border-0 text-red">
+            <div class="card-title">Total Cost</div>
+            <div class="flex-grow-1 mx-3 border-bottom"></div>
+            <div class="card-title">{{data.order.totalCost}} {{data.order.currency}}</div>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h3 class="card-title">Invoice status</h3>
+            <div class="invoice-status">
+                {{> components/invoice-status}}
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}

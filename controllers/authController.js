@@ -3,20 +3,26 @@ require('dotenv').config();
 const Customer = require('../models/Customer');
 
 exports.login = async (req, res) => {
-  const { email, password, rememberMe } = req.body;
-  const customer = await Customer.findOne({ email });
-
-  if (customer && (await customer.comparePassword(password))) {
-    req.session.customer = customer;
-    if (rememberMe) {
-      req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; 
+  try {
+    const { email, password, rememberMe } = req.body;
+    const customer = await Customer.findOne({ email });
+  
+    if (customer && (await customer.comparePassword(password))) {
+      req.session.customer = customer;
+      if (rememberMe) {
+        req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; 
+      } else {
+        req.session.cookie.maxAge = 1000 * 60 * 60 * 24; 
+      }
+      res.status(200).send("login successful");
     } else {
-      req.session.cookie.maxAge = 1000 * 60 * 60 * 24; 
+      res.status(400).send("User not found or credentials are wrong!");
     }
-    res.status(200).send("login successful");
-  } else {
-    res.status(400).send("User not found or credentials are wrong!");
+  } catch(error) {
+    console.log(error);
+    res.status(400).send(error);
   }
+
 };
 
 exports.logout = (req, res) => {
@@ -34,7 +40,7 @@ exports.register = async (req,res) => {
     });
 
     if (!customer) {
-      return res.status(400).render('error', { heading: "Link Expired!", error: 'Link is invalid or has expired. Please ask the admins to re-send you and invite email!' });
+      return res.render('registerDirect');
     }
 
     res.render('register', { name: customer.name, email: customer.email, token: customer.inviteToken });
@@ -64,6 +70,33 @@ exports.registerCustomer = async (req,res) => {
 
     await customer.save();
     res.status(200).send("User updated successfully");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send('Error completing registration');
+  }
+}
+
+exports.registerDirect = async (req,res) => {
+  try {
+    const { name, password, email } = req.body;
+
+    const checkCustomer = await Customer.findOne({email: email}).lean();
+
+    if (checkCustomer) {
+      return res.status(400).send('Customer with this email already exists!');
+    }
+    
+    const customer = new Customer();
+    customer.name = name;
+    customer.email = email;
+    customer.password = password;
+    customer.role = 'viewer';
+    customer.emailStatus = 'Direct registration';
+    customer.inviteToken = undefined;
+    customer.inviteExpires = undefined;
+
+    await customer.save();
+    res.status(200).send("Customer registered successfully!");
   } catch (err) {
     console.log(err);
     res.status(500).send('Error completing registration');
