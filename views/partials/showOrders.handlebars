@@ -60,7 +60,7 @@
           <td>{{capitalizeFirstLetter order.status}}</td>
           <td>
             {{#each order.projects}}
-            <span class="badge bg-green-lt">{{this.totalCostAllMonths}} {{../order.currency}}
+            <span class="badge bg-green-lt">{{this.totalCostAllMonths}} {{order.currency}}
               in {{this.details.name}} </span>
             {{/each}}
           </td>

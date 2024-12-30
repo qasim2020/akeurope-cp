@@ -31,17 +31,14 @@ exports.getPaginatedEntriesForDraftOrder = async (req, res) => {
             });
             if (checkOrder) {
                 await updateDraftOrder(req, res);
-            } else {
-                return res
-                    .status(400)
-                    .send('Order is locked!');
-            }
+            };
         }
 
         const orderInDb = await Order.findOne({
             _id: req.query.orderId,
         }).lean();
         const order = await formatOrder(req, orderInDb);
+        
         const project = order.projects.find(
             (project) => project.slug == req.params.slug,
         );
@@ -50,7 +47,6 @@ exports.getPaginatedEntriesForDraftOrder = async (req, res) => {
                 detail: await Project.findOne({ slug: project.slug }).lean(),
             });
         }
-
         res.render('partials/components/paymentModalEntriesInDraftOrder', {
             layout: false,
             project,

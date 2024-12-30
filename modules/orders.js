@@ -224,7 +224,8 @@ const createDraftOrder = async (req, res) => {
 };
 
 const getPaginatedOrders = async (req, res) => {
-    const orders = await Order.find().sort({ _id: -1 }).lean();
+
+    const orders = await Order.find({customerId: req.session.customer._id}).sort({ _id: -1 }).lean();
 
     const pagination = createPagination({
         req,
@@ -330,8 +331,11 @@ const formatOrder = async (req, order) => {
 };
 
 const getSingleOrder = async (req, res) => {
-    const checkOrder = await Order.findOne({ _id: req.params.orderId }).lean();
+    const checkOrder = await Order.findOne({ _id: req.params.orderId, customerId: req.session.customer._id }).lean();
     let order;
+    if (!checkOrder) {
+        return res.status(400).send('Order does not exist!');
+    };
     if (checkOrder.totalCost == undefined) {
         const calculatedOrder = await calculateOrder(checkOrder);
         await addPaymentsToOrder(calculatedOrder);
@@ -342,7 +346,7 @@ const getSingleOrder = async (req, res) => {
     } else {
         order = await formatOrder(req, checkOrder);
     }
-    order.customer = await Customer.findById(order.customerId).lean();
+    order.customer = req.session.customer;
     return order;
 };
 

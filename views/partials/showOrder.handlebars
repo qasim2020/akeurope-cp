@@ -1,0 +1,50 @@
+{{#with data.order as |order|}}
+{{log order}}
+<div class="col-12 col-md-6 mb-auto" id="order-container">
+
+  <div class="card mb-3 data-row">
+    <div class="card-header">
+      <h3 class="card-title"><span class="badge bg-blue-lt">{{order.orderNo}}</span></h3>
+    </div>
+    <div class="card-body">
+      <div class="datagrid">
+        <div class="datagrid-item">
+          <div class="datagrid-title">Invoice No</div>
+          <div class="datagrid-content">
+            <span>{{order.orderNo}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Total Amount</div>
+          <div class="datagrid-content">
+            <span>{{order.totalCost}} {{order.currency}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Projects Amount</div>
+          <div class="datagrid-content">
+            {{#each order.projects}}
+            <span class="badge bg-green-lt px-2 mb-1">{{this.totalCostAllMonths}} {{order.currency}} in {{this.detail.name}}</span>
+            {{/each}}
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Invoice Status</div>
+          <div class="datagrid-content">
+            <span>{{capitalizeFirstLetter order.status}}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <button class="btn text-blue cursor-pointer" data-bs-toggle="modal"
+        data-bs-target="#modal-order-{{order._id}}">Edit</button>
+    </div>
+  </div>
+
+</div>
+{{/with}}

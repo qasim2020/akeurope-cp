@@ -62,4 +62,11 @@ router.post(
     ordersController.uploadPaymentProof,
 );
 
+router.get(
+    '/order/:orderId',
+    authenticate,
+    authorize('viewOrders'),
+    ordersController.viewOrder,
+);
+
 module.exports = router;

@@ -53,19 +53,17 @@ exports.viewOrders = async (req, res) => {
 
 exports.viewOrder = async (req, res) => {
     try {
-        const { order } = await getSingleOrder(req, res);
+        const order = await getSingleOrder(req, res);
         res.render('order', {
             layout: 'dashboard',
             data: {
-                userName: req.session.user.name,
+                userName: req.session.customer.name,
                 userRole:
-                    req.session.user.role.charAt(0).toUpperCase() +
-                    req.session.user.role.slice(1),
-                role: req.userPermissions,
+                    req.session.customer.role.charAt(0).toUpperCase() +
+                    req.session.customer.role.slice(1),
+                role: req.customerPermissions,
                 logs: await visibleLogs(req, res),
-                sidebarCollapsed: req.session.sidebarCollapsed,
-                projects: req.allProjects,
-                activeMenu: 'orders',
+                activeMenu: 'invoices',
                 order,
             },
         });

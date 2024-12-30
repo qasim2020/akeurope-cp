@@ -107,11 +107,15 @@ const doSearch = function (elem, href, refreshAll) {
         href = $(elem).attr('my-href');
     }
 
-    const customerId = $(modal).find('[name=customerId]').val();
     const slug = $(elem).closest('.card').attr('projectSlug');
-    const orderId = $(modal).find(`.${slug}`).attr('orderId');
+    const orderId = $(modal).attr('order-id');
     const toggleState = $(modal).find(`.${slug}`).attr('toggleState');
     const url = `/getPaginatedEntriesForDraftOrder/${slug}/${href}&orderId=${orderId}&toggleState=${toggleState}`;
+
+    if (!orderId) {
+        alert('order id is required');
+        return;
+    }
 
     startSpinner(modal);
     $.ajax({
@@ -120,7 +124,7 @@ const doSearch = function (elem, href, refreshAll) {
         namespace: 'spinner-on-cart',
         success: function (response) {
             endSpinner(modal);
-            $(modal).find(`.${slug}`).replaceWith(response);
+            $(modal).find(`[projectSlug=${slug}]`).replaceWith(response);
             if (refreshAll == false) return;
             $(modal)
                 .find('.invoice-frame')
@@ -453,7 +457,7 @@ $(document).on('change', '.modal .order-change', function (e) {
 });
 
 const updateTotalCost = function (modal) {
-    const orderId = $(modal).find('.project-in-order').attr('orderId');
+    const orderId = $(modal).attr('order-id');
     if (!orderId) {
         $(modal).find('.total-cost').remove();
         return;
@@ -468,7 +472,6 @@ const updateTotalCost = function (modal) {
             $(modal)
                 .find('.search-results-payment-modal-entries')
                 .append(response);
-            $('#data-container').find('.page-item.active > a').click();
         },
         error: (error) => {
             endSpinner(modal);
@@ -609,6 +612,8 @@ const orderStatusPendingPayment = function (elem) {
         success: (response) => {
             $(modal).find('.search-mode').remove();
             $(modal).find('.invoice-status').html(response);
+            $('#data-container').find('.page-item.active > a').click();
+            $(modal).find('.page-item.active > a').click();
         },
         error: (error) => {
             alert(error.responseText);
