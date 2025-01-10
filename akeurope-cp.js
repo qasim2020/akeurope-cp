@@ -51,10 +51,12 @@ app.use(invoiceRoutes);
 app.use(entryRoutes);
 app.use(orderRoutes);
 
-
-// Home route
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  if (req.session.user) {
+    return res.redirect('/dashboard');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 const PORT = 3009;

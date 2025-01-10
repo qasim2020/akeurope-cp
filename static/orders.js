@@ -117,6 +117,8 @@ const doSearch = function (elem, href, refreshAll) {
         return;
     }
 
+    console.log({url, orderId, toggleState, refreshAll});
+
     startSpinner(modal);
     $.ajax({
         url,
@@ -125,12 +127,18 @@ const doSearch = function (elem, href, refreshAll) {
         success: function (response) {
             endSpinner(modal);
             $(modal).find(`[projectSlug=${slug}]`).replaceWith(response);
-            if (refreshAll == false) return;
-            $(modal)
-                .find('.invoice-frame')
-                .attr({ src: `/invoice/${orderId}` })
-                .removeClass('d-none');
-            updateTotalCost(modal);
+            const isPagination = $(elem).closest('.pagination').length > 0;
+            if (isPagination) {
+                return console.log('stopping refresh because its pagination');
+            }
+            if (refreshAll == true) {
+                $(modal)
+                    .find('.invoice-frame')
+                    .attr({ src: `/invoice/${orderId}` })
+                    .removeClass('d-none');
+                updateTotalCost(modal);
+                refreshContainers(modal);
+            };
         },
         error: function (error) {
             endSpinner(modal);
@@ -424,7 +432,7 @@ $(document).on('change', '.modal .order-change', function (e) {
 
     if (!orderAlreadyCreated) return;
 
-    const { customerId, currency, select, search } = getModalData(modal);
+    const { currency, select, search } = getModalData(modal);
 
     $(modal)
         .find('.project-in-order')
@@ -432,7 +440,7 @@ $(document).on('change', '.modal .order-change', function (e) {
             const orderId = $(modal).find(`.project-in-order`).attr('orderId');
             const slug = $(project).attr('projectSlug');
             const toggleState = $(modal).find(`.${slug}`).attr('toggleState');
-            const url = `/getPaginatedEntriesForDraftOrder/${slug}/${customerId}?customerId=${customerId}&currency=${currency}&orderId=${orderId}&select=${select}&search=${search}&toggleState=${toggleState}`;
+            const url = `/getPaginatedEntriesForDraftOrder/${slug}?currency=${currency}&orderId=${orderId}&select=${select}&search=${search}&toggleState=${toggleState}`;
 
             startSpinner(modal);
             $.ajax({
@@ -612,8 +620,8 @@ const orderStatusPendingPayment = function (elem) {
         success: (response) => {
             $(modal).find('.search-mode').remove();
             $(modal).find('.invoice-status').html(response);
-            $('#data-container').find('.page-item.active > a').click();
             $(modal).find('.page-item.active > a').click();
+            refreshContainers(modal);
         },
         error: (error) => {
             alert(error.responseText);

@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize, isBoarded } = require('../modules/auth');
-const dashboardController = require('../controllers/dashboardController');
+const customerController = require('../controllers/customerController');
 
-router.get('/dashboard', authenticate, authorize("viewDashboard"), dashboardController.dashboard);
-// router.get('/dashboard', authenticate, authorize("viewDashboard"), isBoarded, dashboardController.dashboard);
+router.get('/dashboard', authenticate, authorize("viewDashboard"), (req,res) => res.redirect(`/customer/${req.session.customer._id}`));
+router.get('/customer/:customerId', authenticate, authorize("viewDashboard"), customerController.customer);
 
 module.exports = router;

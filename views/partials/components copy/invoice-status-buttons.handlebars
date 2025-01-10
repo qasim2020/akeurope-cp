@@ -1,0 +1,19 @@
+<label class="form-label">Invoice Status: {{capitalizeFirstLetter data.order.status}}</label>
+<div class="btn-group flex-wrap w-100" role="group">
+    <input value="draft" onclick="changeOrderStatus(this)" type="radio" class="btn-check" name="btn-radio-basic"
+        id="btn-radio-basic-1-{{data.order._id}}" autocomplete="off" {{#if (eq data.order.status 'draft' )}}checked=""
+        {{/if}}>
+    <label for="btn-radio-basic-1-{{data.order._id}}" type="button" class="btn">Draft</label>
+    <input value="pending payment" onclick="changeOrderStatus(this)" type="radio" class="btn-check"
+        name="btn-radio-basic" id="btn-radio-basic-2-{{data.order._id}}" autocomplete="off" {{#if (eq
+        data.order.status 'pending payment' )}}checked="" {{/if}}>
+    <label for="btn-radio-basic-2-{{data.order._id}}" type="button" class="btn">Pending payment</label>
+    <input value="processing" onclick="changeOrderStatus(this)" type="radio" class="btn-check" name="btn-radio-basic"
+        id="btn-radio-basic-3-{{data.order._id}}" autocomplete="off" {{#if (eq data.order.status 'processing'
+        )}}checked="" {{/if}}>
+    <label for="btn-radio-basic-3-{{data.order._id}}" type="button" class="btn">Processing</label>
+    <input value="paid" onclick="changeOrderStatus(this)" type="radio" class="btn-check" name="btn-radio-basic"
+        id="btn-radio-basic-4-{{data.order._id}}" autocomplete="off" {{#if (eq data.order.status 'paid' )}}checked=""
+        {{/if}}>
+    <label for="btn-radio-basic-4-{{data.order._id}}" type="button" class="btn">Paid</label>
+</div>

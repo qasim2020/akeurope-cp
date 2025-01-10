@@ -102,7 +102,7 @@ const getOldestPaidEntries = async (req, project) => {
 const makeProjectForOrder = (project, allEntries) => {
     return {
         slug: project.slug,
-        months: 1,
+        months: 12,
         entries: allEntries.map((entry) => {
             return {
                 entryId: entry._id,

@@ -4,7 +4,7 @@ const path = require('path');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
-const { saveLog, customerLogs, visibleLogs } = require('../modules/logAction');
+const { saveLog, customerLogs, visibleLogs, orderLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const {
@@ -63,6 +63,8 @@ exports.viewOrder = async (req, res) => {
                     req.session.customer.role.slice(1),
                 role: req.customerPermissions,
                 logs: await visibleLogs(req, res),
+                projects: await Project.find({status: 'active'}).lean(),
+                orderLogs: await orderLogs(req, res),
                 activeMenu: 'invoices',
                 order,
             },
@@ -256,43 +258,37 @@ exports.uploadPaymentProof = async (req, res) => {
     }
 };
 
-// exports.checkout = async (req, res) => {
-//     try {
-//         const order = await getSingleOrder(req, res);
-//         await updateOrderStatus(req, 'pending payment');
-//         await addPaymentsToOrder(order);
-//         res.status(200).send('Order checked out!');
-//     } catch (error) {
-//         console.log(error);
-//         res.status(404).send(error);
-//     }
-// };
+exports.getOrderLogs = async (req, res) => {
+    try {
+        res.render('partials/showOrderLogs', {
+            layout: false,
+            data: {
+                order: { _id: req.params.orderId },
+                orderLogs: await orderLogs(req, res),
+            },
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: 'Error occured while fetching logs',
+            details: error.message,
+        });
+    }
+};
 
-// exports.getPaymentModal = async (req, res) => {
-//     try {
-//         const checkOrder = await Order.findById(req.params.orderId).lean();
-//         let order;
-//         if (checkOrder.status == 'draft') {
-//             const draftOrder = await getSingleOrder(req, res);
-//             await generateInvoice(draftOrder);
-//             await addPaymentsToOrder(draftOrder);
-//             await updateOrderStatus(req, 'pending payment');
-//             order = await Order.findById(req.params.orderId).lean();
-//         } else {
-//             order = checkOrder;
-//         }
-//         order = await openOrderProjectWithEntries(req, order);
-//         res.render('partials/emptyPaymentModal', {
-//             layout: false,
-//             data: {
-//                 order,
-//             },
-//         });
-//     } catch (error) {
-//         console.log(error);
-//         res.status(404).render('error', {
-//             heading: 'Server Error',
-//             error: error,
-//         });
-//     }
-// };
+exports.getOrderData = async (req, res) => {
+    try {
+        const order = await getSingleOrder(req, res);
+        res.render('partials/showOrder', {
+            layout: false,
+            data: {
+                order,
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(404).render('error', {
+            heading: 'Server Error',
+            error: error,
+        });
+    }
+};

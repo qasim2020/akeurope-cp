@@ -1,0 +1,82 @@
+<div class="card {{project.slug}}" project-slug="{{project.slug}}">
+    <div class="table-responsive">
+        <table class="table card-table table-vcenter text-nowrap datatable">
+            <thead>
+                <tr>
+                    <th>
+                        <span class="text-uppercase fs-6 strong">
+                            Total <br>
+                            {{project.totalCostSingleMonth}}
+                            {{order.currency}}
+                        </span>
+                    </th>
+                    {{#each project.totalSubscriptionCosts}}
+                    <th>
+                        <span class="text-uppercase fs-6 strong">
+                            {{this.fieldName}} <br> {{this.value}}
+                            {{../order.currency}}
+                        </span>
+                    </th>
+                    {{/each}}
+                    {{#each project.detail.fields}}
+                    {{#if (eq this.subscription false)}}
+                    {{#if (eq this.visible true)}}
+                    <th class="">
+                        {{this.actualName}}
+                    </th>
+                    {{/if}}
+                    {{/if}}
+                    {{/each}}
+                    <th>Last paid</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each project.entries as |entry|}}
+                <tr>
+                    <td>
+                        <span class="text-uppercase fs-5 strong">
+                            {{entry.totalCost}}
+                            {{../order.currency}}
+                        </span>
+                    </td>
+                    {{#each ../project.totalSubscriptionCosts as |field|}}
+                    <td>
+                        {{#each entry.selectedSubscriptionsPair as |subEntry|}}
+                        {{#if (eq subEntry.fieldName field.fieldName)}}
+                        <span class="text-uppercase fs-5 strong">
+                            {{subEntry.value}}
+                            {{../../../order.currency}}
+                        </span>
+                        {{/if}}
+                        {{/each}}
+                    </td>
+                    {{/each}}
+                    {{#each ../project.detail.fields as |field|}}
+                    {{#if (eq field.subscription false)}}
+                    {{#if (eq field.visible true)}}
+                    <td>
+                        {{#if (eq field.type 'date')}}
+                        {{formatDate (lookup entry.detail field.name)}}
+                        {{else}}
+                        {{lookup entry.detail field.name}}
+                        {{/if}}
+                    </td>
+                    {{/if}}
+                    {{/if}}
+                    {{/each}}
+                    <td>
+                        {{#if entry.lastPaid}}
+                        <span class="badge bg-green me-2"></span>
+                        {{entry.lastPaid}}
+                        {{else}}
+                        <span class="badge bg-danger me-2"></span>
+                        Never
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{> dataNavigationFooter data=project}}
+</div>

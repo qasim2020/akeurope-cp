@@ -1,0 +1,33 @@
+<div class="card" id="payments-container">
+  <div class="card-header d-flex justify-content-between">
+    <h3 class="card-title">Payments</h3>
+  </div>
+  {{#if data.orders}}
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each data.orders}}
+        <tr>
+          <td><a href="/order/{{this._id}}">{{this.orderNo}}</a></td>
+          <td>{{formatDate this.createdAt}}</td>
+          <td>{{this.totalCost}} {{this.currency}}</td>
+          <td>{{capitalizeFirstLetter this.status}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <div class="card-body">
+    <div class="text-center py-4">No payments found</div>
+  </div>
+  {{/if}}
+</div>

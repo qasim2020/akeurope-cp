@@ -2,65 +2,136 @@
   <div class="container-xl">
     <div class="row g-2 align-items-center">
       <div class="col">
-        <!-- Page pre-title -->
         <div class="page-pretitle"> Overview </div>
-        <h2 class="page-title"> Invoice
+        <h2 class="page-title"> Invoice {{data.order.orderNo}} <span class="d-flex ms-1">{{{getOrderIcon data.order.status}}}</span>
         </h2>
       </div>
-      <!-- Page title actions -->
+      {{#if data.order.customer}}
       <div class="col-auto ms-auto d-print-none">
         <div class="btn-list">
           <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#editOrder" data-bs-toggle="modal"
-            data-bs-target="#modal-order-{{data.order._id}}">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M12 5l0 14" />
-              <path d="M5 12l14 0" />
+            data-bs-target="#modal-{{data.order._id}}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus m-0">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"></path>
+              <path d="M13.5 6.5l4 4"></path>
+              <path d="M16 19h6"></path>
+              <path d="M19 16v6"></path>
             </svg>
             Edit Invoice
           </a>
           <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
-            data-bs-target="#modal-order-{{data.order._id}}" aria-label="modal-order-{{data.order._id}}">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M12 5l0 14" />
-              <path d="M5 12l14 0" />
+            data-bs-target="#modal-{{data.order._id}}" aria-label="modal-order-{{data.order._id}}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus m-0">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"></path>
+              <path d="M13.5 6.5l4 4"></path>
+              <path d="M16 19h6"></path>
+              <path d="M19 16v6"></path>
             </svg>
           </a>
         </div>
       </div>
+      {{/if}}
     </div>
   </div>
 </div>
-<div class="container-xl pt-4" id="data-container">
+<div class="container-xl mx-auto pt-4" id="data-container">
+  {{> showOrderEntries}}
   <div class="row row-deck row-cards">
     {{> showOrder}}
     <div class="d-block col-12 col-md-6">
-    {{> showOrderLogs}}
+      {{> showOrderLogs}}
     </div>
   </div>
 </div>
+{{#if data.order.customer}}
 {{> emptyOrderModal}}
+{{/if}}
 <script src="/static/orders.js"></script>
 <script>
+
+  const refreshContainers = function (modal) {
+    console.log('refreshing containers');
+    const hrefOrder = `/getOrderData/${$(modal).attr('order-id')}`;
+    loadOrderInContainer(modal, hrefOrder);
+    const hrefLogs = `/getOrderLogs/${$(modal).attr('order-id')}?page=1`;
+    getOrderLogs(modal, hrefLogs);
+    const hrefProjects = `/getOrderProjects/{{data.order._id}}`;
+    loadOrderProjects(hrefProjects);
+  }
 
   const loadOrderInContainer = function (elem, href) {
     if (!href) {
       href = $(elem).attr("my-href");
     }
-    const url = `/getOrdersData/${href}`;
     $.ajax({
-      url,
+      url: href,
       method: 'GET',
       success: function (response) {
-        $(`#data-container`).html(response);
+        $(`#order-container`).replaceWith(response);
       },
       error: function (error) {
         alert(error.responseText);
       }
     });
+  }
+
+  const loadOrderProjects = function (href) {
+    if (!href) {
+      return alert('no href provided');
+    }
+    $.ajax({
+      url: href,
+      method: 'GET',
+      success: function (response) {
+        $('#projects-container').replaceWith(response);
+      },
+      error: function (error) {
+        alert(error.responseText);
+      }
+    });
+  }
+
+  const loadEntriesInProjectCard = function (elem, href) {
+    console.log(elem,href);
+    if (!href) {
+      href = $(elem).attr("my-href");
+    }
+    const projectCard = $(elem).closest('.project-in-order-page');
+    const slug = $(elem).closest('.project-in-order-page').attr('project-slug');
+    const orderId = $(elem).closest('.project-in-order-page').attr('order-id');
+    const customerId = $(elem).closest('.project-in-order-page').attr('customer-id');
+    const toggleState = $(elem).closest('.project-body').hasClass('d-none') ? 'open' : 'close';
+    const url = `/getPaginatedEntriesForOrderPage/${slug}/${customerId}${href}&orderId=${orderId}&toggleState=${toggleState}`;
+    $.ajax({
+      url,
+      method: 'GET',
+      success: function (response) {
+        $(projectCard).replaceWith(response);
+      },
+      error: function (error) {
+        alert(error.responseText);
+      }
+    });
+  }
+
+  const getOrderLogs = function (elem, href) {
+    href = href || $(elem).attr("my-href");
+    $.ajax({
+      url: href,
+      method: 'GET',
+      success: function (response) {
+        $('#logs-container').replaceWith(response);
+      },
+      error: function (error) {
+        $('#logs-container').html(error.responseText);
+      }
+    })
   }
 
   const getEditOrderModal = function (elem) {
@@ -85,5 +156,19 @@
       }
     });
   }
+
+  const toggleProject = function (elem) {
+    const projectCard = $(elem).closest('.project-in-order-page');
+    const projectBody = $(projectCard).find('.project-body');
+    $(projectBody).toggleClass('d-none');
+  }
+
+  $(document).ajaxStart(function () {
+    $(document).ajaxSend(function (event, jqXHR, settings) {
+      console.log("URL:", settings.url);
+    });
+  });
+
+
 
 </script>

@@ -10,7 +10,7 @@ const generateInvoice = async (order) => {
     const invoiceDir = path.join(__dirname, '../../invoices');
     const invoicePath = path.join(
         invoiceDir,
-        `${order.customer.email}_order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`,
+        `order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`,
     );
 
     await fs.ensureDir(invoiceDir);
@@ -165,14 +165,14 @@ const deleteInvoice = async (orderId) => {
     const invoiceDir = path.join(__dirname, '../../invoices');
     const invoicePath = path.join(
         invoiceDir,
-        `${customer.email}_order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`,
+        `order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`,
     );
     return deletePath(invoicePath);
 };
 
 const sendInvoiceToCustomer = async(order, customer)=> {
     const invoicesDirectory = './invoices';
-    const invoiceFilename = `${customer.email}_order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`;
+    const invoiceFilename = `order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`;
     const invoicePath = path.join(invoicesDirectory, invoiceFilename);
 
     let transporter = nodemailer.createTransport({

@@ -1,0 +1,82 @@
+{{#with data.customer as |customer|}}
+<div class="col-12 mb-auto mt-3" id="customer-container">
+
+  <div class="card mb-3 data-row">
+    <div class="card-header">
+      <h3 class="card-title">Customer Information</h3>
+    </div>
+    <div class="card-body">
+      <div class="datagrid">
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Name</div>
+          <div class="datagrid-content">
+            <span>{{customer.name}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Email</div>
+          <div class="datagrid-content">
+            <span>{{customer.email}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Organization</div>
+          <div class="datagrid-content">
+            <span>{{customer.organization}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Location</div>
+          <div class="datagrid-content">
+            <span>{{customer.location}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Status</div>
+          <div class="datagrid-content">
+            <span>{{capitalizeFirstLetter customer.status}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Email Status</div>
+          <div class="datagrid-content">
+            <span>{{customer.emailStatus}}</span>
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Projects</div>
+          <div class="datagrid-content">
+            {{#each customer.projectsOpened}}
+            <a href="/project/{{this.slug}}" class="badge bg-blue-lt mb-1">{{this.name}}</a>
+            {{/each}}
+          </div>
+        </div>
+
+        <div class="datagrid-item">
+          <div class="datagrid-title">Subscriptions</div>
+          <div class="datagrid-content">
+            {{#if customer.subscriptions}}
+            <span>{{customer.subscriptions.length}}</span>
+            {{else}}
+            <span>0</span>
+            {{/if}}
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <button class="btn text-blue cursor-pointer" data-bs-toggle="modal"
+        data-bs-target="#modal-{{customer._id}}">Edit</button>
+    </div>
+  </div>
+
+</div>
+{{/with}}

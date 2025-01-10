@@ -1,5 +1,5 @@
 {{#with data.order as |order|}}
-<div class="col-12 col-md-6 mb-auto" id="order-container">
+<div class="col-12 col-md-6 mb-auto d-flex flex-column" id="order-container">
 
   <div class="card mb-3 data-row">
     <div class="card-header">
@@ -33,7 +33,7 @@
         <div class="datagrid-item">
           <div class="datagrid-title">Invoice Status</div>
           <div class="datagrid-content">
-            <span>{{capitalizeFirstLetter order.status}}</span>
+            <span>{{{getOrderIcon order.status}}} {{capitalizeFirstLetter order.status}}</span>
           </div>
         </div>
 
@@ -41,9 +41,23 @@
     </div>
     <div class="card-body">
       <button class="btn text-blue cursor-pointer" data-bs-toggle="modal"
-        data-bs-target="#modal-order-{{order._id}}">Edit</button>
+        data-bs-target="#modal-{{order._id}}">Edit</button>
     </div>
   </div>
-
+  {{#if order.projects}}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">PDF</h3>
+      </div>
+      <div class="card-body">
+        <iframe class="invoice-frame" width="100%" height="400px" style="border: none;"
+          src="/invoice/{{order._id}}"></iframe>
+      </div>
+      <div class="card-body">
+        <button class="btn text-blue cursor-pointer" data-bs-toggle="modal" data-bs-target="#modal-{{order._id}}">Edit
+          Invoice</button>
+      </div>
+    </div>
+    {{/if}}
 </div>
 {{/with}}

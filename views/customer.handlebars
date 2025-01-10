@@ -1,0 +1,237 @@
+<!-- Page header -->
+<div class="page-header d-print-none">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle"> Customer </div>
+        <h2 class="page-title">{{data.customer.name}}</h2>
+      </div>
+      <!-- Page title actions -->
+      <div class="col-auto ms-auto d-print-none">
+        <div class="btn-list">
+          {{#if (findInArray data.role "editCustomers")}}
+          <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#editCustomer" data-bs-toggle="modal"
+            data-bs-target="#modal-{{data.customer._id}}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 5l0 14" />
+              <path d="M5 12l14 0" />
+            </svg>
+            Edit Customer
+          </a>
+          <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
+            data-bs-target="#modal-new-entry" aria-label="modal-new-entry">
+            <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 5l0 14" />
+              <path d="M5 12l14 0" />
+            </svg>
+          </a>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Page body -->
+<div class="container-xl pt-4">
+  <div class="row row-deck row-cards">
+    <div class="d-block col-12 col-md-6 mb-6">
+      {{> showCustomerPayments}}
+      {{> showCustomer}}
+    </div>
+    {{> showCustomerLogs}}
+  </div>
+</div>
+
+{{#if (findInArray data.role "editCustomers")}}
+{{> editCustomerModal}}
+{{/if}}
+
+{{#if (findInArray data.role "createOrders")}}
+{{> emptyOrderModal}}
+{{/if}}
+
+<script>
+  const sendEmailInvite = function (elem) {
+
+    const customerId = $(elem).attr("customer-id");
+
+    $(elem).siblings("input").removeClass("is-invalid");
+    $(elem).siblings("input").addClass("is-valid");
+    $(elem).siblings(".invalid-feedback").remove();
+    $(elem).siblings(".alert").remove();
+
+    let currentBtnHTML = $(elem).html();
+
+    $(elem).html(`<span class="spinner-border spinner-border-sm" role="status"></span>`);
+
+    $.ajax({
+      url: `/customer/sendInvite`,
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ customerId }),
+      success: function (response) {
+        $(elem).html(currentBtnHTML);
+        $(elem).after(`
+      <div class="w-100 alert alert-success mt-4" role="alert">
+        <h4 class="alert-title">Success!</h4>
+        <div class="text-secondary">Email invite sent successfully!</div>
+      </div>`);
+        showDataAsSuch('/getCustomerData/{{data.customer._id}}', '#customer-container');
+        showDataAsSuch('/getCustomerLogs/{{data.customer._id}}', '#logs-container');
+      },
+      error: function (xhr, status, error) {
+        $(elem).html(currentBtnHTML);
+        $(elem).siblings("input").addClass("is-invalid");
+        $(elem).siblings("input").after(`<div class="invalid-feedback">${xhr.responseText}</div> `);
+      }
+    });
+  }
+
+
+  const showDataAsSuch = function (url, containerId) {
+    $.ajax({
+      url: url,
+      method: 'GET',
+      success: function (response) {
+        $(containerId).replaceWith(response);
+      },
+      error: function (error) {
+        alert(error.responseText);
+      }
+    });
+  }
+
+  const updateCustomer = function (elem) {
+
+    $(elem).closest(".modal").find("input").removeClass("is-invalid");
+    $(elem).closest(".modal").find(".invalid-feedback").remove();
+    $(elem).closest(".modal").find("span").removeClass("border-red");
+    $(elem).closest(".modal").find("span").removeClass("rounded-end");
+    $(elem).closest(".modal").find(".alert").remove();
+
+    let isValid = [];
+
+    $(elem).closest(".modal").find(".form-control, .form-select").each((key, val) => {
+      if ($(val).val() == "") {
+        $(val).addClass("is-invalid")
+        if ($(val).siblings("span").length > 0) {
+          $(val).siblings(".invalid-feedback").remove();
+          $(val).siblings("span").after(`<div class="invalid-feedback mb-2">Invalid entry</div> `);
+          $(val).siblings("span").addClass("is-invalid border-red rounded-end");
+          $(val).siblings("input").addClass("is-invalid");
+        } else {
+          $(val).after(`<div class="invalid-feedback">Invalid entry</div> `);
+        }
+      } else {
+        $(val).addClass("is-valid");
+      }
+      isValid.push($(val).val() != "");
+    });
+
+    const data = $(elem)
+      .closest(".modal")
+      .find(".form-select, input, textarea")
+      .toArray()
+      .reduce((total, val) => {
+        Object.assign(total, {
+          [$(val).attr("name")]: $(val).val()
+        });
+        return total;
+      }, {});
+
+
+    const projects = $(elem)
+      .closest(".modal")
+      .find(".projects input:checked")
+      .map((key, val) => $(val).val())
+      .get();
+
+    if (projects.length == 0) {
+      $(elem).closest(".modal").find(".projects").find(".form-selectgroup-label").addClass("border-red");
+      $(elem).closest(".modal").find(".projects").append(`<div class="d-block invalid-feedback">Invalid entry</div> `);
+      isValid.push(false);
+    } else {
+      $(elem).closest(".modal").find(".projects").find(".form-selectgroup-label").removeClass("border-red");
+    }
+
+    data.projects = projects;
+    data.status = $(elem).closest(".modal").find(".customer-status input:checked").val();
+
+    if (!data.status) {
+      alert("Please select a status for the customer");
+      isValid.push(false);
+    }
+
+    if (!(isValid.every(val => val === true))) {
+      return false;
+    }
+
+    const customerId = $(elem).closest(".modal").attr("customerId");
+    let currentBtnHTML = $(elem).html();
+    $(elem).html(`<span class="spinner-border spinner-border-sm me-2" role="status"></span>`);
+
+    $.ajax({
+      url: `/customer/update/${customerId}`,
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: function (response) {
+        $(elem).html(currentBtnHTML);
+        $(".modal-footer").append(`
+        <div class="alert alert-success mt-4 w-100" role="alert">
+          <h4 class="alert-title">Succesful!</h4>
+          <div class="text-secondary">Customer updated successfully!</div>
+        </div>`);
+        showDataAsSuch('/getCustomerData/{{data.customer._id}}', '#customer-container');
+        showDataAsSuch('/getCustomerLogs/{{data.customer._id}}', '#logs-container');
+      },
+      error: function (xhr, status, error) {
+        $(elem).html(currentBtnHTML);
+        if (xhr.status != 400) {
+          $(".modal-footer").append(`
+        <div class="alert alert-danger mt-4 w-100" role="alert">
+          <h4 class="alert-title">Failed to create customer!</h4>
+          <div class="text-secondary text-break">${xhr.responseText}</div>
+        </div>`);
+          return false;
+        }
+        xhr.responseJSON.forEach(val => {
+          if (val.elem == "other") {
+            $(".modal-footer").append(`
+          <div class="alert alert-danger mt-4 w-100" role="alert">
+            <h4 class="alert-title">Failed to create customer!</h4>
+            <div class="text-secondary text-break">${val.msg}</div>
+          </div>
+          `);
+            return false;
+          };
+          $(val.elem).addClass("is-invalid");
+          $(val.elem).siblings("span").addClass("border-red rounded-end");
+          $(val.elem).parent("div").append(`<div class="mb-2 invalid-feedback">${val.msg}</div> `);
+        });
+      }
+    });
+
+  }
+
+  const getCustomerLogs = function (elem, href) {
+    href = href || $(elem).attr("my-href");
+    $.ajax({
+      url: href,
+      method: 'GET',
+      success: function (response) {
+        $('#logs-container').replaceWith(response);
+      },
+      error: function (error) {
+        $('#logs-container').html(error.responseText);
+      }
+    })
+  }
+
+
+</script>

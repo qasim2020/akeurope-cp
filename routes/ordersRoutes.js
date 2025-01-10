@@ -69,4 +69,18 @@ router.get(
     ordersController.viewOrder,
 );
 
+router.get(
+    '/getOrderLogs/:orderId',
+    authenticate,
+    authorize('viewOrders'),
+    ordersController.getOrderLogs,
+);
+
+router.get(
+    '/getOrderData/:orderId',
+    authenticate,
+    authorize('viewOrders'),
+    ordersController.getOrderData,
+);
+
 module.exports = router;

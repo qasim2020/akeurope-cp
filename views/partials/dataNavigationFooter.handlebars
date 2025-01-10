@@ -1,15 +1,18 @@
 <div class="card-footer border-top-0" page-type="{{data.pagination.pageType}}">
     <div class="row">
         <p class="m-0 text-secondary col-12 col-md-6 mb-2 text-center text-md-start">
-            Showing <span>{{data.pagination.startIndex}}</span> to <span>{{data.pagination.endIndex}}</span> of <span>{{data.pagination.totalEntries}}</span> entries
+            Showing <span>{{data.pagination.startIndex}}</span> to <span>{{data.pagination.endIndex}}</span> of
+            <span>{{data.pagination.totalEntries}}</span> entries
         </p>
         <ul class="pagination m-0 col-12 col-md-6 text-md-end d-flex justify-content-center justify-content-md-end">
             <li class="page-item {{#if (eq data.pagination.currentPage 1)}}disabled{{/if}}">
-                <a class="page-link cursor-pointer" 
-                my-href="?page={{dec data.pagination.currentPage}}&limit={{data.pagination.limit}}&search={{data.pagination.search}}&sortBy={{data.pagination.sort.sortBy}}&orderBy={{data.pagination.sort.order}}{{#if data.pagination.filtersQuery}}&{{data.pagination.filtersQuery}}{{/if}}"
-                onclick="doSearch(this)"
-                tabindex="-1" aria-disabled="{{#if (eq data.pagination.currentPage 1)}}true{{/if}}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <a class="page-link cursor-pointer"
+                    my-href="?page={{dec data.pagination.currentPage}}&limit={{data.pagination.limit}}&search={{data.pagination.search}}&sortBy={{data.pagination.sort.sortBy}}&orderBy={{data.pagination.sort.order}}{{#if data.pagination.filtersQuery}}&{{data.pagination.filtersQuery}}{{/if}}"
+                    onclick="doSearch(this)" tabindex="-1"
+                    aria-disabled="{{#if (eq data.pagination.currentPage 1)}}true{{/if}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                         <path d="M15 6l-6 6l6 6"></path>
                     </svg>
@@ -17,13 +20,14 @@
             </li>
 
             {{#each data.pagination.pagesArray}}
-                {{#if (eq this "..." )}}
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                {{else}}
-                    <li class="page-item {{#if (eq this ../data.pagination.currentPage)}}active{{/if}}">
-                        <a class="page-link cursor-pointer" onclick="doSearch(this)" my-href="?page={{this}}&limit={{../data.pagination.limit}}&search={{../data.pagination.search}}&sortBy={{../data.pagination.sort.sortBy}}&orderBy={{../data.pagination.sort.order}}{{#if ../data.pagination.filtersQuery}}&{{../data.pagination.filtersQuery}}{{/if}}">{{this}}</a>
-                    </li>
-                {{/if}}
+            {{#if (eq this "..." )}}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {{else}}
+            <li class="page-item {{#if (eq this ../data.pagination.currentPage)}}active{{/if}}">
+                <a class="page-link cursor-pointer" onclick="doSearch(this)"
+                    my-href="?page={{this}}&limit={{../data.pagination.limit}}&search={{../data.pagination.search}}&sortBy={{../data.pagination.sort.sortBy}}&orderBy={{../data.pagination.sort.order}}{{#if ../data.pagination.filtersQuery}}&{{../data.pagination.filtersQuery}}{{/if}}">{{this}}</a>
+            </li>
+            {{/if}}
             {{/each}}
 
             <!-- Next button -->
@@ -31,13 +35,14 @@
             {{#if (eq data.pagination.currentPage data.pagination.totalPages)}}disabled{{/if}}
             {{#if (eq data.pagination.totalEntries 0)}}disabled{{/if}}
             ">
-                <a class="page-link cursor-pointer" 
-                {{#unless (eq data.pagination.currentPage data.pagination.totalPages)}}
-                my-href="?page={{inc data.pagination.currentPage}}&limit={{data.pagination.limit}}&search={{data.pagination.search}}&sortBy={{data.pagination.sort.sortBy}}&orderBy={{data.pagination.sort.order}}{{#if data.pagination.filtersQuery}}&{{data.pagination.filtersQuery}}{{/if}}"
-                {{/unless}}
-                onclick="doSearch(this)"
-                tabindex="-1" aria-disabled="{{#if (eq data.pagination.currentPage 1)}}true{{/if}}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                <a class="page-link cursor-pointer" {{#unless (eq data.pagination.currentPage
+                    data.pagination.totalPages)}}
+                    my-href="?page={{inc data.pagination.currentPage}}&limit={{data.pagination.limit}}&search={{data.pagination.search}}&sortBy={{data.pagination.sort.sortBy}}&orderBy={{data.pagination.sort.order}}{{#if data.pagination.filtersQuery}}&{{data.pagination.filtersQuery}}{{/if}}"
+                    {{/unless}} onclick="doSearch(this)" tabindex="-1"
+                    aria-disabled="{{#if (eq data.pagination.currentPage 1)}}true{{/if}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                         <path d="M9 6l6 6l-6 6"></path>
                     </svg>
