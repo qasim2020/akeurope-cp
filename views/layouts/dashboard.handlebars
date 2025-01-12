@@ -26,7 +26,7 @@
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-            <a href=".">
+            <a href="/dashboard">
               <img src="/static/images/logo.png" width="20px">
             </a>
           </div>
@@ -81,35 +81,8 @@
                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5 12l-2 0l9 -9l9 9l-2 0"></path><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"></path></svg>
                         </span>
                         <span class="nav-link-title">
-                          Invoices
+                          Home
                         </span>
-                      </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                      <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                        <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler-icons.io/i/package -->
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5"></path><path d="M12 12l8 -4.5"></path><path d="M12 12l0 9"></path><path d="M12 12l-8 -4.5"></path><path d="M16 5.25l-8 4.5"></path></svg>
-                        </span>
-                        <span class="nav-link-title">Projects</span>
-                      </a>
-                      <div class="dropdown-menu">
-                        <div class="dropdown-menu-columns">
-                          <div class="dropdown-menu-column">
-                            {{#each data.projects}}
-                            <a class="dropdown-item" href="/project/{{this.slug}}">
-                              {{this.name}}
-                            </a>
-                            {{/each}}
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="/reports">
-                        <span class="nav-link-icon d-md-none d-lg-inline-block">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 9l9 6l9 -6l-9 -6l-9 6"></path><path d="M21 9v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10"></path><path d="M3 19l6 -6"></path><path d="M15 13l6 6"></path></svg>
-                        </span>
-                        <span class="nav-link-title">Reports</span>
                       </a>
                     </li>
                     <li class="nav-item dropdown">
@@ -135,18 +108,7 @@
                     </li>
                   </ul>
                 </div>
-                <div class="col-2 d-none d-xxl-block">
-                  <div class="my-2 my-md-0 flex-grow-1 flex-md-grow-0 order-first order-md-last">
-                    <form action="./" method="get" autocomplete="off" novalidate="">
-                      <div class="input-icon">
-                        <span class="input-icon-addon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path><path d="M21 21l-6 -6"></path></svg>
-                        </span>
-                        <input type="text" value="" class="form-control" placeholder="Search…" aria-label="Search in portal">
-                      </div>
-                    </form>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>
@@ -160,7 +122,7 @@
               <div class="col-12 col-lg-auto mt-3 mt-lg-0">
                 <ul class="list-inline list-inline-dots mb-0">
                   <li class="list-inline-item">
-                    Copyright &copy; 2024
+                    Copyright &copy; 2025
                     <a href="https://akeurope.org" class="link-secondary">Alkhidmat Europe </a>.
                     All rights reserved.
                   </li>

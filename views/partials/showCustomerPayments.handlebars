@@ -1,10 +1,21 @@
 <div class="card" id="payments-container">
   <div class="card-header d-flex justify-content-between">
     <h3 class="card-title">Payments</h3>
+    <button class="btn btn-primary d-md-inline-block" id="createNewOrder" data-bs-toggle="modal"
+      data-bs-target="#modal-new-order">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-plus">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 5l0 14" />
+        <path d="M5 12l14 0" />
+      </svg>
+      Create Invoice
+    </button>
   </div>
   {{#if data.orders}}
-  <div class="card-body">
-    <table class="table table-striped">
+  <div class="p-md-3">
+    <table class="table table-striped mb-0">
       <thead>
         <tr>
           <th>Invoice #</th>
@@ -19,7 +30,10 @@
           <td><a href="/order/{{this._id}}">{{this.orderNo}}</a></td>
           <td>{{formatDate this.createdAt}}</td>
           <td>{{this.totalCost}} {{this.currency}}</td>
-          <td>{{capitalizeFirstLetter this.status}}</td>
+          <td>
+            <span>{{{getOrderIcon this.status}}} </span>
+            <span class="ms-1">{{capitalizeFirstLetter this.status}}</span>
+          </td>
         </tr>
         {{/each}}
       </tbody>

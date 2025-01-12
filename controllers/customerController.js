@@ -66,7 +66,7 @@ exports.editModal = async (req, res) => {
 
 exports.updateCustomer = async (req, res) => {
     try {
-        const { name, organization, location, status, projects } = req.body;
+        const { name, organization, location, projects } = req.body;
 
         let check = [];
 
@@ -110,7 +110,6 @@ exports.updateCustomer = async (req, res) => {
             name,
             organization,
             location,
-            status,
             projects,
         };
 
@@ -151,7 +150,7 @@ exports.getLogs = async (req, res) => {
 
 exports.customer = async (req, res) => {
     try {
-        if (req.params.customerId != req.session.customer._id.toString()) {
+        if (req.params.customerId != req.session.user._id.toString()) {
             res.status(401).render('error', {
                 heading: 'Unauthorized',
                 error: 'You are not authorized to view this page',
@@ -160,7 +159,7 @@ exports.customer = async (req, res) => {
         }
         
         const customer = await Customer.findById(
-            req.session.customer._id,
+            req.session.user._id,
         ).lean();
 
         customer.projectsOpened = await Promise.all(
@@ -170,20 +169,22 @@ exports.customer = async (req, res) => {
         );
 
         const orders = await Order.find({
-            customerId: req.session.customer._id,
+            customerId: req.session.user._id,
         }).lean();
+
+        console.log(req.allProjects);
 
         res.render('customer', {
             layout: 'dashboard',
             data: {
                 layout: req.session.layout,
-                userName: req.session.customer.name,
+                userName: req.session.user.name,
                 userRole:
-                    req.session.customer.role.charAt(0).toUpperCase() +
-                    req.session.customer.role.slice(1),
+                    req.session.user.role.charAt(0).toUpperCase() +
+                    req.session.user.role.slice(1),
                 activeMenu: 'customers',
-                projects: req.allProjects,
-                role: req.userPermissions,
+                projects: await Project.find({status: 'active'}).lean(),
+                role: req.customerPermissions,
                 logs: await visibleLogs(req, res),
                 customerLogs: await customerLogs(req, res),
                 customer,

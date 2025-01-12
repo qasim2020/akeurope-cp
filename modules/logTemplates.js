@@ -1,164 +1,319 @@
-const logTemplates = ({ type, entity, actor, project, changes }) => {
-
+const logTemplates = ({
+    type,
+    entity,
+    actor,
+    project,
+    order,
+    entry,
+    color,
+    customer,
+    changes,
+}) => {
     if (!type || !entity || !actor) {
-        throw new Error('Missing required parameters: type, entity, and actor are mandatory.');
+        throw new Error(
+            'Missing required parameters: type, entity, and actor are mandatory.',
+        );
     }
 
     const commons = (entityType, entityId) => ({
         entityType,
         entityId,
-        actorType: 'user',
+        actorType: 'customer',
         actorId: actor._id,
     });
 
     const templates = {
         login: {
             ...commons('user', entity._id),
-            action: 'Logged in',
-            url: `/user/${entity._id}`,
-            isNotification: true,
-            color: 'grey'
+            action: `<a href="/user/${entity._id}">${entity.name}</a> logged in`,
+            color: 'grey',
         },
         logout: {
             ...commons('user', entity._id),
-            action: 'Logged out',
-            url: `/user/${entity._id}`,
-            isNotification: true,
-            color: 'grey'
+            action: `<a href="/user/${entity._id}">${entity.name}</a> logged out`,
+            color: 'grey',
         },
         passwordChanged: {
             ...commons('user', entity._id),
-            action: 'Password changed',
-            url: `/user/${entity._id}`,
+            action: `Password changed of <a href="/user/${entity._id}">${entity.name}</a>`,
             isNotification: true,
             color: 'grey',
         },
         sentEmailForgotPassword: {
             ...commons('user', entity._id),
-            action: 'Sent forgot password email',
-            url: `/user/${entity._id}`,
+            action: `Sent forgot password email to <a href="/user/${entity._id}">${entity.name}</a>`,
             isNotification: true,
-            isRead: false,
-            color: 'grey'
+            color: 'grey',
         },
         customerCreated: {
             ...commons('customer', entity._id),
-            url: `/customer/${entity._id}`,
-            action: 'New customer created',
+            action: `Customer <a href="/customer/${entity._id}">${entity.name}</a> created`,
             color: 'blue',
             isNotification: true,
         },
-        customerUpdated: changes ? {
-            ...commons('customer', entity._id),
-            url: `/customer/${entity._id}`,
-            action: 'Customer updated',
-            changes,
-            color: 'blue',
-            isNotification: true,
-        } : null,
+        customerUpdated: changes
+            ? {
+                  ...commons('customer', entity._id),
+                  action: `Customer <a href="/customer/${entity._id}">${entity.name}</a> updated`,
+                  changes,
+                  color: 'blue',
+              }
+            : null,
         sentEmailCustomerInvite: {
             ...commons('customer', entity._id),
-            url: `/customer/${entity._id}`,
-            action: 'Sent email invite',
+            action: `Sent customer invite email to <a href="/customer/${entity._id}">${entity.name}</a>`,
             color: 'blue',
-            isNotification: true
+            isNotification: false,
         },
         projectCreated: {
             ...commons('project', entity._id),
-            url: `/project/${entity.slug}`,
-            action: 'Project created',
+            action: `Project <a href="/project/${entity.slug}">${entity.name}</a> created`,
             color: 'blue',
-            isNotification: true,
         },
-        projectUpdated: changes ? {
-            ...commons('project', entity._id),
-            url: `/project/${entity.slug}`,
-            action: 'Project updated',
-            changes,
-            color: 'blue',
-            isNotification: true,
-        } : null,
-        entryCreated: project ? {
-            ...commons('entry', entity._id),
-            url: `/entry/${entity._id}/project/${project.slug}`,
-            action: 'Entry created',
-            color: 'blue',
-            isNotification: true,
-        } : null,
-        entryUpdated: project && changes ? {
-            ...commons('entry', entity._id),
-            url: `/entry/${entity._id}/project/${project.slug}`,
-            action: 'Entry updated',
-            changes,
-            color: 'blue',
-            isNotification: true, 
-        } : null,
-        entryDeleted: project ? {
-            ...commons('entry', entity._id),
-            url: `/entry/${entity._id}/project/${project.slug}`,
-            action: 'Entry deleted',
-            color: 'red',
-            isNotification: true,  
-        } : null,
-        entryUpdatedBulkUpload: project && changes ? {
-            ...commons('entry', entity._id),
-            url: `/entry/${entity._id}/project/${project.slug}`,
-            action: 'Entry updated in bulk upload',
-            changes,
-            isNotification: false,
-        } : null,
-        entryCreatedBulkUpload: project ? {
-            ...commons('entry', entity._id),
-            url: `/entry/${entity._id}/project/${project.slug}`,
-            projectId: project._id,
-            action: 'Entry created in bulk upload',
-            isNotification: false,
-        } : null,
+        projectUpdated: changes
+            ? {
+                  ...commons('project', entity._id),
+                  action: `Project <a href="/project/${entity.slug}">${entity.name}</a> updated`,
+                  changes,
+                  color: 'blue',
+              }
+            : null,
+        entryCreated: project
+            ? {
+                  ...commons('entry', entity._id),
+                  action: `Entry <a href="/entry/${entity._id}/project/${project.slug}">${entity.name}</a> created in project <a href="/project/${project.slug}">${project.name}</a>`,
+                  color: 'blue',
+              }
+            : null,
+        entryUpdated:
+            project && changes
+                ? {
+                      ...commons('entry', entity._id),
+                      action: `Entry <a href="/entry/${entity._id}/project/${project.slug}">${entity.name}</a> updated in project <a href="/project/${project.slug}">${project.name}</a>`,
+                      changes,
+                      color: 'blue',
+                  }
+                : null,
+        entryDeleted: project
+            ? {
+                  ...commons('entry', entity._id),
+                  action: `Entry <a href="/entry/${entity._id}/project/${project.slug}">${entity.name}</a> deleted in project <a href="/project/${project.slug}">${project.name}</a>`,
+                  color: 'red',
+                  isNotification: true,
+              }
+            : null,
+        entryUpdatedBulkUpload:
+            project && changes
+                ? {
+                      ...commons('entry', entity._id),
+                      action: `Entry <a href="/entry/${entity._id}/project/${project.slug}">${entity.name}</a> updated in bulk upload in project <a href="/project/${project.slug}">${project.name}</a>`,
+                      changes,
+                  }
+                : null,
+        entryCreatedBulkUpload: project
+            ? {
+                  ...commons('entry', entity._id),
+                  action: `Entry <a href="/entry/${entity._id}/project/${project.slug}">${entity.name}</a> created in bulk upload in project <a href="/project/${project.slug}">${project.name}</a>`,
+                  isNotification: false,
+              }
+            : null,
         bulkUploadCompleted: {
             ...commons('project', entity._id),
-            url: `/project/${entity.slug}`,
-            action: 'Bulk upload completed',
+            action: `Bulk upload completed in project <a href="/project/${entity.slug}">${entity.name}</a>`,
             changes,
             color: 'blue',
-            isNotification: true
+            isNotification: true,
         },
         userCreated: {
             ...commons('user', entity._id),
-            url: `/user/${entity._id}`,
-            action: 'Administrator created',
+            action: `New administrator <a href="/user/${entity._id}">${entity.name}</a> created`,
             color: 'blue',
-            isNotification: true
         },
         userUpdated: {
             ...commons('user', entity._id),
-            url: `/user/${entity._id}`,
-            action: 'User updated',
+            action: `Administrator <a href="/user/${entity._id}">${entity.name}</a> updated`,
             changes,
             color: 'blue',
-            isNotification: true,
         },
         userDeleted: {
             ...commons('user', entity._id),
-            url: `/user/${entity._id}`,
-            action: 'User deleted',
+            action: `Administrator <a href="/user/${entity._id}">${entity.name}</a> deleted`,
             color: 'red',
-            isNotification: true
+            isNotification: true,
         },
         userAcceptedInvite: {
             ...commons('user', entity._id),
-            url: `/user/${entity._id}`,
-            action: 'Administrator accepted invite',
-            color: 'blue',
-            isNotification: true
+            action: `Administrator <a href="/user/${entity._id}">${entity.name}</a> accepted invite`,
+            color: 'green',
+            isNotification: true,
         },
         sentEmailUserInvite: {
             ...commons('user', entity._id),
-            url: `/user/${entity._id}`,
-            action: 'Sent email invite',
+            action: `Sent email invite to adminstrator <a href="/user/${entity._id}">${entity.name}</a>`,
             color: 'blue',
-            isNotification: true
-        }
-    }
+            isNotification: true,
+        },
+        // NEW CHANGES FROM 31 DEC 2024
+        orderCreated: {
+            ...commons('order', entity._id),
+            action: `New <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a> created`,
+            color: 'green',
+        },
+        customerRemovedFromOrder:
+            order && customer
+                ? {
+                      ...commons('order', entity._id),
+                      action: `<a href="/customer/${customer._id}">${customer.name}</a> removed from <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
+                      color: 'blue',
+                  }
+                : null,
+        customerAddedToOrder:
+            order && customer
+                ? {
+                      ...commons('order', entity._id),
+                      action: `<a href="/customer/${customer._id}">${customer.name}</a> added to <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
+                      color: 'blue',
+                  }
+                : null,
+        entryAddedToOrder:
+            order && project
+                ? {
+                      ...commons('order', entity._id),
+                      action: `<a href="/entry/${entity._id}/project/${
+                          project.slug
+                      }">${entity.name}</a> in project <a href="/project/${
+                          project.slug
+                      }">${
+                          project.detail ? project.detail.name : project.name
+                      }</a> selected in <a href="/order/${order._id}">Invoice-${
+                          order.orderNo
+                      }</a>`,
+                      changes,
+                      color: 'green',
+                  }
+                : null,
+        entryRemovedFromOrder:
+            order && project
+                ? {
+                      ...commons('order', entity._id),
+                      action: `<a href="/entry/${entity._id}/project/${
+                          project.slug
+                      }">${entity.name}</a> in project <a href="/project/${
+                          project.slug
+                      }">${
+                          project.detail ? project.detail.name : project.name
+                      }</a> removed from <a href="/order/${
+                          order._id
+                      }">Invoice-${order.orderNo}</a>`,
+                      changes,
+                      color: 'red',
+                  }
+                : null,
+        entryOrderStatusChanged:
+            order && project
+                ? {
+                      ...commons('order', entity._id),
+                      action: `<a href="/entry/${entity._id}/project/${
+                          project.slug
+                      }">${entity.name}</a> in project <a href="/project/${
+                          project.slug
+                      }">${
+                          project.detail ? project.detail.name : project.name
+                      }</a> status changed in <a href="/order/${
+                          order._id
+                      }">Invoice-${order.orderNo}</a>`,
+                      changes,
+                      color: color ? color : 'blue',
+                  }
+                : null,
+        entrySubscriptionChanged:
+            order && project && changes
+                ? {
+                      ...commons('order', entity._id),
+                      action: `Subscription changed for <a href="/entry/${
+                          entity._id
+                      }/project/${project.slug}">${
+                          entity.name
+                      }</a> in project <a href="/project/${project.slug}">${
+                          project.detail ? project.detail.name : project.name
+                      }</a> of <a href="/order/${order._id}">Invoice-${
+                          order.orderNo
+                      }</a>`,
+                      changes,
+                      color: 'blue',
+                  }
+                : null,
+        orderEntrySubscriptionChanged:
+            entry && project && changes
+                ? {
+                      ...commons('order', entity._id),
+                      action: `Subscription changed of <a href="/entry/${entry._id}/project/${project.slug}">${entry.name}</a> in <a href="/project/${project.slug}">${project.detail.name}</a> of <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
+                      changes,
+                      color: 'blue',
+                  }
+                : null,
+        orderColumnSubscriptionChanged:
+            project && order && changes
+                ? {
+                      ...commons('order', entity._id),
+                      action: `Subscription column changed in project <a href="/project/${project.slug}">${project.name}</a> of <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
+                      changes,
+                      color: 'blue',
+                  }
+                : null,
+        orderCustomerChanged: {
+            ...commons('order', entity._id),
+            action: `Customer changed in <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
+            color: 'blue',
+            changes,
+        },
+        orderCurrencyChanged: {
+            ...commons('order', entity._id),
+            action: `Currency changed in <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
+            color: 'blue',
+            changes,
+        },
+        orderProjectRemoved:
+            project && order
+                ? {
+                      ...commons('order', entity._id),
+                      action: `Project <a href="/project/${project.slug}">${project.name}</a> removed from <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
+                      color: 'blue',
+                  }
+                : null,
+        orderProjectSelection: project
+            ? {
+                  ...commons('order', entity._id),
+                  action: `${
+                      project.selection
+                          ? project.selection.entries.length
+                          : null
+                  } x entries selected in project <a href="/project/${
+                      project.slug
+                  }">${project.name}</a> of <a href="/order/${
+                      entity._id
+                  }">Invoice-${entity.orderNo}</a>`,
+                  color: 'blue',
+              }
+            : null,
+        orderTotalCostChanged: {
+            ...commons('order', entity._id),
+            action: `Total cost changed in <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
+            changes,
+            color: 'blue',
+        },
+        orderStatusChanged: {
+            ...commons('order', entity._id),
+            action: `Status changed in <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
+            changes,
+            color: 'blue',
+        },
+        orderDeleted: {
+            ...commons('order', entity._id),
+            action: `<a href="/order/${entity._id}">Invoice-${entity.orderNo}</a> deleted`,
+            color: 'red',
+        },
+    };
 
     if (templates[type] == null) {
         throw new Error(`Incomplete parameters for template type: ${type}`);
@@ -169,7 +324,6 @@ const logTemplates = ({ type, entity, actor, project, changes }) => {
     }
 
     return templates[type];
-
-}
+};
 
 module.exports = { logTemplates };

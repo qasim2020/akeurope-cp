@@ -1,8 +1,8 @@
 const { roles, hasPermission } = require('../modules/roles');
 
 const authenticate = (req, res, next) => {
-  if (req.session.customer) {
-    req.customer = req.session.customer;
+  if (req.session.user) {
+    req.customer = req.session.user;
     return next();
   }
   return res.status(404).render("error", {heading: "Unauthorized", error: "User is not logged in."});
@@ -22,12 +22,12 @@ const authorize = (permission) => {
 };
 
 const isBoarded = (req,res) => {
-  if (req.session.customer.isBoarded) {
+  if (req.session.user.isBoarded) {
     return next();
   }
 
-  if (req.session.customer.isBoardingAtStep) {
-    res.redirect(req.session.customer.isBoardingAtStep);
+  if (req.session.user.isBoardingAtStep) {
+    res.redirect(req.session.user.isBoardingAtStep);
   }
 
   res.redirect('/onboarding/stepOne');

@@ -8,7 +8,7 @@ exports.login = async (req, res) => {
     const customer = await Customer.findOne({ email });
   
     if (customer && (await customer.comparePassword(password))) {
-      req.session.customer = customer;
+      req.session.user = customer;
       if (rememberMe) {
         req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; 
       } else {

@@ -1,7 +1,8 @@
 const Project = require("../models/Project");
 const Payment = require("../models/Payment");
 const Subscription = require("../models/Subscription");
-
+const Order = require("../models/Order");
+const Customer = require("../models/Customer");
 const { createDynamicModel } = require("../models/createDynamicModel");
 const { generatePagination } = require("../modules/generatePagination");
 const { generateSearchQuery } = require("../modules/generateSearchQuery");
@@ -110,4 +111,35 @@ const projectEntries = async function(req, res) {
     }
 };
 
-module.exports = { projectEntries, fetchEntrySubscriptionsAndPayments};
+const getPaidOrdersByEntryId = async (req, res) => {
+    const orders = await Order.find({
+        status: 'paid',
+        'projects.entries': {
+            $elemMatch: {
+                entryId: req.params.entryId,
+                totalCost: { $ne: 0 },
+            },
+        },
+    }).lean();
+
+    for (const order of orders) {
+        order.customer = await Customer.findById(order.customerId).lean();
+        const project = order.projects.find((project) =>
+            project.entries.find(
+                (entry) => entry.entryId == req.params.entryId,
+            ),
+        );
+        order.project = project;
+        order.entry = project.entries.find(
+            (entry) => entry.entryId == req.params.entryId,
+        );
+    }
+
+    return orders;
+};
+
+module.exports = {
+    projectEntries,
+    fetchEntrySubscriptionsAndPayments,
+    getPaidOrdersByEntryId,
+};

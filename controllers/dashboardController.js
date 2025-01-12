@@ -12,8 +12,8 @@ exports.dashboard = async (req, res) => {
         layout: 'dashboard',
         data: {
             activeMenu: "dashboard",
-            userName: req.session.customer.name,
-            userRole: req.session.customer.role.charAt(0).toUpperCase() + req.session.customer.role.slice(1),
+            userName: req.session.user.name,
+            userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
             orders,
             projects,
             pagination

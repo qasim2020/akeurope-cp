@@ -13,4 +13,5 @@ router.get('/getSingleEntryLogs/:entryId/project/:slug', authenticate, authorize
 router.get('/getPaginatedEntriesForDraftOrder/:slug', authenticate, authorize('viewEntry'), entryController.getPaginatedEntriesForDraftOrder);
 router.get('/getPaginatedEntriesForOrderPage/:slug', authenticate, authorize('viewEntry'), entryController.getPaginatedEntriesForOrderPage);
 router.get('/getOrderProjects/:orderId', authenticate, authorize('viewEntry'), entryController.getOrderProjects);
+
 module.exports = router;

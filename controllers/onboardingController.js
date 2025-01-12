@@ -6,7 +6,7 @@ const {createDynamicModel} = require("../models/createDynamicModel");
 exports.stepOnePage = async(req,res) => {
 
     const myProjects = await Promise.all(
-        req.session.customer.projects.map(val => 
+        req.session.user.projects.map(val => 
             Project.findOne({ slug: val, status: 'active' }).lean()
         )
     );
@@ -22,8 +22,8 @@ exports.stepOnePage = async(req,res) => {
     return res.render('onboarding', {
         data: {
             activeMenu: "onboarding",
-            userName: req.session.customer.name,
-            userRole: req.session.customer.role.charAt(0).toUpperCase() + req.session.customer.role.slice(1),
+            userName: req.session.user.name,
+            userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
             showStep: 'one',
             projects: myProjects.filter(val => val != null)
         }
@@ -33,7 +33,7 @@ exports.stepOnePage = async(req,res) => {
 
 exports.stepOnePartial = async(req,res) => {
     const myProjects = await Promise.all(
-        req.session.customer.projects.map(val => 
+        req.session.user.projects.map(val => 
             Project.findOne({ slug: val, status: 'active' }).lean()
         )
     );
@@ -64,8 +64,8 @@ exports.stepTwoPage = async(req,res) => {
     return res.render('onboarding', {
         data: {
             activeMenu: "onboarding",
-            userName: req.session.customer.name,
-            userRole: req.session.customer.role.charAt(0).toUpperCase() + req.session.customer.role.slice(1),
+            userName: req.session.user.name,
+            userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
             showStep: 'two',
             project,
             entries,
@@ -93,8 +93,8 @@ exports.stepThreePage = async(req,res) => {
     return res.render('onboarding', {
         data: {
             activeMenu: "onboarding",
-            userName: req.session.customer.name,
-            userRole: req.session.customer.role.charAt(0).toUpperCase() + req.session.customer.role.slice(1),
+            userName: req.session.user.name,
+            userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
             showStep: 'three'
         }
     }); 
@@ -105,8 +105,8 @@ exports.stepThreePartial = async(req,res) => {
         layout: false,
         data: {
             activeMenu: "onboarding",
-            userName: req.session.customer.name,
-            userRole: req.session.customer.role.charAt(0).toUpperCase() + req.session.customer.role.slice(1),
+            userName: req.session.user.name,
+            userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
             showStep: 'three'
         }
     }); 
@@ -116,8 +116,8 @@ exports.stepFourPage = async(req,res) => {
     return res.render('onboarding', {
         data: {
             activeMenu: "onboarding",
-            userName: req.session.customer.name,
-            userRole: req.session.customer.role.charAt(0).toUpperCase() + req.session.customer.role.slice(1),
+            userName: req.session.user.name,
+            userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
             showStep: 'four'
         }
     }); 
@@ -128,8 +128,8 @@ exports.stepFourPartial = async(req,res) => {
         layout: false,
         data: {
             activeMenu: "onboarding",
-            userName: req.session.customer.name,
-            userRole: req.session.customer.role.charAt(0).toUpperCase() + req.session.customer.role.slice(1),
+            userName: req.session.user.name,
+            userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
             showStep: 'three'
         }
     }); 

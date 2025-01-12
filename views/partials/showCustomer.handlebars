@@ -2,8 +2,20 @@
 <div class="col-12 mb-auto mt-3" id="customer-container">
 
   <div class="card mb-3 data-row">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between">
       <h3 class="card-title">Customer Information</h3>
+      <button class="btn btn-primary cursor-pointer" data-bs-toggle="modal" data-bs-target="#modal-{{customer._id}}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+          <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"></path>
+          <path d="M13.5 6.5l4 4"></path>
+          <path d="M16 19h6"></path>
+          <path d="M19 16v6"></path>
+        </svg>
+        Edit Customer
+      </button>
     </div>
     <div class="card-body">
       <div class="datagrid">
@@ -54,7 +66,7 @@
           <div class="datagrid-title">Projects</div>
           <div class="datagrid-content">
             {{#each customer.projectsOpened}}
-            <a href="/project/{{this.slug}}" class="badge bg-blue-lt mb-1">{{this.name}}</a>
+            <span class="badge bg-blue-lt mb-1">{{this.name}}</span>
             {{/each}}
           </div>
         </div>
@@ -72,10 +84,7 @@
 
       </div>
     </div>
-    <div class="card-body">
-      <button class="btn text-blue cursor-pointer" data-bs-toggle="modal"
-        data-bs-target="#modal-{{customer._id}}">Edit</button>
-    </div>
+
   </div>
 
 </div>

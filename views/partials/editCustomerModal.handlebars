@@ -1,0 +1,63 @@
+<div class="modal modal-blur fade" id="modal-{{data.customer._id}}" tabindex="-1" style="display: none; padding-left: 0px;" customerId="{{data.customer._id}}">
+  <div class="modal-dialog modal-lg" role="document" id="">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Customer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">Owner Name</label>
+          <input type="text" class="name form-control" name="name" placeholder="Name of owner" value="{{data.customer.name}}"/>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Owner Email</label>
+          <input type="email" class="email form-control" name="email" value="{{data.customer.email}}" disabled>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Organization Name</label>
+          <input type="text" class="org-name form-control" name="organization" placeholder="Name of organization" value="{{data.customer.organization}}"/>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Address</label>
+          <input type="text" class="location form-control" name="location" placeholder="Village Dhoria, City Kharian, PO 1765, Pakistan etc" value="{{data.customer.location}}"/>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Active Projects</label>
+          <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column projects">
+            {{#each data.projects as |project|}}
+            {{#if (eq 'active' project.status)}}
+            <label class="form-selectgroup-item flex-fill">
+              <input type="checkbox" name="projects" value="{{project.slug}}" class="form-selectgroup-input" {{#if (findInArray ../data.customer.projects project.slug)}} checked="" {{/if}}>
+              <div class="form-selectgroup-label d-flex align-items-center p-3">
+                <div class="me-3">
+                  <span class="form-selectgroup-check"></span>
+                </div>
+                <div class="form-selectgroup-label-content d-flex align-items-center">
+                    <div class="font-weight-medium">{{project.name}}</div>
+                </div>
+              </div>
+            </label>
+            {{/if}}
+            {{/each}}
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal"> Cancel </a>
+        <a href="#" class="btn btn-primary ms-auto" customer-id="{data.customer._id}}" onclick="updateCustomer(this)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-upload"> <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /> <path d="M7 9l5 -5l5 5" /> <path d="M12 4l0 12" /> </svg>
+          Update Customer
+          </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button href="#" class="btn btn-primary d-none" id="button-{{data.customer._id}}" data-bs-toggle="modal" data-bs-target="#modal-{{data.customer._id}}"></button>

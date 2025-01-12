@@ -13,6 +13,7 @@ const onboardingRoutes = require('./routes/onboardingRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const orderRoutes = require('./routes/ordersRoutes');
 const entryRoutes = require('./routes/entryRoutes');
+const customerRoutes = require('./routes/customerRoutes');
 
 require('dotenv').config();
 mongoose();
@@ -50,6 +51,7 @@ app.use(onboardingRoutes);
 app.use(invoiceRoutes);
 app.use(entryRoutes);
 app.use(orderRoutes);
+app.use(customerRoutes);
 
 app.get('/', (req, res) => {
   if (req.session.user) {

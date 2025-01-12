@@ -57,10 +57,10 @@ exports.viewOrder = async (req, res) => {
         res.render('order', {
             layout: 'dashboard',
             data: {
-                userName: req.session.customer.name,
+                userName: req.session.user.name,
                 userRole:
-                    req.session.customer.role.charAt(0).toUpperCase() +
-                    req.session.customer.role.slice(1),
+                    req.session.user.role.charAt(0).toUpperCase() +
+                    req.session.user.role.slice(1),
                 role: req.customerPermissions,
                 logs: await visibleLogs(req, res),
                 projects: await Project.find({status: 'active'}).lean(),
@@ -207,7 +207,7 @@ exports.uploadPaymentProof = async (req, res) => {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        const customer = req.session.customer;
+        const customer = req.session.user;
 
         if (
             !customer ||

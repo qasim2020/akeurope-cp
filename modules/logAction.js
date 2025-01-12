@@ -212,11 +212,16 @@ const orderLogs = async (req, res) => {
 
 const findConnectedIds = async (logs) => {
     for (const log of logs) {
-        log.actor = await User.findById(log.actorId).lean();
         if (log.entityType == 'user') {
             log.entity = await User.findById(log.entityId).lean();
         } else if (log.entityType == 'customer') {
             log.entity = await Customer.findById(log.entityId).lean();
+        }
+        if (log.actorType == 'customer') {
+            log.actor = await Customer.findById(log.actorId).lean();
+            console.log(log);
+        } else if (log.actorType == 'user') {
+            log.actor = await User.findById(log.actorId).lean();
         }
     }
     return logs;

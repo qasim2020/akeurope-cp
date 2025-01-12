@@ -2,8 +2,21 @@
 <div class="col-12 col-md-6 mb-auto d-flex flex-column" id="order-container">
 
   <div class="card mb-3 data-row">
-    <div class="card-header">
-      <h3 class="card-title"><span class="badge bg-blue-lt">{{order.orderNo}}</span></h3>
+    <div class="card-header d-flex justify-content-between">
+      <h3 class="card-title">Summary</h3>
+      <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#editOrder" data-bs-toggle="modal"
+        data-bs-target="#modal-{{data.order._id}}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus me-1">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+          <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"></path>
+          <path d="M13.5 6.5l4 4"></path>
+          <path d="M16 19h6"></path>
+          <path d="M19 16v6"></path>
+        </svg>
+        Edit Invoice
+      </a>
     </div>
     <div class="card-body">
       <div class="datagrid">
@@ -25,7 +38,8 @@
           <div class="datagrid-title">Projects Amount</div>
           <div class="datagrid-content">
             {{#each order.projects}}
-            <span class="badge bg-green-lt px-2 mb-1">{{this.totalCostAllMonths}} {{order.currency}} in {{this.detail.name}}</span>
+            <span class="badge bg-green-lt px-2 mb-1">{{this.totalCostAllMonths}} {{order.currency}} in
+              {{this.detail.name}}</span>
             {{/each}}
           </div>
         </div>
@@ -39,25 +53,30 @@
 
       </div>
     </div>
-    <div class="card-body">
-      <button class="btn text-blue cursor-pointer" data-bs-toggle="modal"
-        data-bs-target="#modal-{{order._id}}">Edit</button>
-    </div>
   </div>
   {{#if order.projects}}
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">PDF</h3>
-      </div>
-      <div class="card-body">
-        <iframe class="invoice-frame" width="100%" height="400px" style="border: none;"
-          src="/invoice/{{order._id}}"></iframe>
-      </div>
-      <div class="card-body">
-        <button class="btn text-blue cursor-pointer" data-bs-toggle="modal" data-bs-target="#modal-{{order._id}}">Edit
-          Invoice</button>
-      </div>
+  <div class="card">
+    <div class="card-header d-flex justify-content-between">
+      <h3 class="card-title">Invoice</h3>
+      <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#editOrder" data-bs-toggle="modal"
+        data-bs-target="#modal-{{data.order._id}}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus me-1">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+          <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"></path>
+          <path d="M13.5 6.5l4 4"></path>
+          <path d="M16 19h6"></path>
+          <path d="M19 16v6"></path>
+        </svg>
+        Edit Invoice
+      </a>
     </div>
-    {{/if}}
+    <div class="card-body">
+      <iframe class="invoice-frame" width="100%" height="400px" style="border: none;"
+        src="/invoice/{{order._id}}"></iframe>
+    </div>
+  </div>
+  {{/if}}
 </div>
 {{/with}}

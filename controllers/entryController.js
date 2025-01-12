@@ -7,6 +7,7 @@ const { createDynamicModel } = require('../models/createDynamicModel');
 const {
     projectEntries,
     fetchEntrySubscriptionsAndPayments,
+    getPaidOrdersByEntryId,
 } = require('../modules/projectEntries');
 const { saveLog, visibleLogs, entryLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
@@ -56,14 +57,15 @@ exports.entry = async (req, res) => {
         }).lean();
 
         entry = await fetchEntrySubscriptionsAndPayments(entry);
+        entry.currency = project.currency;
 
         res.render('entry', {
             layout: 'dashboard',
             data: {
-                userName: req.session.customer.name,
+                userName: req.session.user.name,
                 userRole:
-                    req.session.customer.role.charAt(0).toUpperCase() +
-                    req.session.customer.role.slice(1),
+                    req.session.user.role.charAt(0).toUpperCase() +
+                    req.session.user.role.slice(1),
                 activeMenu: project.slug,
                 projects: req.allProjects,
                 project,
@@ -75,6 +77,7 @@ exports.entry = async (req, res) => {
                 entryLogs: await entryLogs(req, res),
                 sidebarCollapsed: req.session.sidebarCollapsed,
                 customers: await Customer.find().lean(),
+                payments: await getPaidOrdersByEntryId(req),
             },
         });
     } catch (error) {
@@ -144,7 +147,6 @@ exports.getSingleEntryLogs = async (req, res) => {
         });
     }
 };
-
 
 exports.getOrderProjects = async (req, res) => {
     try {
