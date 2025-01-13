@@ -111,6 +111,32 @@ const projectEntries = async function(req, res) {
     }
 };
 
+const getOrdersByEntryId = async (req, res) => {
+    const orders = await Order.find({
+        'projects.entries': {
+            $elemMatch: {
+                entryId: req.params.entryId,
+                totalCost: { $ne: 0 },
+            },
+        },
+    }).lean();
+
+    for (const order of orders) {
+        order.customer = await Customer.findById(order.customerId).lean();
+        const project = order.projects.find((project) =>
+            project.entries.find(
+                (entry) => entry.entryId == req.params.entryId,
+            ),
+        );
+        order.project = project;
+        order.entry = project.entries.find(
+            (entry) => entry.entryId == req.params.entryId,
+        );
+    }
+
+    return orders;
+};
+
 const getPaidOrdersByEntryId = async (req, res) => {
     const orders = await Order.find({
         status: 'paid',
@@ -142,4 +168,5 @@ module.exports = {
     projectEntries,
     fetchEntrySubscriptionsAndPayments,
     getPaidOrdersByEntryId,
+    getOrdersByEntryId,
 };

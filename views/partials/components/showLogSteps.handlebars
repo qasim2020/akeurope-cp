@@ -4,12 +4,12 @@
             <span class="badge">{{formatTime log.timestamp}}</span>
             <span class="badge bg-transparent fs-5">by</span>
             {{#if (eq log.actorType 'user')}}
-            <span class="badge">
+            <span class="badge bg-green-lt">
                 AKEurope Team
             </span>
             {{else}}
             <span class="badge bg-red-lt">
-                <a href="/{{log.actorType}}/{{log.actor._id}}">{{log.actor.name}}</a>
+                <a href="/{{log.actorType}}/{{log.actor._id}}" style="color: inherit">{{log.actor.name}}</a>
             </span> 
             {{/if}}
         </div>
@@ -41,16 +41,16 @@
         </div>
     </div>
     <div class="">
-        {{{log.action}}}
+        {{{removeLinks log.action}}}
         {{#if log.changes}}
         {{#each log.changes}}
         <br>
         <span class="badge bg-green-lt mt-1"></b3>{{camelCaseToNormalString this.key}}</span>
         {{#if this.oldValue}}
-        <span class="text-decoration-line-through">{{{this.oldValue}}}</span>
+        <span class="text-decoration-line-through">{{{removeLinks this.oldValue}}}</span>
         {{/if}}
         {{#if this.newValue}}
-        <span>{{{this.newValue}}}</span>
+        <span>{{{removeLinks this.newValue}}}</span>
         {{/if}}
         {{#if this.changes}}
         {{#each this.changes as |change|}}

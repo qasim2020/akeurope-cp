@@ -10,7 +10,8 @@
     <span class="badge bg-red notification-check"></span>
     {{/if}}
 </a>
-<div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card" style="width: 80vw;max-width: 500px;">
+<div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card"
+    style="width: 80vw;max-width: 500px;">
     {{#if data.logs}}
     <div class="card" style="min-width: 30vw;">
         <div class="card-header">
@@ -21,13 +22,29 @@
             <div class="list-group-item">
                 <div class="row">
                     <div class="col-auto">
+                        {{#if (eq log.actorType 'customer')}}
                         <a href="/{{log.actorType}}/{{log.actor._id}}">
-                            <span class="avatar">{{getFirstTwoLetters log.actor.name}}</span>
+                            <span class="avatar bg-red-lt">{{getFirstTwoLetters log.actor.name}}</span>
                         </a>
+                        {{else}}
+                        <span class="avatar bg-green-lt"><img src="/static/images/logo.png" alt="" width="30%"></span>
+                        {{/if}}
                     </div>
                     <div class="col">
                         <div class="">
-                            {{{log.action}}}
+                            {{{removeLinks log.action}}}
+                            {{#if log.changes}}
+                            {{#each log.changes}}
+                            <br>
+                            <span class="badge bg-green-lt mt-1"></b3>{{camelCaseToNormalString this.key}}</span>
+                            {{#if this.oldValue}}
+                            <span class="text-decoration-line-through">{{{removeLinks this.oldValue}}}</span>
+                            {{/if}}
+                            {{#if this.newValue}}
+                            <span>{{{removeLinks this.newValue}}}</span>
+                            {{/if}}
+                            {{/each}}
+                            {{/if}}
                         </div>
                         <div class="text-secondary">{{timeAgo log.timestamp}}</div>
                     </div>

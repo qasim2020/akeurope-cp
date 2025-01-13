@@ -147,7 +147,6 @@ function deletePath(filePath) {
     if (fs.existsSync(filePath)) {
         try {
             fs.unlinkSync(filePath);
-            console.log(`File deleted successfully: ${filePath}`);
             return true;
         } catch (err) {
             console.error(`Error deleting file: ${filePath}`, err);
@@ -206,7 +205,6 @@ const sendInvoiceToCustomer = async(order, customer)=> {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log('Invoice sent!');
         return true;
     } catch (err) {
         throw new Error(`Failed to send email: ${err.message}`);

@@ -286,7 +286,7 @@ const createDraftOrder = async (req, res) => {
 };
 
 const getPaginatedOrders = async (req, res) => {
-    const orders = await Order.find().sort({ _id: -1 }).lean();
+    const orders = await Order.find({customerId: req.session.user._id}).sort({ _id: -1 }).lean();
 
     const pagination = createPagination({
         req,
@@ -420,21 +420,32 @@ const updateOrderStatus = async (req, res) => {
         { $set: { status: status } },
         { new: true, lean: true },
     );
-    await saveLog(
-        logTemplates({
-            type: 'orderStatusChanged',
-            entity: order,
-            changes: [
-                {
-                    key: 'status',
-                    oldValue: capitalizeFirstLetter(checkOrder.status),
-                    newValue: capitalizeFirstLetter(order.status),
-                },
-            ],
-            actor: req.session.user,
-        }),
-    );
+    
     if (checkOrder.status != order.status) {
+        if (order.status == 'paid') {
+            await saveLog(
+                logTemplates({
+                    type: 'orderStatusChangedToPaid',
+                    entity: order,
+                    actor: req.session.user,
+                }),
+            ); 
+        } else {
+            await saveLog(
+                logTemplates({
+                    type: 'orderStatusChanged',
+                    entity: order,
+                    changes: [
+                        {
+                            key: 'status',
+                            oldValue: capitalizeFirstLetter(checkOrder.status),
+                            newValue: capitalizeFirstLetter(order.status),
+                        },
+                    ],
+                    actor: req.session.user,
+                }),
+            );
+        };   
         for (const project of order.projects) {
             const model = await createDynamicModel(project.slug);
             project.detail = await Project.findOne({

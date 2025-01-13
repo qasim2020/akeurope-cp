@@ -20,7 +20,11 @@
               <path d="M16 19h6"></path>
               <path d="M19 16v6"></path>
             </svg>
+            {{#if (eq data.order.status 'draft')}}
             Edit Invoice
+            {{else}}
+            View Invoice
+            {{/if}}
           </a>
           <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
             data-bs-target="#modal-{{data.order._id}}" aria-label="modal-order-{{data.order._id}}">
@@ -40,15 +44,20 @@
     </div>
   </div>
 </div>
-<div class="container-xl mx-auto pt-4" id="data-container">
+<div class="m-3 pt-4" id="data-container">
   {{> showOrderEntries}}
   <div class="row row-deck row-cards">
-    {{> showOrder}}
+    <div class="col-12 col-md-6 mb-auto d-flex flex-column">
+      {{!-- {{> showOrderDocs}} --}}
+      {{> showOrder}}
+      {{> showOrderInvoice}}
+    </div>
     <div class="d-block col-12 col-md-6">
       {{> showOrderLogs}}
     </div>
   </div>
 </div>
+
 {{#if data.order.customer}}
 {{> emptyOrderModal}}
 {{/if}}
@@ -98,16 +107,14 @@
   }
 
   const loadEntriesInProjectCard = function (elem, href) {
-    console.log(elem,href);
     if (!href) {
       href = $(elem).attr("my-href");
     }
     const projectCard = $(elem).closest('.project-in-order-page');
     const slug = $(elem).closest('.project-in-order-page').attr('project-slug');
     const orderId = $(elem).closest('.project-in-order-page').attr('order-id');
-    const customerId = $(elem).closest('.project-in-order-page').attr('customer-id');
     const toggleState = $(elem).closest('.project-body').hasClass('d-none') ? 'open' : 'close';
-    const url = `/getPaginatedEntriesForOrderPage/${slug}/${customerId}${href}&orderId=${orderId}&toggleState=${toggleState}`;
+    const url = `/getPaginatedEntriesForOrderPage/${slug}/${href}&orderId=${orderId}&toggleState=${toggleState}`;
     $.ajax({
       url,
       method: 'GET',

@@ -158,6 +158,8 @@ const logTemplates = ({
             ...commons('order', entity._id),
             action: `New <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a> created`,
             color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
         },
         customerRemovedFromOrder:
             order && customer
@@ -306,6 +308,22 @@ const logTemplates = ({
             ...commons('order', entity._id),
             action: `Status changed in <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
             changes,
+            isNotification: true,
+            isReadByCustomer: true,
+            color: 'blue',
+        },
+        orderStatusChangedToPaid: {
+            ...commons('order', entity._id),
+            action: `<a href="/order/${entity._id}">Invoice-${entity.orderNo}</a> status changed to Paid`,
+            isNotification: true,
+            isReadByCustomer: true,
+            color: 'green', 
+        },
+        orderPaymentProofAdded: {
+            ...commons('order', entity._id),
+            action: `Payment proof added to <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
+            isNotification: true,
+            isReadByCustomer: true,
             color: 'blue',
         },
         orderDeleted: {

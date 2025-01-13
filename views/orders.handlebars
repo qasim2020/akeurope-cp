@@ -1,0 +1,130 @@
+<!-- Page header -->
+<div class="page-header d-print-none">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <!-- Page pre-title -->
+        <div class="page-pretitle"> Overview </div>
+        <h2 class="page-title"> Invoices
+        </h2>
+      </div>
+      <!-- Page title actions -->
+      <div class="col-auto ms-auto d-print-none">
+        <div class="btn-list">
+          <a href="#" class="btn btn-primary d-none d-md-inline-block" id="createNewOrder" data-bs-toggle="modal"
+            data-bs-target="#modal-new-order">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 5l0 14" />
+              <path d="M5 12l14 0" />
+            </svg>
+            Create new invoice
+          </a>
+          <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
+            data-bs-target="#modal-new-order" aria-label="modal-new-order">
+            <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 5l0 14" />
+              <path d="M5 12l14 0" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Page body -->
+<div class="container-xl pt-4" id="data-container">
+  {{> showOrders}}
+</div>
+
+{{> emptyOrderModal}}
+
+<script src="/static/orders.js"></script>
+
+<script>
+
+  let newLayout = '{{data.layout}}' == 'grid' ? 'table' : 'grid';
+
+  const toggleLayout = function (elem) {
+    $.ajax({
+      url: '/update-layout',
+      method: 'POST',
+      data: { layout: newLayout },
+      success: function (response) {
+        $.ajax({
+          url: '/getOrdersTable',
+          method: 'GET',
+          success: function (response) {
+            newLayout = newLayout == 'grid' ? 'table' : 'grid';
+            $("#data-container").html(response);
+          },
+          error: function (error) {
+            alert(error.responseText);
+          }
+        });
+      },
+      error: function () {
+        alert("Failed to update layout.");
+      }
+    });
+
+  }
+
+  const refreshContainers = function (modal) {
+    const hrefOrder = "?refresh=true";
+    loadOrdersInContainer(modal, hrefOrder);
+  }
+
+  const loadOrdersInContainer = function (elem, href) {
+    if (!href) {
+      href = $(elem).attr("my-href");
+    }
+    const url = `/getOrdersData${href}`;
+    $.ajax({
+      url,
+      method: 'GET',
+      success: function (response) {
+        $(`#data-container`).html(response);
+      },
+      error: function (error) {
+        alert(error.responseText);
+      }
+    });
+  }
+
+  const getEditOrderModal = function (elem) {
+    const orderId = $(elem).attr("order-id");
+
+    const modalExists = $(document).find(`#button-${orderId}`).length > 0;
+
+    if (modalExists) {
+      return $(`#button-${orderId}`).trigger("click");
+    }
+
+    const isCreateModal = $(document).find(`.modal[order-id=${orderId}]`).length > 0;
+    console.log({isCreateModal});
+    if (isCreateModal) {
+      const modal = new bootstrap.Modal(document.getElementById('modal-new-order'))
+      modal.show();
+      return;
+    }
+
+    $.ajax({
+      url: `/getEditOrderModal/${orderId}`,
+      type: 'GET',
+      contentType: 'application/json',
+      success: function (response) {
+        $("footer").before(response);
+        $(`#button-${orderId}`).trigger("click");
+      },
+      error: function (xhr, status, error) {
+        alert(xhr.responseText);
+      }
+    });
+  }
+
+</script>

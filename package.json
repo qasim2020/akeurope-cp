@@ -3,6 +3,7 @@
     "@tabler/core": "^1.0.0-beta21",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
+    "cheerio": "^1.0.0",
     "cloudinary": "^2.5.1",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^5.1.0",
@@ -17,6 +18,7 @@
     "mongoose": "^8.7.3",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.15",
-    "pdfkit": "^0.15.1"
+    "pdfkit": "^0.15.1",
+    "socket.io-client": "^4.8.1"
   }
 }

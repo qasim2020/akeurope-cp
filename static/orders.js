@@ -103,13 +103,19 @@ const doSearch = function (elem, href, refreshAll) {
         return;
     }
 
+    const isOrderPage = $(elem).closest('.project-in-order-page').length > 0;
+    if (isOrderPage) {
+        loadEntriesInProjectCard(elem, href);
+        return;
+    }
+
     if (!href) {
         href = $(elem).attr('my-href');
     }
 
     const slug = $(elem).closest('.card').attr('projectSlug');
-    const orderId = $(modal).attr('order-id');
-    const toggleState = $(modal).find(`.${slug}`).attr('toggleState');
+    const orderId = $(modal).attr('order-id') || $(elem).closest('.card').attr('order-id');
+    const toggleState = $(modal).find(`.${slug}`).attr('toggleState') || $(elem).closest('.card').attr('toggleState');
     const url = `/getPaginatedEntriesForDraftOrder/${slug}/${href}&orderId=${orderId}&toggleState=${toggleState}`;
 
     if (!orderId) {

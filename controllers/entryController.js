@@ -8,6 +8,7 @@ const {
     projectEntries,
     fetchEntrySubscriptionsAndPayments,
     getPaidOrdersByEntryId,
+    getOrdersByEntryId,
 } = require('../modules/projectEntries');
 const { saveLog, visibleLogs, entryLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
@@ -66,7 +67,7 @@ exports.entry = async (req, res) => {
                 userRole:
                     req.session.user.role.charAt(0).toUpperCase() +
                     req.session.user.role.slice(1),
-                activeMenu: project.slug,
+                activeMenu: 'orders',
                 projects: req.allProjects,
                 project,
                 fields: project.fields,
@@ -77,7 +78,7 @@ exports.entry = async (req, res) => {
                 entryLogs: await entryLogs(req, res),
                 sidebarCollapsed: req.session.sidebarCollapsed,
                 customers: await Customer.find().lean(),
-                payments: await getPaidOrdersByEntryId(req),
+                payments: await getOrdersByEntryId(req),
             },
         });
     } catch (error) {

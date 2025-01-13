@@ -170,9 +170,7 @@ exports.customer = async (req, res) => {
 
         const orders = await Order.find({
             customerId: req.session.user._id,
-        }).lean();
-
-        console.log(req.allProjects);
+        }).sort({_id: -1}).lean();
 
         res.render('customer', {
             layout: 'dashboard',

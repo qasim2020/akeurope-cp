@@ -1,6 +1,7 @@
 const moment = require('moment');
 const getLetterIcon = require('../modules/iconLetter');
 const getOrderIcon = require('../modules/iconOrder');
+const cheerio = require('cheerio');
 
 const eq = function (a, b) {
     return a === b;
@@ -238,6 +239,23 @@ const expiresOn = (createdAt, months) => {
     return moment(createdAt).add(months, 'months').format('DD-MM-YYYY');
 };
 
+function removeLinks(htmlString) {
+    try {
+        const parameters = ['project', 'user', 'customer'];
+        const $ = cheerio.load(htmlString);
+
+        parameters.forEach((param) => {
+            $(`a[href*="/${param}/"]`).each(function () {
+                $(this).replaceWith($(this).text());
+            });
+        });
+
+        return $.html();
+    } catch (error) {
+        return htmlString;
+    }
+}
+
 module.exports = {
     eq,
     gt,
@@ -270,5 +288,6 @@ module.exports = {
     stringifyDate,
     json,
     expiresOn,
-    getOrderIcon
+    getOrderIcon,
+    removeLinks,
 };

@@ -4,7 +4,12 @@ const path = require('path');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
-const { saveLog, customerLogs, visibleLogs, orderLogs } = require('../modules/logAction');
+const {
+    saveLog,
+    customerLogs,
+    visibleLogs,
+    orderLogs,
+} = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const {
@@ -63,9 +68,9 @@ exports.viewOrder = async (req, res) => {
                     req.session.user.role.slice(1),
                 role: req.customerPermissions,
                 logs: await visibleLogs(req, res),
-                projects: await Project.find({status: 'active'}).lean(),
+                projects: await Project.find({ status: 'active' }).lean(),
                 orderLogs: await orderLogs(req, res),
-                activeMenu: 'invoices',
+                activeMenu: 'orders',
                 order,
             },
         });
@@ -139,19 +144,8 @@ exports.getOrderTotalCost = async (req, res) => {
 
 exports.orderStatusPendingPayment = async (req, res) => {
     try {
-        const orderId = req.params.orderId;
-        const order = await Order.findOneAndUpdate(
-            { _id: orderId, status: 'draft' },
-            {
-                $set: {
-                    status: 'pending payment',
-                },
-            },
-            {
-                new: true,
-                lean: true,
-            },
-        );
+        req.body.status = 'pending payment';
+        const order = await updateOrderStatus(req, res);
         if (!order) {
             throw new Error('No order found!');
         }
@@ -226,7 +220,7 @@ exports.uploadPaymentProof = async (req, res) => {
             fs.mkdirSync(paymentsDir);
         }
 
-        const newFilename = `${customer.email}_order_no_${
+        const newFilename = `order_no_${
             order.orderNo
         }_order_total_${order.totalCost}${path.extname(file.originalname)}`;
         const newFilePath = path.join(paymentsDir, newFilename);
@@ -237,11 +231,15 @@ exports.uploadPaymentProof = async (req, res) => {
 
         fs.renameSync(file.path, newFilePath);
 
-        await Order.updateOne({_id: order._id},{
-            $set: {
-                status: 'processing'
-            }
-        });
+        await saveLog(logTemplates({
+            type: 'orderPaymentProofAdded',
+            entity: order,
+            actor: req.session.user,
+        }));
+
+        req.body.status = 'processing';
+
+        await updateOrderStatus(req, res);
 
         res.json({ message: 'File saved' });
     } catch (error) {

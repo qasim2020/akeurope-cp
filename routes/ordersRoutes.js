@@ -42,18 +42,6 @@ router.post(
     authorize('editOrders'),
     ordersController.orderStatusPendingPayment,
 );
-router.get(
-    '/deleteOrder/:orderId',
-    authenticate,
-    authorize('deleteOrders'),
-    ordersController.deleteOrder,
-);
-router.post(
-    '/emailInvoice/:orderId',
-    authenticate,
-    authorize('viewOrders'),
-    ordersController.emailInvoice,
-);
 router.post(
     '/paymentProof/:orderId',
     authenticate,
@@ -61,21 +49,18 @@ router.post(
     uploadPaymentProofMulter.single('file'),
     ordersController.uploadPaymentProof,
 );
-
 router.get(
     '/order/:orderId',
     authenticate,
     authorize('viewOrders'),
     ordersController.viewOrder,
 );
-
 router.get(
     '/getOrderLogs/:orderId',
     authenticate,
     authorize('viewOrders'),
     ordersController.getOrderLogs,
 );
-
 router.get(
     '/getOrderData/:orderId',
     authenticate,

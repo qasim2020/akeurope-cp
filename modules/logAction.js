@@ -18,6 +18,7 @@ const saveLog = async ({
     color,
     isNotification,
     isRead,
+    isReadByCustomer,
     expiresAt,
 }) => {
     try {
@@ -32,6 +33,7 @@ const saveLog = async ({
             url,
             isNotification,
             isRead,
+            isReadByCustomer,
             expiresAt,
             color,
         });
@@ -180,7 +182,6 @@ const customerLogs = async (req, res) => {
 const orderLogs = async (req, res) => {
     try {
         const query = { entityId: req.params.orderId };
-        console.log(query);
 
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -219,7 +220,6 @@ const findConnectedIds = async (logs) => {
         }
         if (log.actorType == 'customer') {
             log.actor = await Customer.findById(log.actorId).lean();
-            console.log(log);
         } else if (log.actorType == 'user') {
             log.actor = await User.findById(log.actorId).lean();
         }
@@ -229,9 +229,23 @@ const findConnectedIds = async (logs) => {
 
 const visibleLogs = async (req, res) => {
     try {
-        const logs = await Log.find({ isNotification: true, isRead: false })
+        const orders = await Order.find({
+            customerId: req.session.user._id,
+        }).lean();
+
+        const query = {
+            isNotification: true, 
+            $or: [
+                { entityId: req.session.user._id }, 
+                { entityId: { $in: orders.map(order => order._id) } },
+            ],
+            isReadByCustomer: false,
+        };
+
+        const logs = await Log.find(query)
             .sort({ timestamp: -1 })
             .lean();
+
         return await findConnectedIds(logs);
     } catch (error) {
         console.log(error);

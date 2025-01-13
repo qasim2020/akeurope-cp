@@ -1,6 +1,6 @@
 <div class="card mb-3">
   <div class="card-header d-flex justify-content-between">
-    <h3 class="card-title">Payments</h3>
+    <h3 class="card-title">Payments from Paid Invoices</h3>
   </div>
   {{#if data.payments}}
   <table class="table table-striped mb-0">
@@ -10,7 +10,6 @@
         <th>Date</th>
         <th>Amount</th>
         <th>Expires</th>
-        <th>Status</th>
         <th>Customer</th>
       </tr>
     </thead>
@@ -22,19 +21,11 @@
         <td>
           {{#each entry.costs}}
           {{#if totalOrderedCost}}
-          {{totalOrderedCost}} {{../currency}} in {{camelCaseToNormalString fieldName}} <br>
+          {{totalOrderedCost}} {{../currency}} per month in {{camelCaseToNormalString fieldName}} <br>
           {{/if}}
           {{/each}}
         </td>
         <td>After {{project.months}} month(s) on {{expiresOn createdAt project.months}}</td>
-        <td>
-          {{#if (eq status 'paid')}}
-          {{{getOrderIcon status}}}
-          {{capitalizeFirstLetter status}}
-          {{else}}
-          {{capitalizeFirstLetter status}}
-          {{/if}}
-        </td>
         <td><a href='/customer/{{customer._id}}'>{{customer.name}}</a></td>
       </tr>
       {{/each}}
