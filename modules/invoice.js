@@ -5,6 +5,7 @@ const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
+const { Error } = require('mongoose');
 
 const generateInvoice = async (order) => {
     const invoiceDir = path.join(__dirname, '../../invoices');
@@ -36,61 +37,100 @@ const generateInvoice = async (order) => {
 
             // Add company name and details
             doc.fontSize(16).text('Alkhidmat Europe', 120, 50);
-            doc.fontSize(12).text(
-                'Address: 123 Business St, City, Country',
-                120,
-                70,
-            );
-            doc.text(
-                'Email: payments@akeurope.org | Phone: +123456789',
-                120,
-                85,
-            );
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Address: ', 120, 70, { continued: true })
+                .font('Helvetica')
+                .text('Grønland 6, 0188, Oslo');
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Email: ', 120, 85, { continued: true })
+                .font('Helvetica') 
+                .text('regnskap@akeurope.org | ', { continued: true })
+                .font('Helvetica-Bold') 
+                .text('Phone: ', { continued: true })
+                .font('Helvetica') 
+                .text('+47 40150015');
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Organization No: ', 120, 100, { continued: true })
+                .font('Helvetica')
+                .text('915487440');
+
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Case Manager: ', 120, 115, { continued: true })
+                .font('Helvetica')
+                .text('Muhammad Sadiq');
 
             // Draw a separator line
-            doc.moveTo(50, 120).lineTo(550, 120).stroke();
+            doc.moveTo(50, 140).lineTo(560, 140).stroke();
 
             // Add invoice details
-            doc.fontSize(16).text('Invoice', 50, 140);
-            doc.fontSize(12).text(`Invoice Number: ${order.orderNo}`, 50, 160);
-            doc.text(
-                `Invoice Date: ${new Date(
+            doc.fontSize(16).text('Invoice', 50, 150);
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Account Number: ', 50, 170, { continued: true })
+                .font('Helvetica')
+                .text('22702596711');
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Invoice Number: ', 50, 185, { continued: true })
+                .font('Helvetica')
+                .text(`${order.orderNo}`);
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Invoice Date: ', 50, 200, { continued: true })
+                .font('Helvetica')
+                .text(`${new Date(
                     order.createdAt,
-                ).toLocaleDateString()}`,
-                50,
-                175,
-            );
+                ).toLocaleDateString()}`);
 
             // Add customer details
-            doc.fontSize(16).text(`Billed To:`, 350, 140);
+            doc.fontSize(16).text(`Billed To:`, 350, 150);
             doc.fontSize(12);
-            doc.text(`${order.customer.name}`, 350, 160);
-            doc.text(`${order.customer.email}`, 350, 175);
-            doc.text(`${order.customer.organization || ''}`, 350, 190);
+            doc.text(`${order.customer.name}`, 350, 170);
+            doc.text(`${order.customer.email}`, 350, 185);
 
-            // Draw the table starting from a Y position
-            const startY = 250;
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Organization: ', 350, 200, { continued: true })
+                .font('Helvetica')
+                .text(`${order.customer.organization || ''}`);
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold') 
+                .text('Address: ', 350, 215); 
+
+            doc.fontSize(12)
+                .font('Helvetica')
+                .text(`${order.customer.location || ''}`, 350, 230);  
+
+            const startY = 320;
             const endY = drawTable(doc, order.projects, startY, order);
+            
+            doc.moveTo(50, endY + 20).lineTo(560, endY + 20).stroke();
 
-            // Draw a total price below the table
-            doc.fontSize(12).text(
-                `Total: ${order.totalCost} ${order.currency}`,
-                350,
-                endY + 30,
-            );
+            doc.fontSize(12)
+                .font('Helvetica') 
+                .text('Total: ', 350, endY + 30, { continued: true })
+                .font('Helvetica-Bold') 
+                .text(`${order.totalCost} ${order.currency}`);
 
-            // Calculate the available space for the footer
-            let footerY = pageHeight - footerMargin;
-
-            // Add "Thank you for your business!" text at the bottom of the page
+            let footerY = pageHeight - footerMargin - 30;
+            
+            doc.font('Helvetica');
             doc.fontSize(12).text('Thank you for your business!', 50, footerY, {
                 align: 'center',
             });
 
-            // Move the y-position down a bit for the next line
-            footerY += 15;
+            footerY += 20;
 
-            // Add the second line of text with some margin
             doc.text(
                 'If you have any questions, feel free to contact us.',
                 50,
@@ -99,6 +139,13 @@ const generateInvoice = async (order) => {
                     align: 'center',
                 },
             );
+
+            footerY += 20;
+
+            doc.fontSize(12)
+                .text('regnskap@akeurope.org | +47 40150015', 50, footerY, { align: 'center' });
+
+           
 
             doc.end();
 
@@ -119,19 +166,17 @@ const generateInvoice = async (order) => {
 
 const drawTable = (doc, projects, startY, order) => {
     let y = startY;
-
-    // Table headers
+    doc.font('Helvetica-Bold');
     doc.fontSize(12).text('Project', 50, y);
-    doc.text('Selected\nBeneficiaries', 250, y - 14);
+    doc.text('Beneficiaries', 250, y);
     doc.text('Months', 180, y);
     doc.text(`Total Cost (${order.currency})`, 350, y);
-    doc.moveTo(50, y + 20)
-        .lineTo(550, y + 20)
-        .stroke();
+
+    doc.moveTo(50, y + 20).lineTo(560, y + 20).stroke();
 
     y += 14;
 
-    // Table rows
+    doc.font('Helvetica');
     projects.forEach((project) => {
         y += 20;
         doc.fontSize(12).text(project.detail.name, 50, y);
@@ -147,6 +192,7 @@ function deletePath(filePath) {
     if (fs.existsSync(filePath)) {
         try {
             fs.unlinkSync(filePath);
+            console.log(`File deleted successfully: ${filePath}`);
             return true;
         } catch (err) {
             console.error(`Error deleting file: ${filePath}`, err);
@@ -160,6 +206,9 @@ function deletePath(filePath) {
 
 const deleteInvoice = async (orderId) => {
     const order = await Order.findOne({ _id: orderId });
+    if (!order) {
+        throw new Error('Order does not exist');
+    }
     const customer = await Customer.findOne({ _id: order.customerId });
     const invoiceDir = path.join(__dirname, '../../invoices');
     const invoicePath = path.join(
@@ -170,7 +219,7 @@ const deleteInvoice = async (orderId) => {
 };
 
 const sendInvoiceToCustomer = async(order, customer)=> {
-    const invoicesDirectory = './invoices';
+    const invoicesDirectory = '../invoices';
     const invoiceFilename = `order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`;
     const invoicePath = path.join(invoicesDirectory, invoiceFilename);
 
@@ -205,6 +254,7 @@ const sendInvoiceToCustomer = async(order, customer)=> {
 
     try {
         await transporter.sendMail(mailOptions);
+        console.log('Invoice sent!');
         return true;
     } catch (err) {
         throw new Error(`Failed to send email: ${err.message}`);

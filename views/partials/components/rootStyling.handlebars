@@ -1,43 +1,54 @@
-@import url('https://rsms.me/inter/inter.css');
+<style>
+    @import url('https://rsms.me/inter/inter.css');
 
-:root {
---tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue,
-sans-serif;
+    :root {
+        --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue,
+            sans-serif;
 
-/* Primary color updated to #007A78 */
---tblr-primary: #007A78; /* Teal for primary color */
---tblr-primary-hover: #006864; /* Slightly darker teal for hover */
---tblr-primary-active: #005954; /* Even darker teal for active */
---tblr-primary-bg: #d5f0ef; /* Light teal for background */
-}
+        /* Primary color updated to #007A78 */
+        --tblr-primary: #007A78;
+        /* Teal for primary color */
+        --tblr-primary-hover: #006864;
+        /* Slightly darker teal for hover */
+        --tblr-primary-active: #005954;
+        /* Even darker teal for active */
+        --tblr-primary-bg: #d5f0ef;
+        /* Light teal for background */
+    }
 
-body {
-font-feature-settings: "cv03", "cv04", "cv11";
-}
+    body {
+        font-feature-settings: "cv03", "cv04", "cv11";
+    }
 
-.btn-primary {
-background-color: var(--tblr-primary) !important; /* Teal background */
-border-color: var(--tblr-primary) !important; /* Teal border */
-color: #fff !important; /* White text */
-}
+    .btn-primary {
+        background-color: var(--tblr-primary) !important;
+        /* Teal background */
+        border-color: var(--tblr-primary) !important;
+        /* Teal border */
+        color: #fff !important;
+        /* White text */
+    }
 
-.btn-primary:hover {
-background-color: var(--tblr-primary-hover) !important; /* Darker teal on hover */
-border-color: var(--tblr-primary-hover) !important;
-}
+    .btn-primary:hover {
+        background-color: var(--tblr-primary-hover) !important;
+        /* Darker teal on hover */
+        border-color: var(--tblr-primary-hover) !important;
+    }
 
-.btn-primary:active,
-.btn-primary:focus {
-background-color: var(--tblr-primary-active) !important; /* Even darker teal for active */
-border-color: var(--tblr-primary-active) !important;
-}
+    .btn-primary:active,
+    .btn-primary:focus {
+        background-color: var(--tblr-primary-active) !important;
+        /* Even darker teal for active */
+        border-color: var(--tblr-primary-active) !important;
+    }
 
 
-.card-hover {
-cursor: pointer;
-}
+    .card-hover {
+        cursor: pointer;
+    }
 
-.card-hover:hover {
-background-color: rgba(0, 123, 255, 0.1);
-transition: background-color 0.3s ease;
-}
+    .card-hover:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        transition: background-color 0.3s ease;
+    }
+</style>

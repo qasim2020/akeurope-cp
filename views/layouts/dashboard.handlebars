@@ -11,13 +11,9 @@
   <link href="/tabler/css/tabler-payments.min.css?1692870487" rel="stylesheet" />
   <link href="/tabler/css/tabler-vendors.min.css?1692870487" rel="stylesheet" />
   <link href="/tabler/css/demo.min.css?1692870487" rel="stylesheet" />
-  <style>
-    {
-        {
-        >components/rootStyling
-      }
-    }
-  </style>
+
+  {{>components/rootStyling}}
+
 </head>
 
 <body>
@@ -209,7 +205,6 @@
           document.querySelector('.card').addEventListener('click', function (event) {
             event.stopPropagation();
           });
-          refreshContainers();
         },
         error: (error) => {
           console.log(error);
