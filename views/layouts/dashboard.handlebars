@@ -190,28 +190,42 @@
       })
     }
 
-    const socket = io('http://localhost:3007');
-
-    socket.on('connect_error', (err) => {
-      console.error('Connection failed:', err);
-    });
-
-    socket.on('new-notification', (data) => {
-      $.ajax({
-        url: '/getFreshNotifications',
-        method: 'GET',
-        success: (response) => {
-          $('.notifications-container').html(response);
-          document.querySelector('.card').addEventListener('click', function (event) {
-            event.stopPropagation();
-          });
-        },
-        error: (error) => {
-          console.log(error);
-          alert(error);
-        }
+    fetch('/socket-url')
+      .then(response => response.json())
+      .then(data => {
+        socketEvents(data.socketUrl);
       })
-    });
+      .catch(error => console.error('Error fetching socket URL:', error));
+
+    const socketEvents = function (url) {
+
+      const socket = io(url);
+
+      socket.on('connect', () => {
+        console.log('Successfully connected to the server!');
+      });
+
+      socket.on('connect_error', (err) => {
+        console.error('Connection failed:', err);
+      });
+
+      socket.on('new-notification', (data) => {
+        $.ajax({
+          url: '/getFreshNotifications',
+          method: 'GET',
+          success: (response) => {
+            $('.notifications-container').html(response);
+            document.querySelector('.card').addEventListener('click', function (event) {
+              event.stopPropagation();
+            });
+          },
+          error: (error) => {
+            console.log(error);
+            alert(error);
+          }
+        })
+      });
+    }
 
   </script>
 

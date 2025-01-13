@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize, isBoarded } = require('../modules/auth');
@@ -8,5 +9,6 @@ router.get('/dashboard', authenticate, authorize("viewDashboard"), (req,res) => 
 router.get('/customer/:customerId', authenticate, authorize("viewDashboard"), customerController.customer);
 router.get('/getFreshNotifications', authenticate, authorize('viewDashboard'), dashboardController.notifications);
 router.post("/clearNotification/:logId", authenticate, authorize("editNotifications"), dashboardController.clearNotification);
+router.get('/socket-url', authenticate, authorize('viewDashboard'), (req, res) => res.json({ socketUrl: process.env.URL }) );
 
 module.exports = router;
