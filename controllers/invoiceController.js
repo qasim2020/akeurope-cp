@@ -25,13 +25,16 @@ exports.getInvoice = async (req, res) => {
             return;
         }
 
-        if (order.projects.length == 0) {
+        if (order.projects.length == 0 || order.totalCost == 0) {
             res.status(200).render('error', {
                 message: 'Invoice is created after you select beneficiaries',
                 success: true,
             });
             return;
         }
+
+        order.projects = order.projects.filter(project => project.entriesCount != 0);
+
         const invoiceDir = path.join(__dirname, '../../invoices');
 
         const filename = `order_no_${order.orderNo}_order_total_${order.totalCost}.pdf`;

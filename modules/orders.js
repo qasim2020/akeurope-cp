@@ -9,7 +9,7 @@ const { runQueriesOnOrder } = require('../modules/orderUpdates');
 const {
     getOldestPaidEntries,
     makeProjectForOrder,
-    getDateOfLastPayment,
+    getPreviousOrdersForEntry,
 } = require('../modules/ordersFetchEntries');
 const { saveLog } = require('./logAction');
 const { logTemplates } = require('./logTemplates');
@@ -380,7 +380,26 @@ const formatOrder = async (req, order) => {
             entry.detail = await entryModel
                 .findOne({ _id: entry.entryId })
                 .lean();
-            entry.lastPaid = await getDateOfLastPayment(entry.entryId);
+            entry.lastPaid = await getPreviousOrdersForEntry(
+                entry.entryId,
+                order._id,
+            );
+            if (entry.lastPaid) {
+                for (const order of entry.lastPaid) {
+                    entry.costs = entry.costs.map((cost) => {
+                        if (
+                            order.selectedSubscriptions &&
+                            order.selectedSubscriptions.includes(cost.fieldName)
+                        ) {
+                            Object.assign(cost, {
+                                prevOrder: order,
+                            });
+                            return cost;
+                        }
+                        return cost;
+                    });
+                }
+            }
         }
 
         project.detail = detail;
@@ -392,10 +411,10 @@ const formatOrder = async (req, order) => {
 };
 
 const getSingleOrder = async (req, res) => {
-    const checkOrder = await Order.findOne({ _id: req.params.orderId }).lean();
+    const checkOrder = await Order.findOne({ _id: req.params.orderId, customerId: req.session.user._id }).lean();
     let order;
     if (!checkOrder) {
-        return { _id: req.params.orderId };
+        throw new Error('Payment do not exist!');
     }
     if (checkOrder.totalCost == undefined) {
         const calculatedOrder = await calculateOrder(checkOrder);
@@ -407,14 +426,33 @@ const getSingleOrder = async (req, res) => {
     } else {
         order = await formatOrder(req, checkOrder);
     }
-    order.customer = await Customer.findById(order.customerId).lean();
+    order.customer = req.session.user;
     return order;
 };
 
 const updateOrderStatus = async (req, res) => {
+    
     const orderId = req.params.orderId || req.query.orderId;
     const { status } = req.body;
     const checkOrder = await Order.findById(orderId).lean();
+
+    if (checkOrder.totalCost == 0) {
+        throw new Error('Invoice has no selected beneficiaries.')
+    }
+
+    const projectsWithZeroSubscriptions = checkOrder.projects.filter(project => project.totalCostSingleMonth == 0);
+
+    if (projectsWithZeroSubscriptions.length > 0) {
+        for (const project of projectsWithZeroSubscriptions) {
+            await Order.updateOne(
+                { _id: orderId, 'projects.slug': project.slug },
+                {
+                    $pull: { projects: { slug: project.slug } },
+                },
+            );
+        }
+    }
+
     const order = await Order.findOneAndUpdate(
         { _id: orderId },
         { $set: { status: status } },

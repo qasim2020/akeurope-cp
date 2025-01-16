@@ -5,11 +5,13 @@ const { saveLog } = require('../modules/logAction');
 const {
     getOldestPaidEntries,
     makeProjectForOrder,
+    validateQuery,
 } = require('../modules/ordersFetchEntries');
 const { createDynamicModel } = require('../models/createDynamicModel');
 const { camelCaseWithCommaToNormalString } = require('../modules/helpers');
 
 const runQueriesOnOrder = async (req, res) => {
+    await validateQuery(req, res);
     let order;
     const orderId = req.query.orderId;
     const projectSlug = req.params.slug;
@@ -53,6 +55,10 @@ const runQueriesOnOrder = async (req, res) => {
 
     if (req.query.subscriptions && !req.query.entryId) {
         const subscriptions = req.query.subscriptions;
+        const excludedEntries = req.query.excludedEntries;
+        const excludedEntriesId = excludedEntries ? excludedEntries.map(
+            (entry) => entry.entryId,
+        ) : [];
         if (subscriptions === 'empty') {
             order = await Order.findOneAndUpdate(
                 { _id: orderId, 'projects.slug': projectSlug },
@@ -67,20 +73,51 @@ const runQueriesOnOrder = async (req, res) => {
                 },
             );
         } else {
-            order = await Order.findOneAndUpdate(
+            const tempOrder = await Order.findOneAndUpdate(
                 { _id: orderId, 'projects.slug': projectSlug },
                 {
                     $set: {
-                        'projects.$.entries.$[].selectedSubscriptions':
+                        'projects.$.entries.$[entry].selectedSubscriptions':
                             subscriptions.split(','),
                     },
                 },
                 {
                     new: true,
                     lean: true,
+                    arrayFilters: [
+                        {
+                            'entry.entryId': { $nin: excludedEntriesId },
+                        },
+                    ],
                 },
             );
+
+            for (const entry of excludedEntries) {
+                order = await Order.findOneAndUpdate(
+                    { _id: orderId, 'projects.slug': projectSlug },
+                    {
+                        $set: {
+                            'projects.$.entries.$[entry].selectedSubscriptions':
+                                entry.validSubscriptions,
+                        },
+                    },
+                    {
+                        new: true,
+                        lean: true,
+                        arrayFilters: [
+                            {
+                                'entry.entryId': entry.entryId,
+                            },
+                        ],
+                    },
+                );
+            }
+
+            if (excludedEntries.length == 0) {
+                order = tempOrder;
+            }
         }
+
         await saveLog(
             logTemplates({
                 type: 'orderColumnSubscriptionChanged',

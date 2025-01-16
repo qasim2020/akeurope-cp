@@ -10,6 +10,7 @@ router.get('/getEntryData/:slug', authenticate, authorize("viewEntry"), entryCon
 router.get('/getSingleEntryData/:entryId/project/:slug', authenticate, authorize("editEntry"), entryExistsInPaidOrder, entryController.getSingleEntryData);
 router.get('/getSingleEntryLogs/:entryId/project/:slug', authenticate, authorize("editEntry"), entryExistsInPaidOrder, entryController.getSingleEntryLogs);
 
+router.get('/getPaginatedEntriesForLockedOrder/:slug', authenticate, authorize('viewEntry'), entryController.getPaginatedEntriesForLockedOrder);
 router.get('/getPaginatedEntriesForDraftOrder/:slug', authenticate, authorize('viewEntry'), entryController.getPaginatedEntriesForDraftOrder);
 router.get('/getPaginatedEntriesForOrderPage/:slug', authenticate, authorize('viewEntry'), entryController.getPaginatedEntriesForOrderPage);
 router.get('/getOrderProjects/:orderId', authenticate, authorize('viewEntry'), entryController.getOrderProjects);

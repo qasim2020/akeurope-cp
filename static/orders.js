@@ -80,6 +80,7 @@ const searchBeneficiaries = function (elem) {
             const orderId = $(modal).find('.project-in-order').attr('orderId');
             $(modal).attr({ 'order-id': orderId });
             updateTotalCost(modal);
+            initializePopovers();
             if (!orderId) return;
             $(modal)
                 .find('.invoice-frame')
@@ -108,22 +109,29 @@ const doSearch = function (elem, href, refreshAll) {
         loadEntriesInProjectCard(elem, href);
         return;
     }
+    
+    const isLockedProjectInModal = $(elem).closest('.locked-project').length > 0;
+    if (isLockedProjectInModal) {
+        loadProjectsInLockedOrder(elem);
+        return;
+    }
 
     if (!href) {
         href = $(elem).attr('my-href');
     }
 
     const slug = $(elem).closest('.card').attr('projectSlug');
-    const orderId = $(modal).attr('order-id') || $(elem).closest('.card').attr('order-id');
-    const toggleState = $(modal).find(`.${slug}`).attr('toggleState') || $(elem).closest('.card').attr('toggleState');
+    const orderId =
+        $(modal).attr('order-id') || $(elem).closest('.card').attr('order-id');
+    const toggleState =
+        $(modal).find(`.${slug}`).attr('toggleState') ||
+        $(elem).closest('.card').attr('toggleState');
     const url = `/getPaginatedEntriesForDraftOrder/${slug}/${href}&orderId=${orderId}&toggleState=${toggleState}`;
 
     if (!orderId) {
         alert('order id is required');
         return;
     }
-
-    console.log({url, orderId, toggleState, refreshAll});
 
     startSpinner(modal);
     $.ajax({
@@ -134,6 +142,7 @@ const doSearch = function (elem, href, refreshAll) {
             endSpinner(modal);
             $(modal).find(`[projectSlug=${slug}]`).replaceWith(response);
             const isPagination = $(elem).closest('.pagination').length > 0;
+            initializePopovers();
             if (isPagination) {
                 return console.log('stopping refresh because its pagination');
             }
@@ -144,10 +153,33 @@ const doSearch = function (elem, href, refreshAll) {
                     .removeClass('d-none');
                 updateTotalCost(modal);
                 refreshContainers(modal);
-            };
+            }
         },
         error: function (error) {
             endSpinner(modal);
+            alert(error.responseText);
+        },
+    });
+};
+
+const loadProjectsInLockedOrder = function (elem, href) {
+    if (!href) {
+        href = $(elem).attr('my-href');
+    }
+    const projectCard = $(elem).closest('.locked-project');
+    const slug = $(elem).closest('.locked-project').attr('project-slug');
+    const orderId = $(elem).closest('.locked-project').attr('order-id');
+    const toggleState = $(elem).closest('.project-body').hasClass('d-none')
+        ? 'open'
+        : 'close';
+    const url = `/getPaginatedEntriesForLockedOrder/${slug}/${href}&orderId=${orderId}&toggleState=${toggleState}`;
+    $.ajax({
+        url,
+        method: 'GET',
+        success: function (response) {
+            $(projectCard).replaceWith(response);
+        },
+        error: function (error) {
             alert(error.responseText);
         },
     });
@@ -615,8 +647,19 @@ const deleteOrder = function (elem) {
 const orderStatusPendingPayment = function (elem) {
     const orderId = $(elem).closest('.modal').attr('order-id');
     const modal = $(elem).closest('.modal');
+    const totalCost = $(modal).find('.total-cost').attr('total-cost');
+    if (totalCost == 0) {
+        alert('Order can not be checked out with 0 cost.');
+        return;
+    }
     if (!orderId) {
         alert('Order does not exist!');
+        return;
+    }
+    const userResponse = confirm(
+        'Do you want to proceed? Checking out will lock this invoice for further changes.',
+    );
+    if (!userResponse) {
         return;
     }
     $.ajax({
@@ -625,11 +668,26 @@ const orderStatusPendingPayment = function (elem) {
         contentType: 'application/json',
         success: (response) => {
             $(modal).find('.search-mode').remove();
+            renderLockedOrderInModal(modal);
             $(modal).find('.invoice-status').html(response);
-            $(modal).find('.page-item.active > a').click();
             refreshContainers(modal);
         },
         error: (error) => {
+            alert(error.responseText);
+        },
+    });
+};
+
+const renderLockedOrderInModal = function (modal) {
+    const orderId = $(modal).attr('order-id');
+
+    $.ajax({
+        url: `/getLockedOrderInModal/${orderId}`,
+        method: 'GET',
+        success: function (response) {
+            $(modal).find('.projects-container-in-modal').replaceWith(response);
+        },
+        error: function (error) {
             alert(error.responseText);
         },
     });

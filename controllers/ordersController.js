@@ -215,7 +215,7 @@ exports.uploadPaymentProof = async (req, res) => {
                 .json({ message: 'Incomplete customer or order data' });
         }
 
-        const paymentsDir = path.join(__dirname, '../../payments');
+        const paymentsDir = path.join(__dirname, '../../uploads');
         if (!fs.existsSync(paymentsDir)) {
             fs.mkdirSync(paymentsDir);
         }
@@ -290,3 +290,21 @@ exports.getOrderData = async (req, res) => {
         });
     }
 };
+
+exports.getLockedOrderInModal = async(req,res) => {
+    try {
+        const order = await getSingleOrder(req, res);
+        res.render('partials/components/paymentModalEntriesInLockedOrder', {
+            layout: false,
+            data: {
+                order,
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(404).render('error', {
+            heading: 'Could not fetch locked order modal',
+            error: error,
+        });
+    }
+}

@@ -74,9 +74,15 @@
             {{/unless}}
             <div class="search-results-payment-modal-entries">
               {{#if data.order}}
-              {{#each data.order.projects}}
-              {{> components/paymentModalEntriesInDraftOrder project=this order=../data.order}}
-              {{/each}}
+              {{#if (eq data.order.status 'draft')}}
+              <div class="projects-container-in-modal">
+                {{#each data.order.projects}}
+                {{> components/paymentModalEntriesInDraftOrder project=this order=../data.order}}
+                {{/each}}
+              </div>
+              {{else}}
+              {{> components/paymentModalEntriesInLockedOrder order=../data.order}}
+              {{/if}}
               {{> components/afterProjectCards}}
               {{/if}}
             </div>

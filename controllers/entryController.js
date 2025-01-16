@@ -219,6 +219,38 @@ exports.getPaginatedEntriesForDraftOrder = async (req, res) => {
     }
 };
 
+exports.getPaginatedEntriesForLockedOrder = async (req,res) => {
+    try {
+        const orderInDb = await Order.findOne({
+            _id: req.query.orderId,
+        }).lean();
+        const order = await formatOrder(req, orderInDb);
+        const project = order.projects.find(
+            (project) => project.slug == req.params.slug,
+        );
+        if (project) {
+            Object.assign(project, {
+                detail: await Project.findOne({ slug: project.slug }).lean(),
+            });
+        }
+
+        order.projects = [project];
+
+        res.render('partials/components/paymentModalEntriesInLockedOrder', {
+            layout: false,
+            data: {
+                order,
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            error: 'Error getting paginated order',
+            details: error.message,
+        });
+    } 
+}
+
 exports.getPaginatedEntriesForOrderPage = async (req, res) => {
     try {
         const orderInDb = await Order.findOne({
@@ -250,4 +282,3 @@ exports.getPaginatedEntriesForOrderPage = async (req, res) => {
         });
     }
 };
- 

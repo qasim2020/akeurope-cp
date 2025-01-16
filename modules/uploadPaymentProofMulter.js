@@ -2,7 +2,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
-const paymentsDir = path.join(__dirname, '../../payments');
+const paymentsDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(paymentsDir)) {
     fs.mkdirSync(paymentsDir);
 }
@@ -13,7 +13,6 @@ const uploadPaymentProofMulter = multer({
       cb(null, paymentsDir);
     },
     filename: (req, file, cb) => {
-      // Use a temporary filename; we'll rename it after validations
       cb(null, `temp_${Date.now()}_${file.originalname}`);
     },
   }),

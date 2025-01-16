@@ -67,5 +67,12 @@ router.get(
     authorize('viewOrders'),
     ordersController.getOrderData,
 );
+router.get(
+    '/getLockedOrderInModal/:orderId',
+    authenticate,
+    authorize('viewOrders'),
+    ordersController.getLockedOrderInModal,
+);
+
 
 module.exports = router;

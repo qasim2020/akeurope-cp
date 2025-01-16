@@ -227,6 +227,25 @@
       });
     }
 
+    function initializePopovers() {
+      var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
+      popoverTriggerList.forEach(function (popoverTriggerEl) {
+        new bootstrap.Popover(popoverTriggerEl);
+      });
+    }
+
+    document.addEventListener('click', function (event) {
+      const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+      popoverTriggerList.forEach(function (popoverTriggerEl) {
+        const popover = bootstrap.Popover.getInstance(popoverTriggerEl);
+        if (popover && popover._isShown && !popoverTriggerEl.contains(event.target)) {
+          popover.hide();
+        }
+      });
+    });
+
+    initializePopovers();
+
   </script>
 
 </body>
