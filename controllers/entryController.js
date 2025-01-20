@@ -20,6 +20,7 @@ const {
     formatOrder,
 } = require('../modules/orders');
 const Order = require('../models/Order');
+const File = require('../models/File');
 
 
 exports.getData = async (req, res) => {
@@ -60,6 +61,8 @@ exports.entry = async (req, res) => {
         entry = await fetchEntrySubscriptionsAndPayments(entry);
         entry.currency = project.currency;
 
+        const files = await File.find({ 'links.entityId': req.params.entryId, access: 'customers' }).lean();
+
         res.render('entry', {
             layout: 'dashboard',
             data: {
@@ -73,6 +76,7 @@ exports.entry = async (req, res) => {
                 fields: project.fields,
                 layout: req.session.layout,
                 entry,
+                files,
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
                 entryLogs: await entryLogs(req, res),

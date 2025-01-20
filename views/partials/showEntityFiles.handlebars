@@ -1,0 +1,18 @@
+<div class="card-header d-flex justify-content-between">
+    <h3 class="card-title">Linked Documents</h3>
+</div>
+{{#if data.files}}
+<div class="card-body">
+    <div class="row">
+        {{#each data.files}}
+        <div class="col-3 col-md-2 text-center file" file-id="{{this._id}}" onclick="getFileModal(this)">
+            {{> components/fileSkeleton}}
+        </div>
+        {{/each}}
+    </div>
+</div>
+{{else}}
+<div class="card-body">
+    <div class="text-center py-4">No files found</div>
+</div>
+{{/if}}

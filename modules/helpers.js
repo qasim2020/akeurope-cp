@@ -256,6 +256,16 @@ function removeLinks(htmlString) {
     }
 }
 
+
+const shortenFileName = function(string) {
+    if (string.length <= 10) {
+        return string;
+    }
+    const start = string.slice(0, 5); 
+    const end = string.slice(-4);    
+    return `${start}...${end}`;       
+}
+
 module.exports = {
     eq,
     gt,
@@ -290,4 +300,5 @@ module.exports = {
     expiresOn,
     getOrderIcon,
     removeLinks,
+    shortenFileName,
 };

@@ -16,7 +16,7 @@ const authorize = (permission) => {
       return res.status(401).send(`Unauthorized: ${customerRole} can't ${permission}`);
     }
 
-    req.customerPermissions = roles[customerRole] || [];
+    req.userPermissions = roles[customerRole] || [];
     next(); 
   };
 };

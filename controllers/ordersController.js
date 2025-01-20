@@ -4,12 +4,7 @@ const path = require('path');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
-const {
-    saveLog,
-    customerLogs,
-    visibleLogs,
-    orderLogs,
-} = require('../modules/logAction');
+const { saveLog, customerLogs, visibleLogs, orderLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const {
@@ -19,11 +14,7 @@ const {
     addPaymentsToOrder,
     openOrderProjectWithEntries,
 } = require('../modules/orders');
-const {
-    generateInvoice,
-    deleteInvoice,
-    sendInvoiceToCustomer,
-} = require('../modules/invoice');
+const { generateInvoice, deleteInvoice, sendInvoiceToCustomer } = require('../modules/invoice');
 
 exports.viewOrders = async (req, res) => {
     try {
@@ -34,9 +25,7 @@ exports.viewOrders = async (req, res) => {
             data: {
                 layout: req.session.layout,
                 userName: req.session.user.name,
-                userRole:
-                    req.session.user.role.charAt(0).toUpperCase() +
-                    req.session.user.role.slice(1),
+                userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
                 activeMenu: 'orders',
                 projects: req.allProjects,
                 role: req.userPermissions,
@@ -63,10 +52,8 @@ exports.viewOrder = async (req, res) => {
             layout: 'dashboard',
             data: {
                 userName: req.session.user.name,
-                userRole:
-                    req.session.user.role.charAt(0).toUpperCase() +
-                    req.session.user.role.slice(1),
-                role: req.customerPermissions,
+                userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
+                role: req.userPermissions,
                 logs: await visibleLogs(req, res),
                 projects: await Project.find({ status: 'active' }).lean(),
                 orderLogs: await orderLogs(req, res),
@@ -203,16 +190,8 @@ exports.uploadPaymentProof = async (req, res) => {
 
         const customer = req.session.user;
 
-        if (
-            !customer ||
-            !customer.email ||
-            !order ||
-            !order.orderNo ||
-            !order.totalCost
-        ) {
-            return res
-                .status(400)
-                .json({ message: 'Incomplete customer or order data' });
+        if (!customer || !customer.email || !order || !order.orderNo || !order.totalCost) {
+            return res.status(400).json({ message: 'Incomplete customer or order data' });
         }
 
         const paymentsDir = path.join(__dirname, '../../uploads');
@@ -220,9 +199,7 @@ exports.uploadPaymentProof = async (req, res) => {
             fs.mkdirSync(paymentsDir);
         }
 
-        const newFilename = `order_no_${
-            order.orderNo
-        }_order_total_${order.totalCost}${path.extname(file.originalname)}`;
+        const newFilename = `order_no_${order.orderNo}_order_total_${order.totalCost}${path.extname(file.originalname)}`;
         const newFilePath = path.join(paymentsDir, newFilename);
 
         if (fs.existsSync(newFilePath)) {
@@ -231,11 +208,13 @@ exports.uploadPaymentProof = async (req, res) => {
 
         fs.renameSync(file.path, newFilePath);
 
-        await saveLog(logTemplates({
-            type: 'orderPaymentProofAdded',
-            entity: order,
-            actor: req.session.user,
-        }));
+        await saveLog(
+            logTemplates({
+                type: 'orderPaymentProofAdded',
+                entity: order,
+                actor: req.session.user,
+            }),
+        );
 
         req.body.status = 'processing';
 
@@ -291,7 +270,7 @@ exports.getOrderData = async (req, res) => {
     }
 };
 
-exports.getLockedOrderInModal = async(req,res) => {
+exports.getLockedOrderInModal = async (req, res) => {
     try {
         const order = await getSingleOrder(req, res);
         res.render('partials/components/paymentModalEntriesInLockedOrder', {
@@ -307,4 +286,4 @@ exports.getLockedOrderInModal = async(req,res) => {
             error: error,
         });
     }
-}
+};

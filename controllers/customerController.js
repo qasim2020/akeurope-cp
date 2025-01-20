@@ -182,7 +182,7 @@ exports.customer = async (req, res) => {
                     req.session.user.role.slice(1),
                 activeMenu: 'customers',
                 projects: await Project.find({status: 'active'}).lean(),
-                role: req.customerPermissions,
+                role: req.userPermissions,
                 logs: await visibleLogs(req, res),
                 customerLogs: await customerLogs(req, res),
                 customer,

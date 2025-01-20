@@ -1,0 +1,45 @@
+<div class="modal modal-blur fade" id="modal-{{data.file._id}}" tabindex="-1" style="display: none; padding-left: 0px;"
+    aria-modal="true" role="dialog" projSlug="new-entry" file-id="{{data.file._id}}">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header px-4">
+                <h5 class="modal-title">View Document</h5>
+                <div class="ms-auto d-flex align-items-center">
+                    <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-xl-6 col-12">
+                        <div class="mb-3">
+                            <label class="form-label" for="fileName">Document Name</label>
+                            <div>{{data.file.name}}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Document Category</label>
+                            <div>{{capitalizeFirstLetter data.file.category}}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Upload Date</label>
+                            <div>{{formatDate data.file.createdAt}}</div>
+                        </div>
+
+                    </div>
+
+                    <div class="col-xl-6 col-12" id="file-container">
+                        <iframe width="100%" height="755px" style="border: none;"
+                            src="/file/{{data.file._id}}"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary close-modal" data-bs-dismiss="modal"> Close </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button href="#" class="btn btn-primary d-none" id="button-{{data.file._id}}" data-bs-toggle="modal"
+    data-bs-target="#modal-{{data.file._id}}"></button>

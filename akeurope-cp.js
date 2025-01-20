@@ -14,6 +14,7 @@ const invoiceRoutes = require('./routes/invoiceRoutes');
 const orderRoutes = require('./routes/ordersRoutes');
 const entryRoutes = require('./routes/entryRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const filesRoutes = require('./routes/filesRoutes');
 
 require('dotenv').config();
 mongoose();
@@ -52,6 +53,7 @@ app.use(invoiceRoutes);
 app.use(entryRoutes);
 app.use(orderRoutes);
 app.use(customerRoutes);
+app.use(filesRoutes);
 
 app.get('/', (req, res) => {
   if (req.session.user) {
