@@ -125,10 +125,7 @@ exports.updateCustomer = async (req, res) => {
                 }),
             );
 
-            await Customer.findByIdAndUpdate(
-                req.params.customerId,
-                updatedFields,
-            );
+            await Customer.findByIdAndUpdate(req.params.customerId, updatedFields);
         }
 
         res.status(200).send('Customer updated successfully!');
@@ -157,10 +154,8 @@ exports.customer = async (req, res) => {
             });
             return;
         }
-        
-        const customer = await Customer.findById(
-            req.session.user._id,
-        ).lean();
+
+        const customer = await Customer.findById(req.session.user._id).lean();
 
         customer.projectsOpened = await Promise.all(
             customer.projects.map(async (val) => {
@@ -170,18 +165,18 @@ exports.customer = async (req, res) => {
 
         const orders = await Order.find({
             customerId: req.session.user._id,
-        }).sort({_id: -1}).lean();
+        })
+            .sort({ _id: -1 })
+            .lean();
 
         res.render('customer', {
             layout: 'dashboard',
             data: {
                 layout: req.session.layout,
                 userName: req.session.user.name,
-                userRole:
-                    req.session.user.role.charAt(0).toUpperCase() +
-                    req.session.user.role.slice(1),
+                userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
                 activeMenu: 'customers',
-                projects: await Project.find({status: 'active'}).lean(),
+                projects: await Project.find({ status: 'active' }).lean(),
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
                 customerLogs: await customerLogs(req, res),

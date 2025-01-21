@@ -60,7 +60,12 @@ exports.viewOrder = async (req, res) => {
                 orderLogs: await orderLogs(req, res),
                 activeMenu: 'orders',
                 order,
-                files: await File.find({ 'links.entityId': req.params.orderId, access: 'customers' }).lean()
+                files: await File.find({
+                    'links.entityId': req.params.orderId,
+                    access: {
+                        $in: ['customer', 'customers'],
+                    },
+                }).lean(),
             },
         });
     } catch (error) {
@@ -223,8 +228,8 @@ exports.uploadPaymentProof = async (req, res) => {
             uploadedBy: {
                 actorType: 'customer',
                 actorId: req.session.user._id,
-                actorUrl: `/customer/${req.session.user._id}`
-            }
+                actorUrl: `/customer/${req.session.user._id}`,
+            },
         });
 
         await newFile.save();
