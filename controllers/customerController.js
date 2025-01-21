@@ -18,14 +18,8 @@ const Order = require('../models/Order');
 exports.getCustomerData = async (req, res) => {
     try {
         const customer = await Customer.findOne({
-            _id: req.params.customerId,
+            _id: req.session.user._id
         }).lean();
-
-        customer.projectsOpened = await Promise.all(
-            customer.projects.map(async (val) => {
-                return await Project.findOne({ slug: val }).lean();
-            }),
-        );
 
         res.render('partials/showCustomer', {
             layout: false,
@@ -45,7 +39,7 @@ exports.getCustomerData = async (req, res) => {
 exports.editModal = async (req, res) => {
     try {
         const customer = await Customer.findOne({
-            _id: req.params.customerId,
+            _id: req.session.user._id
         }).lean();
 
         res.render('partials/editCustomerModal', {
@@ -66,7 +60,7 @@ exports.editModal = async (req, res) => {
 
 exports.updateCustomer = async (req, res) => {
     try {
-        const { name, organization, location, projects } = req.body;
+        const { name, organization, location  } = req.body;
 
         let check = [];
 
@@ -75,30 +69,6 @@ exports.updateCustomer = async (req, res) => {
                 elem: '.name',
                 msg: 'Name contains only letters and spaces and is at least three characters long',
             });
-        }
-
-        await Promise.all(
-            projects.map(async (slug) => {
-                let project = await Project.findOne({ slug });
-                if (!project) {
-                    check.push({
-                        elem: '.projects',
-                        msg: `Project ${slug} was not foud!`,
-                    });
-                }
-                if (project.status == 'inactive') {
-                    check.push({
-                        elem: '.projects',
-                        msg: `Project ${slug} is not Active!`,
-                    });
-                }
-            }),
-        );
-
-        const customer = await Customer.findById(req.params.customerId);
-
-        if (!customer) {
-            check.push({ msg: 'Customer not found.' });
         }
 
         if (check.length > 0) {
@@ -110,8 +80,9 @@ exports.updateCustomer = async (req, res) => {
             name,
             organization,
             location,
-            projects,
         };
+
+        const customer = await Customer.findById(req.session.user._id).lean();
 
         const changes = getChanges(customer, updatedFields);
 
@@ -125,7 +96,7 @@ exports.updateCustomer = async (req, res) => {
                 }),
             );
 
-            await Customer.findByIdAndUpdate(req.params.customerId, updatedFields);
+            await Customer.findByIdAndUpdate({_id: req.session.user._id}, updatedFields);
         }
 
         res.status(200).send('Customer updated successfully!');
@@ -140,7 +111,7 @@ exports.getLogs = async (req, res) => {
         layout: false,
         data: {
             customerLogs: await customerLogs(req, res),
-            customer: await Customer.findById(req.params.customerId).lean(),
+            customer: await Customer.findById(req.session.user._id).lean(),
         },
     });
 };
@@ -156,13 +127,7 @@ exports.customer = async (req, res) => {
         }
 
         const customer = await Customer.findById(req.session.user._id).lean();
-
-        customer.projectsOpened = await Promise.all(
-            customer.projects.map(async (val) => {
-                return await Project.findOne({ slug: val }).lean();
-            }),
-        );
-
+        
         const orders = await Order.find({
             customerId: req.session.user._id,
         })

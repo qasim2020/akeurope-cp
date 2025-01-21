@@ -113,6 +113,8 @@ const projectEntries = async function(req, res) {
 
 const getOrdersByEntryId = async (req, res) => {
     const orders = await Order.find({
+        customerId: req.session.user._id,
+        status: 'paid',
         'projects.entries': {
             $elemMatch: {
                 entryId: req.params.entryId,

@@ -14,6 +14,7 @@ router.get('/reset/:token', passwordController.resetPasswordForm);
 router.post('/reset/:token', passwordController.resetPassword);
 
 router.get('/register', authController.register);
+router.post('/sendRegistrationLink', authController.sendRegistrationLink);
 router.post('/registerDirect', authController.registerDirect);
 
 module.exports = router;

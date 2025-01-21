@@ -7,8 +7,8 @@ const entryController = require('../controllers/entryController');
 router.get('/entry/:entryId/project/:slug', authenticate, authorize("viewEntry"), entryExistsInPaidOrder, allProjects, entryController.entry);
 router.get('/getEntryData/:slug', authenticate, authorize("viewEntry"), entryController.getData);
 
-router.get('/getSingleEntryData/:entryId/project/:slug', authenticate, authorize("editEntry"), entryExistsInPaidOrder, entryController.getSingleEntryData);
-router.get('/getSingleEntryLogs/:entryId/project/:slug', authenticate, authorize("editEntry"), entryExistsInPaidOrder, entryController.getSingleEntryLogs);
+router.get('/getSingleEntryData/:entryId/project/:slug', authenticate, authorize("viewEntry"), entryExistsInPaidOrder, entryController.getSingleEntryData);
+router.get('/getSingleEntryLogs/:entryId/project/:slug', authenticate, authorize("viewEntry"), entryExistsInPaidOrder, entryController.getSingleEntryLogs);
 
 router.get('/getPaginatedEntriesForLockedOrder/:slug', authenticate, authorize('viewEntry'), entryController.getPaginatedEntriesForLockedOrder);
 router.get('/getPaginatedEntriesForDraftOrder/:slug', authenticate, authorize('viewEntry'), entryController.getPaginatedEntriesForDraftOrder);

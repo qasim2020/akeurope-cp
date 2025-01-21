@@ -21,6 +21,8 @@ const roles = {
         'editFiles',
         'deleteFiles',
         'updateFiles',
+        'editSelf',
+        'viewSelf'
     ]
 };
 

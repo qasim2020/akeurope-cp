@@ -62,26 +62,6 @@
           </div>
         </div>
 
-        <div class="datagrid-item">
-          <div class="datagrid-title">Projects</div>
-          <div class="datagrid-content">
-            {{#each customer.projectsOpened}}
-            <span class="badge bg-blue-lt mb-1">{{this.name}}</span>
-            {{/each}}
-          </div>
-        </div>
-
-        <div class="datagrid-item">
-          <div class="datagrid-title">Subscriptions</div>
-          <div class="datagrid-content">
-            {{#if customer.subscriptions}}
-            <span>{{customer.subscriptions.length}}</span>
-            {{else}}
-            <span>0</span>
-            {{/if}}
-          </div>
-        </div>
-
       </div>
     </div>
 

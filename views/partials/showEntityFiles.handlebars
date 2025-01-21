@@ -1,5 +1,9 @@
 <div class="card-header d-flex justify-content-between">
+    {{#if beneficiary}}
+    <h3 class="card-title">Reports</h3>
+    {{else}}
     <h3 class="card-title">Linked Documents</h3>
+    {{/if}}
 </div>
 {{#if data.files}}
 <div style="overflow-x: auto;">
@@ -28,6 +32,11 @@
 </div>
 {{else}}
 <div class="card-body">
-    <div class="text-center py-4">No files found</div>
+    {{#if beneficiary}}
+    <div class="text-center py-4">So far no reports have been added. As they are added to beneficiaries, these will be listed here.</div>
+    {{/if}}
+    {{#if order}}
+    <div class="text-center py-4">No documents found.</div>
+    {{/if}}
 </div>
 {{/if}}

@@ -141,7 +141,7 @@ const userLogs = async (req, res) => {
 const customerLogs = async (req, res) => {
     try {
         const orders = await Order.find({
-            customerId: req.params.customerId,
+            customerId: req.session.user._id
         }).lean();
 
         const query = {

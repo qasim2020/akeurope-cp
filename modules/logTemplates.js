@@ -1,18 +1,6 @@
-const logTemplates = ({
-    type,
-    entity,
-    actor,
-    project,
-    order,
-    entry,
-    color,
-    customer,
-    changes,
-}) => {
+const logTemplates = ({ type, entity, actor, project, order, entry, color, customer, changes }) => {
     if (!type || !entity || !actor) {
-        throw new Error(
-            'Missing required parameters: type, entity, and actor are mandatory.',
-        );
+        throw new Error('Missing required parameters: type, entity, and actor are mandatory.');
     }
 
     const commons = (entityType, entityId) => ({
@@ -181,15 +169,11 @@ const logTemplates = ({
             order && project
                 ? {
                       ...commons('order', entity._id),
-                      action: `<a href="/entry/${entity._id}/project/${
-                          project.slug
-                      }">${entity.name}</a> in project <a href="/project/${
-                          project.slug
-                      }">${
+                      action: `<a href="/entry/${entity._id}/project/${project.slug}">${
+                          entity.name
+                      }</a> in project <a href="/project/${project.slug}">${
                           project.detail ? project.detail.name : project.name
-                      }</a> selected in <a href="/order/${order._id}">Invoice-${
-                          order.orderNo
-                      }</a>`,
+                      }</a> selected in <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
                       changes,
                       color: 'green',
                   }
@@ -198,15 +182,11 @@ const logTemplates = ({
             order && project
                 ? {
                       ...commons('order', entity._id),
-                      action: `<a href="/entry/${entity._id}/project/${
-                          project.slug
-                      }">${entity.name}</a> in project <a href="/project/${
-                          project.slug
-                      }">${
+                      action: `<a href="/entry/${entity._id}/project/${project.slug}">${
+                          entity.name
+                      }</a> in project <a href="/project/${project.slug}">${
                           project.detail ? project.detail.name : project.name
-                      }</a> removed from <a href="/order/${
-                          order._id
-                      }">Invoice-${order.orderNo}</a>`,
+                      }</a> removed from <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
                       changes,
                       color: 'red',
                   }
@@ -215,15 +195,11 @@ const logTemplates = ({
             order && project
                 ? {
                       ...commons('order', entity._id),
-                      action: `<a href="/entry/${entity._id}/project/${
-                          project.slug
-                      }">${entity.name}</a> in project <a href="/project/${
-                          project.slug
-                      }">${
+                      action: `<a href="/entry/${entity._id}/project/${project.slug}">${
+                          entity.name
+                      }</a> in project <a href="/project/${project.slug}">${
                           project.detail ? project.detail.name : project.name
-                      }</a> status changed in <a href="/order/${
-                          order._id
-                      }">Invoice-${order.orderNo}</a>`,
+                      }</a> status changed in <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
                       changes,
                       color: color ? color : 'blue',
                   }
@@ -232,15 +208,11 @@ const logTemplates = ({
             order && project && changes
                 ? {
                       ...commons('order', entity._id),
-                      action: `Subscription changed for <a href="/entry/${
-                          entity._id
-                      }/project/${project.slug}">${
+                      action: `Subscription changed for <a href="/entry/${entity._id}/project/${project.slug}">${
                           entity.name
                       }</a> in project <a href="/project/${project.slug}">${
                           project.detail ? project.detail.name : project.name
-                      }</a> of <a href="/order/${order._id}">Invoice-${
-                          order.orderNo
-                      }</a>`,
+                      }</a> of <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
                       changes,
                       color: 'blue',
                   }
@@ -287,12 +259,8 @@ const logTemplates = ({
             ? {
                   ...commons('order', entity._id),
                   action: `${
-                      project.selection
-                          ? project.selection.entries.length
-                          : null
-                  } x entries selected in project <a href="/project/${
-                      project.slug
-                  }">${project.name}</a> of <a href="/order/${
+                      project.selection ? project.selection.entries.length : null
+                  } x entries selected in project <a href="/project/${project.slug}">${project.name}</a> of <a href="/order/${
                       entity._id
                   }">Invoice-${entity.orderNo}</a>`,
                   color: 'blue',
@@ -317,7 +285,7 @@ const logTemplates = ({
             action: `<a href="/order/${entity._id}">Invoice-${entity.orderNo}</a> status changed to Paid`,
             isNotification: true,
             isReadByCustomer: true,
-            color: 'green', 
+            color: 'green',
         },
         orderPaymentProofAdded: {
             ...commons('order', entity._id),
@@ -330,6 +298,14 @@ const logTemplates = ({
             ...commons('order', entity._id),
             action: `<a href="/order/${entity._id}">Invoice-${entity.orderNo}</a> deleted`,
             color: 'red',
+        },
+        // CUSTOMER DIRECT REGISTRATION
+        newCustomerDirectRegistrationStarted: {
+            ...commons('customer', entity._id),
+            action: `<a href="/customer/${entity._id}">${entity.name}</a> started registration and sent a registration link to his/her email`,
+            color: 'red',
+            isNotification: true,
+            isReadByCustomer: true,
         },
     };
 

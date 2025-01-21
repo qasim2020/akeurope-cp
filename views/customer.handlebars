@@ -20,13 +20,9 @@
   </div>
 </div>
 
-{{#if (findInArray data.role "editCustomers")}}
 {{> editCustomerModal}}
-{{/if}}
 
-{{#if (findInArray data.role "createOrders")}}
 {{> emptyOrderModal}}
-{{/if}}
 
 <script src="/static/orders.js"></script>
 <script>
@@ -65,7 +61,6 @@
       }
     });
   }
-
 
   const showDataAsSuch = function (url, containerId) {
     $.ajax({
@@ -125,26 +120,15 @@
       .map((key, val) => $(val).val())
       .get();
 
-    if (projects.length == 0) {
-      $(elem).closest(".modal").find(".projects").find(".form-selectgroup-label").addClass("border-red");
-      $(elem).closest(".modal").find(".projects").append(`<div class="d-block invalid-feedback">Invalid entry</div> `);
-      isValid.push(false);
-    } else {
-      $(elem).closest(".modal").find(".projects").find(".form-selectgroup-label").removeClass("border-red");
-    }
-
-    data.projects = projects;
-
     if (!(isValid.every(val => val === true))) {
       return false;
     }
 
-    const customerId = $(elem).closest(".modal").attr("customerId");
     let currentBtnHTML = $(elem).html();
     $(elem).html(`<span class="spinner-border spinner-border-sm me-2" role="status"></span>`);
 
     $.ajax({
-      url: `/customer/update/${customerId}`,
+      url: `/customer/update`,
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(data),
@@ -200,6 +184,5 @@
       }
     })
   }
-
 
 </script>

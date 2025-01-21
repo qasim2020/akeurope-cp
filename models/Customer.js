@@ -10,14 +10,19 @@ const CustomerSchema = new mongoose.Schema({
     password: { type : String },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
     emailStatus: { type: String },
-    projects: [{ type: String, ref: 'Project' }],
-    subscriptions: [{ type: mongoose.Types.ObjectId }],
     inviteToken: String,
     inviteExpires: Date,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
 });
 
+CustomerSchema.pre('findOneAndUpdate', async function (next) {
+    const update = this.getUpdate();
+    if (update.$set && update.$set.password) {
+        update.$set.password = await bcrypt.hash(update.$set.password, 10);
+    }
+    next();
+});
 
 CustomerSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();

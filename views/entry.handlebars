@@ -5,16 +5,16 @@
       <div class="col">
         <!-- Page pre-title -->
         <div class="page-pretitle"> Overview </div>
-        <h2 class="page-title"> 
-            {{#if data.entry}}
-              {{#if data.entry.name}}
-            {{data.entry.name}}
-              {{else}}
-            {{lookup data.entry (findPrimaryKey data.project.fields)}}
-              {{/if}}
-            {{else}}
-            Entry deleted
-            {{/if}}
+        <h2 class="page-title">
+          {{#if data.entry}}
+          {{#if data.entry.name}}
+          {{data.entry.name}}
+          {{else}}
+          {{lookup data.entry (findPrimaryKey data.project.fields)}}
+          {{/if}}
+          {{else}}
+          Entry deleted
+          {{/if}}
           </ol>
         </h2>
       </div>
@@ -22,12 +22,30 @@
       <div class="col-auto ms-auto d-print-none">
         <div class="btn-list">
           {{#if (findInArray data.role "editEntry")}}
-          <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#createNewEntry" data-bs-toggle="modal" data-bs-target="#modal-{{data.entry._id}}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus"> <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /> <path d="M13.5 6.5l4 4" /> <path d="M16 19h6" /> <path d="M19 16v6" /> </svg>
+          <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#createNewEntry" data-bs-toggle="modal"
+            data-bs-target="#modal-{{data.entry._id}}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+              <path d="M13.5 6.5l4 4" />
+              <path d="M16 19h6" />
+              <path d="M19 16v6" />
+            </svg>
             Edit Entry
           </a>
-          <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-new-entry" aria-label="modal-new-entry">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus"> <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /> <path d="M13.5 6.5l4 4" /> <path d="M16 19h6" /> <path d="M19 16v6" /> </svg>
+          <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
+            data-bs-target="#modal-new-entry" aria-label="modal-new-entry">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+              <path d="M13.5 6.5l4 4" />
+              <path d="M16 19h6" />
+              <path d="M19 16v6" />
+            </svg>
           </a>
           {{/if}}
         </div>
@@ -40,41 +58,41 @@
   <div class="row row-deck row-cards">
     {{> showEntry}}
     <div class="d-block col-12 col-md-8">
-    {{> showEntryPayments}}
-    <div class="card mb-3" id="files-container">
-        {{> showEntityFiles}}
+      {{> showEntryPayments}}
+      <div class="card mb-3" id="files-container">
+        {{> showEntityFiles beneficiary=true}}
       </div>
-    {{> showEntryLogs}}
+      {{> showEntryLogs}}
     </div>
   </div>
 </div>
 
 {{#if (findInArray data.role "editEntry")}}
-  {{> editEntryModal}}
+{{> editEntryModal}}
 {{/if}}
 
 {{#if (findInArray data.role "createOrders")}}
-  {{> emptyOrderModal}}
+{{> emptyOrderModal}}
 {{/if}}
 
 <script>
 
-  const deleteEntry = function(elem) {
+  const deleteEntry = function (elem) {
     const entryId = $(elem).attr("entry-id");
     $.ajax({
-        url: '/project/entry/delete/{{data.project.slug}}',
-        method: 'POST',
-        data: {entryId}, 
-        success: function(response) {
-            $(elem).closest(".data-row").remove();
-        },
-        error: function(error) {
-            alert(error.responseText)
-        }
-      });  
+      url: '/project/entry/delete/{{data.project.slug}}',
+      method: 'POST',
+      data: { entryId },
+      success: function (response) {
+        $(elem).closest(".data-row").remove();
+      },
+      error: function (error) {
+        alert(error.responseText)
+      }
+    });
   }
 
-  const editEntry = function(elem) {
+  const editEntry = function (elem) {
 
     $(elem).closest(".modal").find("input").removeClass("is-invalid");
     $(elem).closest(".modal").find(".invalid-feedback").remove();
@@ -84,7 +102,7 @@
 
     let isValid = [];
 
-    $(elem).closest(".modal").find(".entry-input").each( (key, val) => {
+    $(elem).closest(".modal").find(".entry-input").each((key, val) => {
       if ($(val).val() == "") {
         $(val).addClass("is-invalid")
         if ($(val).siblings("span").length > 0) {
@@ -102,18 +120,18 @@
     });
 
     const data = $(elem)
-        .closest(".modal")
-        .find(".form-select, input, textarea")
-        .toArray() 
-        .reduce((total, val) => {
-            Object.assign(total, {
-                [$(val).attr("name")]: $(val).val()
-            });
-            return total;
-        }, {});
+      .closest(".modal")
+      .find(".form-select, input, textarea")
+      .toArray()
+      .reduce((total, val) => {
+        Object.assign(total, {
+          [$(val).attr("name")]: $(val).val()
+        });
+        return total;
+      }, {});
 
     if (!(isValid.every(val => val === true))) {
-        return false;
+      return false;
     }
 
     let currentBtnHTML = $(elem).html();
@@ -125,14 +143,14 @@
     $.ajax({
       url: `/project/entry/update/{{data.project.slug}}/${entryId}`,
       type: 'POST',
-      contentType: 'application/json', 
+      contentType: 'application/json',
       data: JSON.stringify(data),
-      success: function(response) {
+      success: function (response) {
         $(elem).html(currentBtnHTML);
         showDataAsSuch('/getSingleEntryData/{{data.entry._id}}/project/{{data.project.slug}}', '#entry-container');
         showDataAsSuch('/getSingleEntryLogs/{{data.entry._id}}/project/{{data.project.slug}}', '#logs-container');
       },
-      error: function(xhr, status, error) {
+      error: function (xhr, status, error) {
         $(elem).html(currentBtnHTML);
         $(".modal-footer").append(`
         <div class="w-100 d-block alert alert-danger mt-4" role="alert">
@@ -140,36 +158,36 @@
           <div class="text-secondary">${xhr.responseText}</div>
         </div>`);
       }
-    }); 
+    });
 
-}
+  }
 
-const showDataAsSuch = function(url, containerId) {
-  $.ajax({
-    url: url, 
-    method: 'GET',
-    success: function(response) {
-      $(containerId).replaceWith(response);
-    },
-    error: function(error) {
+  const showDataAsSuch = function (url, containerId) {
+    $.ajax({
+      url: url,
+      method: 'GET',
+      success: function (response) {
+        $(containerId).replaceWith(response);
+      },
+      error: function (error) {
         alert(error.responseText);
-    }
-  }); 
-}
+      }
+    });
+  }
 
-const getEntryLogs = function(elem, href) {
+  const getEntryLogs = function (elem, href) {
     href = href || $(elem).attr("my-href");
     $.ajax({
-        url: href,
-        method: 'GET',
-        success: function (response) {
-            $('#logs-container').replaceWith(response);
-        },
-        error: function (error) {
-            $('#logs-container').html(error.responseText);
-        }
+      url: href,
+      method: 'GET',
+      success: function (response) {
+        $('#logs-container').replaceWith(response);
+      },
+      error: function (error) {
+        $('#logs-container').html(error.responseText);
+      }
     })
-}
+  }
 
 
 </script>
