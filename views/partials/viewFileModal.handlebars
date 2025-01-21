@@ -16,9 +16,16 @@
                             <div>{{data.file.name}}</div>
                         </div>
 
+                        {{#if data.file.notes}}
+                        <div class="mb-3">
+                            <label class="form-label" for="fileName">Document Notes</label>
+                            <div>{{data.file.notes}}</div>
+                        </div>
+                        {{/if}}
+
                         <div class="mb-3">
                             <label class="form-label">Document Category</label>
-                            <div>{{capitalizeFirstLetter data.file.category}}</div>
+                            <div>{{camelCaseToNormalString data.file.category}}</div>
                         </div>
 
                         <div class="mb-3">

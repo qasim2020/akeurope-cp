@@ -742,7 +742,13 @@ const toggleInvoice = function (elem) {
 };
 
 const uploadPaymentProof = function (elem) {
-    $(elem).closest('.modal').find('.file-input').click();
+    const modal = $(elem).closest('.modal');
+    if (modal.length > 0) {
+        $(elem).closest('.modal').find('.file-input').click();
+    } else {
+        $(document).find('.file-input').click();
+        console.log($(document).find('.file-input'));
+    }
 };
 
 $(document).on('change', '.file-input', function (e) {
@@ -770,6 +776,7 @@ $(document).on('change', '.file-input', function (e) {
         contentType: false,
         success: function (response) {
             updateTotalCost(modal);
+            refreshContainers();
         },
         error: function (xhr, status, error) {
             alert('Error uploading file: ' + (xhr.responseText || error));

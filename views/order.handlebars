@@ -3,7 +3,8 @@
     <div class="row g-2 align-items-center">
       <div class="col">
         <div class="page-pretitle"> Overview </div>
-        <h2 class="page-title"> Invoice {{data.order.orderNo}} <span class="d-flex ms-1">{{{getOrderIcon data.order.status}}}</span>
+        <h2 class="page-title"> Invoice {{data.order.orderNo}} <span class="d-flex ms-1">{{{getOrderIcon
+            data.order.status}}}</span>
         </h2>
       </div>
       {{#if data.order.customer}}
@@ -46,13 +47,20 @@
 </div>
 <div class="m-3 pt-4 m-auto container-xl" id="data-container">
   {{> showOrderEntries}}
+  <div class="card mb-3">
+    <div class="card-body">
+      {{>components/invoice-status order=data.order body=true}}
+    </div>
+  </div>
   <div class="row row-deck row-cards">
     <div class="col-12 col-md-6 mb-auto d-flex flex-column">
-      {{!-- {{> showOrderDocs}} --}}
       {{> showOrder}}
       {{> showOrderInvoice}}
     </div>
     <div class="d-block col-12 col-md-6">
+      <div class="card mb-3" id="files-container">
+        {{> showEntityFiles}}
+      </div>
       {{> showOrderLogs}}
     </div>
   </div>
@@ -65,13 +73,27 @@
 <script>
 
   const refreshContainers = function (modal) {
-    console.log('refreshing containers');
-    const hrefOrder = `/getOrderData/${$(modal).attr('order-id')}`;
+    const hrefOrder = `/getOrderData/{{data.order._id}}`;
     loadOrderInContainer(modal, hrefOrder);
-    const hrefLogs = `/getOrderLogs/${$(modal).attr('order-id')}?page=1`;
+    const hrefLogs = `/getOrderLogs/{{data.order._id}}`;
     getOrderLogs(modal, hrefLogs);
     const hrefProjects = `/getOrderProjects/{{data.order._id}}`;
     loadOrderProjects(hrefProjects);
+    const hrefFiles = `/filesByEntityRender/{{data.order._id}}`;
+    loadOrderFiles(hrefFiles);
+  }
+
+  const loadOrderFiles = function (href) {
+    $.ajax({
+      url: href,
+      method: 'GET',
+      success: function (response) {
+        $(`#files-container`).html(response);
+      },
+      error: function (error) {
+        alert(error.responseText);
+      }
+    });
   }
 
   const loadOrderInContainer = function (elem, href) {

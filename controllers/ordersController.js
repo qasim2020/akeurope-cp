@@ -4,6 +4,7 @@ const path = require('path');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
+const File = require('../models/File');
 const { saveLog, customerLogs, visibleLogs, orderLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
@@ -59,6 +60,7 @@ exports.viewOrder = async (req, res) => {
                 orderLogs: await orderLogs(req, res),
                 activeMenu: 'orders',
                 order,
+                files: await File.find({ 'links.entityId': req.params.orderId, access: 'customers' }).lean()
             },
         });
     } catch (error) {
@@ -138,9 +140,8 @@ exports.orderStatusPendingPayment = async (req, res) => {
         }
         res.status(200).render('partials/components/invoice-status', {
             layout: false,
-            data: {
-                order,
-            },
+            order,
+            modal: true,
         });
     } catch (error) {
         console.log(error);
@@ -194,19 +195,39 @@ exports.uploadPaymentProof = async (req, res) => {
             return res.status(400).json({ message: 'Incomplete customer or order data' });
         }
 
-        const paymentsDir = path.join(__dirname, '../../uploads');
-        if (!fs.existsSync(paymentsDir)) {
-            fs.mkdirSync(paymentsDir);
-        }
+        req.body.status = 'processing';
 
-        const newFilename = `order_no_${order.orderNo}_order_total_${order.totalCost}${path.extname(file.originalname)}`;
-        const newFilePath = path.join(paymentsDir, newFilename);
+        await updateOrderStatus(req, res);
 
-        if (fs.existsSync(newFilePath)) {
-            fs.unlinkSync(newFilePath);
-        }
+        const links = [
+            {
+                entityId: orderId,
+                entityType: 'order',
+                entityUrl: `/order/${orderId}`,
+            },
+            {
+                entityId: req.session.user._id,
+                entityType: 'customer',
+                entityUrl: `/customer/${req.session.user._id}`,
+            },
+        ];
 
-        fs.renameSync(file.path, newFilePath);
+        const newFile = new File({
+            links,
+            category: 'paymentProof',
+            access: ['customers'],
+            name: file.filename,
+            size: file.size / 1000,
+            path: `/uploads/${file.filename}`,
+            mimeType: file.mimetype,
+            uploadedBy: {
+                actorType: 'customer',
+                actorId: req.session.user._id,
+                actorUrl: `/customer/${req.session.user._id}`
+            }
+        });
+
+        await newFile.save();
 
         await saveLog(
             logTemplates({
@@ -215,10 +236,6 @@ exports.uploadPaymentProof = async (req, res) => {
                 actor: req.session.user,
             }),
         );
-
-        req.body.status = 'processing';
-
-        await updateOrderStatus(req, res);
 
         res.json({ message: 'File saved' });
     } catch (error) {

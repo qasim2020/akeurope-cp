@@ -13,7 +13,7 @@ const uploadPaymentProofMulter = multer({
       cb(null, paymentsDir);
     },
     filename: (req, file, cb) => {
-      cb(null, `temp_${Date.now()}_${file.originalname}`);
+      cb(null, `${Date.now()}_${file.originalname}`);
     },
   }),
   fileFilter: (req, file, cb) => {

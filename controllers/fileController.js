@@ -101,7 +101,9 @@ exports.renderEntityFiles = async (req, res) => {
         if (req.userPermissions.includes('changeFilesAccess')) {
             files = await File.find({ 'links.entityId': req.params.entityId }).sort({ uploadDate: -1 }).lean();
         } else {
-            files = await File.find({ 'links.entityId': req.params.entityId, access: 'customers' }).sort({ uploadDate: -1 }).lean();
+            files = await File.find({ 'links.entityId': req.params.entityId, access: 'customers' })
+                .sort({ uploadDate: -1 })
+                .lean();
         }
         res.status(200).render('partials/showEntityFiles', {
             layout: false,
@@ -117,12 +119,16 @@ exports.renderEntityFiles = async (req, res) => {
 
 exports.file = async (req, res) => {
     try {
-
         let file;
         if (req.userPermissions.includes('changeFilesAccess')) {
             file = await File.findById(req.params.fileId).lean();
         } else {
-            file = await File.findOne({ _id: req.params.fileId, access: 'customers' }).lean();
+            file = await File.findOne({
+                _id: req.params.fileId,
+                access: {
+                    $in: ['customer', 'customers'],
+                },
+            }).lean();
         }
 
         if (!file) {
@@ -172,14 +178,14 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     try {
         const { fileId } = req.params;
-        
+
         let file;
 
         if (req.user?.role === 'admin') {
             file = await File.findOneAndDelete({ _id: fileId });
         } else {
             file = await await File.findOneAndDelete({ _id: fileId, access: 'editors' });
-        } 
+        }
 
         if (!file) return res.status(404).send('File not found');
 
@@ -201,8 +207,13 @@ exports.getFileModal = async (req, res) => {
         if (req.userPermissions.includes('changeFilesAccess')) {
             file = await File.findById(req.params.fileId).lean();
         } else {
-            file = await File.findOne({_id: req.params.fileId, access: 'customers'}).lean();
-        } 
+            file = await File.findOne({
+                _id: req.params.fileId,
+                access: {
+                    $in: ['customer', 'customers'],
+                },
+            }).lean();
+        }
 
         if (!file) {
             return res.status(404).send({ error: 'File not found' });
@@ -231,10 +242,11 @@ exports.getFileModal = async (req, res) => {
             layout: false,
             data: {
                 file,
-                role: req.userPermissions
+                role: req.userPermissions,
             },
         });
     } catch (error) {
+        console.log(error);
         res.status(500).json({
             error: 'Error occured while fetching file modal',
             details: error.message,
