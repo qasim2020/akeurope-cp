@@ -19,6 +19,9 @@ exports.login = async (req, res) => {
         const customer = await Customer.findOne({ email, password: { $exists: true } });
 
         if (customer && (await customer.comparePassword(password))) {
+            if (customer.status === 'blocked') {
+                return res.status(400).send('Customer is blocked. Please contact akeurope team to resolve the issue.');
+            }
             req.session.user = customer;
             if (rememberMe) {
                 req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;

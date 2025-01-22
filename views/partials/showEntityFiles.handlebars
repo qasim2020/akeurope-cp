@@ -19,7 +19,7 @@
         <tbody>
             {{#each data.files}}
             <tr file-id="{{this._id}}" onclick="getFileModal(this)" style="cursor: pointer;">
-                <td>{{shortenFileName this.name}}</td>
+                <td class="text-blue">{{shortenFileName this.name}}</td>
                 <td>
                     <span class="badge">{{camelCaseToNormalString this.category}}</span>
                 </td>
