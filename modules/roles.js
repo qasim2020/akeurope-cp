@@ -1,11 +1,5 @@
 const roles = {
-    admin: [
-        
-    ],
-    editor: [
-        
-    ],
-    viewer: [
+    owner: [
         'viewDashboard', 
         'viewEntry',
         'viewOrders',
@@ -22,7 +16,28 @@ const roles = {
         'deleteFiles',
         'updateFiles',
         'editSelf',
-        'viewSelf'
+        'viewSelf',
+
+        'viewWidgets',
+    ],
+    partner: [
+        'viewDashboard', 
+        'viewEntry',
+        'viewOrders',
+        'uploadPdf',
+        'uploadImage',
+        'editNotifications',
+        'createOrders',
+        'editOrders',
+        'deleteOrders',
+        'viewInvoices',
+        'viewFiles',
+        'uploadFiles',
+        'editFiles',
+        'deleteFiles',
+        'updateFiles',
+        'editSelf',
+        'viewSelf'  
     ]
 };
 

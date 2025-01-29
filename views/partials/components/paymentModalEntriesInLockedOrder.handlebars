@@ -131,7 +131,8 @@
                                 {{#if cost.prevOrder}}
                                 <div class="fs-5 d-flex align-items-center">
                                     <span class="me-1 cursor-pointer" data-bs-toggle="popover" data-bs-placement="top"
-                                        data-bs-content="Beneficiary is subscribed in another invoice." data-bs-html="true">
+                                        data-bs-content="Beneficiary is subscribed in another invoice."
+                                        data-bs-html="true">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round"
@@ -147,7 +148,7 @@
                                 </div>
                                 {{else}}
                                 <button subscriptionName="{{cost.fieldName}}"
-                                    class="btn btn-icon btn-sm px-2 {{#if (eq cost.totalCost cost.totalOrderedCost)}}bg-green-lt{{/if}}" >
+                                    class="btn btn-icon btn-sm px-2 {{#if (eq cost.totalCost cost.totalOrderedCost)}}bg-green-lt{{/if}}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -176,6 +177,19 @@
                             <td>
                                 {{#if (eq field.type 'date')}}
                                 {{formatDate (lookup entry.detail field.name)}}
+                                {{else if (eq field.type 'image')}}
+                                {{#if (lookup entry.detail field.name)}}
+                                <a data-fslightbox="gallery"
+                                    href="{{lookup entry.detail field.name}}">
+                                    <img src="{{resizeCloudinaryUrl (lookup entry.detail field.name) 't_w-250'}}" alt=""
+                                        style="max-width: 40px;">
+                                </a>
+                                {{else}}
+                                <a data-fslightbox="gallery"
+                                    href="/static/images/no-image-placement.png">
+                                    <img src="/static/images/no-image-placement.png" alt="" style="max-width: 40px;">
+                                </a>
+                                {{/if}}
                                 {{else}}
                                 {{lookup entry.detail field.name}}
                                 {{/if}}

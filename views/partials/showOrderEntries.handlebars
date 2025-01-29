@@ -165,6 +165,21 @@
                             <td>
                                 {{#if (eq field.type 'date')}}
                                 {{formatDate (lookup entry.detail field.name)}}
+                                {{else if (eq field.type 'image')}}
+                                {{#if (lookup entry.detail field.name)}}
+                                <a data-fslightbox="gallery"
+                                    data-title="{{entry.detail.name}}"
+                                    href="{{lookup entry.detail field.name}}">
+                                    <img src="{{resizeCloudinaryUrl (lookup entry.detail field.name) 't_w-250'}}" alt=""
+                                        style="max-width: 40px;">
+                                </a>
+                                {{else}}
+                                <a data-fslightbox="gallery"
+                                    data-title="{{entry.detail.name}}"
+                                    href="/static/images/no-image-placement.png">
+                                    <img src="/static/images/no-image-placement.png" alt="" style="max-width: 40px;">
+                                </a>
+                                {{/if}}
                                 {{else}}
                                 {{lookup entry.detail field.name}}
                                 {{/if}}

@@ -26,5 +26,7 @@ router.get('/order/:orderId', authenticate, authorize('viewOrders'), ordersContr
 router.get('/getOrderLogs/:orderId', authenticate, authorize('viewOrders'), ordersController.getOrderLogs);
 router.get('/getOrderData/:orderId', authenticate, authorize('viewOrders'), ordersController.getOrderData);
 router.get('/getLockedOrderInModal/:orderId', authenticate, authorize('viewOrders'), ordersController.getLockedOrderInModal);
+router.get('/projectVisibleDateFields/:slug', authenticate, authorize('viewOrders'), ordersController.projectVisibleDateFields);
+router.post('/emailInvoice/:orderId', authenticate, authorize('viewOrders'), ordersController.emailInvoice);
 
 module.exports = router;

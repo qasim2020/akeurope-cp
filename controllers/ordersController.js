@@ -16,9 +16,19 @@ const {
     openOrderProjectWithEntries,
 } = require('../modules/orders');
 const { generateInvoice, deleteInvoice, sendInvoiceToCustomer } = require('../modules/invoice');
+const { visibleProjectDateFields } = require('../modules/projectEntries');
 
 exports.viewOrders = async (req, res) => {
     try {
+        const projects = await Project.find({ status: 'active' }).lean();
+
+        let visibleDateFields = [];
+
+        if (!projects) {
+            projects = [];
+        } else {
+            visibleDateFields = await visibleProjectDateFields(projects[0]);
+        }
         const { orders, pagination } = await getPaginatedOrders(req, res);
         const customers = await Customer.find().lean();
         res.render('orders', {
@@ -28,7 +38,8 @@ exports.viewOrders = async (req, res) => {
                 userName: req.session.user.name,
                 userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
                 activeMenu: 'orders',
-                projects: req.allProjects,
+                projects,
+                visibleDateFields,
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
                 sidebarCollapsed: req.session.sidebarCollapsed,
@@ -48,6 +59,16 @@ exports.viewOrders = async (req, res) => {
 
 exports.viewOrder = async (req, res) => {
     try {
+        const projects = await Project.find({ status: 'active' }).lean();
+
+        let visibleDateFields = [];
+
+        if (!projects) {
+            projects = [];
+        } else {
+            visibleDateFields = await visibleProjectDateFields(projects[0]);
+        }
+
         const order = await getSingleOrder(req, res);
         res.render('order', {
             layout: 'dashboard',
@@ -56,7 +77,8 @@ exports.viewOrder = async (req, res) => {
                 userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
-                projects: await Project.find({ status: 'active' }).lean(),
+                projects,
+                visibleDateFields,
                 orderLogs: await orderLogs(req, res),
                 activeMenu: 'orders',
                 order,
@@ -100,13 +122,24 @@ exports.getEditOrderModal = async (req, res) => {
     try {
         const order = await getSingleOrder(req, res);
         const customers = await Customer.find().lean();
+
         const projects = await Project.find({ status: 'active' }).lean();
+
+        let visibleDateFields = [];
+
+        if (!projects) {
+            projects = [];
+        } else {
+            visibleDateFields = await visibleProjectDateFields(projects[0]);
+        }
+
         res.render('partials/emptyOrderModal', {
             layout: false,
             data: {
                 order,
                 customers,
                 projects,
+                visibleDateFields,
             },
         });
     } catch (error) {
@@ -170,8 +203,8 @@ exports.deleteOrder = async (req, res) => {
 
 exports.emailInvoice = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.orderId).lean();
-        const customer = await Customer.findById(order.customerId).lean();
+        const order = await Order.findOne({ _id: req.params.orderId, customerId: req.session.user._id }).lean();
+        const customer = await req.session.user;
         await sendInvoiceToCustomer(order, customer);
         res.status(200).send('Email sent successfully!');
     } catch (error) {
@@ -305,6 +338,26 @@ exports.getLockedOrderInModal = async (req, res) => {
         console.log(error);
         res.status(404).render('error', {
             heading: 'Could not fetch locked order modal',
+            error: error,
+        });
+    }
+};
+
+exports.projectVisibleDateFields = async (req, res) => {
+    try {
+        const project = await Project.findOne({ slug: req.params.slug }).lean();
+        const visibleDateFields = await visibleProjectDateFields(project);
+
+        res.render('partials/projectVisibleDateFields', {
+            layout: false,
+            data: {
+                visibleDateFields,
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(404).render('error', {
+            heading: 'Could not fetch project visible fields',
             error: error,
         });
     }

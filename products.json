@@ -1,0 +1,134 @@
+{
+  "prod_ReQXTaKcgl7Jc1": {
+    "name": "One-time - Diamond",
+    "prices": [
+      {
+        "id": "price_1Ql7gRCseHPTMVKX0NSIxDau",
+        "price": 10000,
+        "currency": "nok",
+        "interval": "one-time"
+      }
+    ]
+  },
+  "prod_ReQXESktzA8Nnq": {
+    "name": "One-time - Platinum",
+    "prices": [
+      {
+        "id": "price_1Ql7gCCseHPTMVKXOdl1Jlwg",
+        "price": 5000,
+        "currency": "nok",
+        "interval": "one-time"
+      }
+    ]
+  },
+  "prod_ReQWdKTKrRt3Mc": {
+    "name": "One-time Gold",
+    "prices": [
+      {
+        "id": "price_1Ql7fkCseHPTMVKXZu9HaDb4",
+        "price": 1000,
+        "currency": "nok",
+        "interval": "one-time"
+      }
+    ]
+  },
+  "prod_ReQWooG6JM0nci": {
+    "name": "One-time - Premium",
+    "prices": [
+      {
+        "id": "price_1Ql7f1CseHPTMVKXz6v4GDFn",
+        "price": 500,
+        "currency": "nok",
+        "interval": "one-time"
+      }
+    ]
+  },
+  "prod_ReQV0kK9NFSXSX": {
+    "name": "One-time - Standard",
+    "prices": [
+      {
+        "id": "price_1Ql7eMCseHPTMVKXPRSuKyXr",
+        "price": 100,
+        "currency": "nok",
+        "interval": "one-time"
+      }
+    ]
+  },
+  "prod_ReQVKsAeFUl0cz": {
+    "name": "One-time - Basic",
+    "prices": [
+      {
+        "id": "price_1Ql7e1CseHPTMVKXhZSjCfRW",
+        "price": 5,
+        "currency": "nok",
+        "interval": "one-time"
+      }
+    ]
+  },
+  "prod_ReQOyyBDrHL54z": {
+    "name": "Monthly - Basic",
+    "prices": [
+      {
+        "id": "price_1Ql7XGCseHPTMVKX8cEpBDUu",
+        "price": 5,
+        "currency": "nok",
+        "interval": "month"
+      }
+    ]
+  },
+  "prod_ReQOb5QjeNng6u": {
+    "name": "Monthly - Standard",
+    "prices": [
+      {
+        "id": "price_1Ql7XGCseHPTMVKXLI5NFbOu",
+        "price": 100,
+        "currency": "nok",
+        "interval": "month"
+      }
+    ]
+  },
+  "prod_ReQOcto7XzB8bG": {
+    "name": "Monthly - Premium",
+    "prices": [
+      {
+        "id": "price_1Ql7XFCseHPTMVKXdpogwraX",
+        "price": 500,
+        "currency": "nok",
+        "interval": "month"
+      }
+    ]
+  },
+  "prod_ReQOnLC7r6KA0m": {
+    "name": "Monthly - Gold",
+    "prices": [
+      {
+        "id": "price_1Ql7XECseHPTMVKXXetxtnyO",
+        "price": 1000,
+        "currency": "nok",
+        "interval": "month"
+      }
+    ]
+  },
+  "prod_ReQNLiQy48C0B4": {
+    "name": "Monthly - Platinum",
+    "prices": [
+      {
+        "id": "price_1Ql7XDCseHPTMVKXxd1DVB15",
+        "price": 5000,
+        "currency": "nok",
+        "interval": "month"
+      }
+    ]
+  },
+  "prod_ReQNsm5BP6cNui": {
+    "name": "Monthly - Diamond",
+    "prices": [
+      {
+        "id": "price_1Ql7XDCseHPTMVKXRGKIdAP4",
+        "price": 10000,
+        "currency": "nok",
+        "interval": "month"
+      }
+    ]
+  }
+}

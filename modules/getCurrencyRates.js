@@ -2,9 +2,10 @@ const axios = require('axios');
 const { CurrencyRate } = require('../models/CurrencyRate');
 
 const getCurrencyRates = async (baseCurrency = 'USD') => {
+
     const today = new Date().toISOString().split('T')[0];
 
-    let currencyRates = await CurrencyRate.findOne({ baseCurrency, date: today });
+    let currencyRates = await CurrencyRate.findOne({ baseCurrency, date: today }).lean();
     if (currencyRates) {
         return currencyRates;
     }

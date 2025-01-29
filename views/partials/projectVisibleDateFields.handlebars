@@ -1,0 +1,20 @@
+<label class="form-label">Select Beneficiaries</label>
+<div class="input-group mb-2">
+    <span class="input-group-text">Select</span>
+    <input type="number" class="form-control" style="min-width: 60px;" value="10" min="1"
+        onkeydown="if (event.key === 'Enter') searchBeneficiaries(this)" name="randomBeneficiaries"
+        placeholder="Number of beneficiaries" />
+    <span class="input-group-text">beneficiaries randomly</span>
+</div>
+{{#each data.visibleDateFields}}
+<div class="input-group mb-2">
+    <span class="input-group-text">{{this.actualName}}</span>
+    <input type="text" class="form-control dateInput" placeholder="> 2023 or = May 2023 or < 20 Jan 2023 etc"
+        onkeydown="if (event.key === 'Enter') searchBeneficiaries(this)" name="{{this.name}}" />
+</div>
+{{/each}}
+<div class="input-group">
+    <span class="input-group-text">or</span>
+    <input type="text" class="form-control" placeholder="Search beneficiaries..."
+        onkeydown="if (event.key === 'Enter') searchBeneficiaries(this)" name="specificBeneficiaries" />
+</div>

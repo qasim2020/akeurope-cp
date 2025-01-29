@@ -4,7 +4,7 @@
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Invoice Management</h5>
+        <h5 class="modal-title">{{#if data.order}}Invoice Management{{else}}Select Beneficiaries{{/if}}</h5>
         <button class="btn ms-auto" onclick="toggleInvoice(this)">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -22,7 +22,7 @@
       </div>
       <div class="modal-body">
         <div class="row">
-          <div class="col-xl-6 col-12 opposite-invoice">
+          <div class="col-12 opposite-invoice">
             {{#unless (regexMatch data.order.status 'pending payment|processing|paid')}}
             <div class="search-mode">
               <div class="mb-3">
@@ -37,39 +37,33 @@
                   <option value="EGP" {{#if (eq data.order.currency 'EGP' )}}selected{{/if}}>EGP (£)</option>
                 </select>
               </div>
-              <div class="mb-3 search-beneficiaries">
-                <label class="form-label">Select Beneficiaries</label>
-                <div class="input-group mb-2">
-                  <span class="input-group-text">Select</span>
-                  <input type="number" class="form-control" style="min-width: 60px;" value="10" min="1"
-                    onkeydown="if (event.key === 'Enter') searchBeneficiaries(this)" name="randomBeneficiaries"
-                    placeholder="Number of beneficiaries" />
-                  <span class="input-group-text">beneficiaries randomly</span>
-                </div>
-                <div class="input-group">
-                  <span class="input-group-text">or</span>
-                  <input type="text" class="form-control" placeholder="search specific beneficiaries..."
-                    onkeydown="if (event.key === 'Enter') searchBeneficiaries(this)" name="specificBeneficiaries" />
-                  <span class="input-group-text">from</span>
-                  <select name="projectSlug" class="form-control form-select" style="min-width: 200px;">
-                    {{#each data.projects}}
-                    <option value="{{this.slug}}">{{this.name}}</option>
-                    {{/each}}
-                  </select>
-                  <button class="input-group-btn btn btn-icon submit-btn" onclick="searchBeneficiaries(this)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart-plus">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                      <path d="M12.5 17h-6.5v-14h-2" />
-                      <path d="M6 5l14 1l-.86 6.017m-2.64 .983h-10.5" />
-                      <path d="M16 19h6" />
-                      <path d="M19 16v6" />
-                    </svg>
-                  </button>
-                </div>
+              <div class="mb-3">
+                <label class="form-label">Select Project</label>
+                <select name="projectSlug" class="form-control form-select select-project" style="min-width: 200px;">
+                  {{#each data.projects}}
+                  <option value="{{this.slug}}">{{this.name}}</option>
+                  {{/each}}
+                </select>
               </div>
+              <div class="mb-3 search-beneficiaries">
+                {{> projectVisibleDateFields data=data}}
+              </div>
+              <div class="mb-3 start-search">
+                <button class="btn submit-btn w-100 btn-primary" onclick="searchBeneficiaries(this)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart-plus">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                    <path d="M12.5 17h-6.5v-14h-2" />
+                    <path d="M6 5l14 1l-.86 6.017m-2.64 .983h-10.5" />
+                    <path d="M16 19h6" />
+                    <path d="M19 16v6" />
+                  </svg>
+                  Search
+                </button>
+              </div>
+
             </div>
             {{/unless}}
             <div class="search-results-payment-modal-entries">
@@ -87,7 +81,7 @@
               {{/if}}
             </div>
           </div>
-          <div class="col-xl-6 col-12 invoice">
+          <div class="col-xl-6 col-12 invoice d-none">
             <iframe class="invoice-frame" width="100%" height="755px" style="border: none;"
               src="/invoice/{{#if data.order}}{{data.order._id}}{{else}}blank{{/if}}"></iframe>
           </div>
@@ -95,7 +89,7 @@
       </div>
       <div class="modal-footer">
         <div class="ms-auto">
-          <a href="#" class="btn btn-link link-default cancel-btn" data-bs-dismiss="modal"> Close </a>
+          <a href="#" class="btn btn-link link-default cancel-btn" data-bs-dismiss="modal">Close </a>
         </div>
       </div>
     </div>

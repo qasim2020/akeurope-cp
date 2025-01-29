@@ -204,7 +204,7 @@ exports.registerDirect = async (req, res) => {
         customer.name = name;
         customer.email = email;
         customer.password = password;
-        customer.role = 'viewer';
+        customer.role = 'partner';
         customer.emailStatus = 'Direct registration';
         customer.inviteToken = undefined;
         customer.inviteExpires = undefined;

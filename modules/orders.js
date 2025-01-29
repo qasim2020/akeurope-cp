@@ -57,7 +57,7 @@ const calculationOnProject = async (projectOrdered, requestedCurrencyRate) => {
 
     const currencyRates = await getCurrencyRates(requestedCurrencyRate);
     const currencyRate = parseFloat(
-        currencyRates.rates.get(projectOriginal.currency).toFixed(2),
+        currencyRates.rates[projectOriginal.currency].toFixed(2),
     );
 
     let allEntries = await Promise.all(
@@ -404,7 +404,7 @@ const formatOrder = async (req, order) => {
 
         project.detail = detail;
         project.pagination = pagination;
-        project.toggleState = req.query.toggleState || 'hide';
+        project.toggleState = req.query.toggleState || 'show';
     }
 
     return order;

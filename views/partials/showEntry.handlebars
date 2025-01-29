@@ -31,10 +31,13 @@
 
             {{else if (eq this.type "image")}}
             {{#if (lookup entry this.name)}}
-            <img src="{{resizeCloudinaryUrl (lookup entry this.name) 't_w-250'}}" alt="{{this.name}}"
-              class="img-thumbnail" style="max-width: 150px;">
+            <a data-fslightbox="gallery" href="{{lookup entry this.name}}">
+              <img src="{{resizeCloudinaryUrl (lookup entry this.name) 't_w-250'}}" alt="" style="max-width: 150px;">
+            </a>
             {{else}}
-            <span>No image available</span>
+            <a data-fslightbox="gallery" href="/static/images/no-image-placement.png">
+              <img src="/static/images/no-image-placement.png" alt="" style="max-width: 150px;">
+            </a>
             {{/if}}
 
             {{else if (eq this.type "file")}}
@@ -45,7 +48,8 @@
             {{/if}}
 
             {{else if this.subscription}}
-            <span class="text-danger fw-bold">{{lookup entry this.name}} <sup>{{../../data.project.currency}} / Month</sup></span>
+            <span class="text-danger fw-bold">{{lookup entry this.name}} <sup>{{../../data.project.currency}} /
+                Month</sup></span>
             {{else}}
             {{lookup entry this.name}}
             {{/if}}

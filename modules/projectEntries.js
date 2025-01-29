@@ -166,9 +166,21 @@ const getPaidOrdersByEntryId = async (req, res) => {
     return orders;
 };
 
+const visibleProjectDateFields = async (project) => {
+    if (!project) throw new Error('no project provided');
+    let visibleFields = [];
+    for (const field of project.fields) {
+        if (field.type === 'date' && field.visible === true) {
+            visibleFields.push(field);
+        }
+    }
+    return visibleFields;
+}
+
 module.exports = {
     projectEntries,
     fetchEntrySubscriptionsAndPayments,
     getPaidOrdersByEntryId,
     getOrdersByEntryId,
+    visibleProjectDateFields,
 };

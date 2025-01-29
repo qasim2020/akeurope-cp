@@ -3,20 +3,10 @@
 <div class="card mb-3 project-in-order {{project.slug}}" orderId="{{order._id}}" projectSlug="{{project.slug}}"
     toggleState="{{project.toggleState}}"
     my-href="?months={{project.months}}&page={{project.pagination.currentPage}}&limit={{project.pagination.limit}}&search={{project.pagination.search}}&sortBy={{project.pagination.sort.sortBy}}&orderBy={{project.pagination.sort.order}}{{#if project.pagination.filtersQuery}}&{{project.pagination.filtersQuery}}{{/if}}">
-    <div class="card-header flex-wrap border-0">
+    <div class="card-header flex-wrap border-0 card-hover" onclick="toggleSearchResults(this)">
         <div class="card-title w-100 d-flex">
             <div class="page-pretitle mb-2">{{project.entriesCount}} x {{project.detail.name}}</div>
             <div class="ms-auto no-wrap">
-                <button class="btn btn-icon btn-sm btn-pill border-0 shadow-none p-0"
-                    onclick="toggleSearchResults(this)" style=" margin-top: -13px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="icon icon-tabler icons-tabler-outline icon-tabler-caret-up-down">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M18 10l-6 -6l-6 6h12"></path>
-                        <path d="M18 14l-6 6l-6 -6h12"></path>
-                    </svg>
-                </button>
                 <button class="btn btn-icon btn-sm btn-pill shadow-none p-0" onclick="removeProject(this)"
                     style="position: absolute;top: -8px;right: -8px;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -40,7 +30,8 @@
                     <path d="M5 12l14 0" />
                 </svg>
             </button>
-            <button class="btn btn-icon btn-sm" {{#if (neq (dec project.months) 0)}} onclick="doSearch(this,'',true)"
+            <button class="month-selector btn btn-icon btn-sm" {{#if (neq (dec project.months) 0)}}
+                onclick="event.stopPropagation(); doSearch(this,'',true)"
                 my-href="?months={{dec project.months}}&page={{project.pagination.currentPage}}&limit={{project.pagination.limit}}&search={{project.pagination.search}}&sortBy={{project.pagination.sort.sortBy}}&orderBy={{project.pagination.sort.order}}{{#if project.pagination.filtersQuery}}&{{project.pagination.filtersQuery}}{{/if}}"
                 {{/if}}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -51,7 +42,7 @@
                 </svg>
             </button>
             <span class="mx-2 strong">{{project.months}}</span>
-            <button class="btn btn-icon btn-sm" onclick="doSearch(this,'',true)"
+            <button class="month-selector btn btn-icon btn-sm" onclick="event.stopPropagation(); doSearch(this,'',true)"
                 my-href="?months={{inc project.months}}&page={{project.pagination.currentPage}}&limit={{project.pagination.limit}}&search={{project.pagination.search}}&sortBy={{project.pagination.sort.sortBy}}&orderBy={{project.pagination.sort.order}}{{#if project.pagination.filtersQuery}}&{{project.pagination.filtersQuery}}{{/if}}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -227,6 +218,17 @@
                         <td>
                             {{#if (eq field.type 'date')}}
                             {{formatDate (lookup entry.detail field.name)}}
+                            {{else if (eq field.type 'image')}}
+                            {{#if (lookup entry.detail field.name)}}
+                            <a data-fslightbox="gallery" href="{{lookup entry.detail field.name}}">
+                                <img src="{{resizeCloudinaryUrl (lookup entry.detail field.name) 't_w-250'}}" alt=""
+                                    style="max-width: 40px;">
+                            </a>
+                            {{else}}
+                            <a data-fslightbox="gallery" href="/static/images/no-image-placement.png">
+                                <img src="/static/images/no-image-placement.png" alt="" style="max-width: 40px;">
+                            </a>
+                            {{/if}}
                             {{else}}
                             {{lookup entry.detail field.name}}
                             {{/if}}

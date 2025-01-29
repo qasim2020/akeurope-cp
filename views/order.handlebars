@@ -12,6 +12,7 @@
         <div class="btn-list">
           <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#editOrder" data-bs-toggle="modal"
             data-bs-target="#modal-{{data.order._id}}">
+            {{#if (eq data.order.status 'draft')}}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus me-1">
@@ -21,14 +22,24 @@
               <path d="M16 19h6"></path>
               <path d="M19 16v6"></path>
             </svg>
-            {{#if (eq data.order.status 'draft')}}
-            Edit Invoice
+            Edit Selection
             {{else}}
-            View Invoice
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-file-text me-1">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+              <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+              <path d="M9 9l1 0" />
+              <path d="M9 13l6 0" />
+              <path d="M9 17l6 0" />
+            </svg>
+            View Selection
             {{/if}}
           </a>
           <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
             data-bs-target="#modal-{{data.order._id}}" aria-label="modal-order-{{data.order._id}}">
+            {{#if (eq data.order.status 'draft')}}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus m-0">
@@ -38,6 +49,18 @@
               <path d="M16 19h6"></path>
               <path d="M19 16v6"></path>
             </svg>
+            {{else}}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-file-text m-0">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+              <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+              <path d="M9 9l1 0" />
+              <path d="M9 13l6 0" />
+              <path d="M9 17l6 0" />
+            </svg>
+            {{/if}}
           </a>
         </div>
       </div>
@@ -54,8 +77,8 @@
   </div>
   <div class="row row-deck row-cards">
     <div class="col-12 col-md-6 mb-auto d-flex flex-column">
-      {{> showOrder}}
       {{> showOrderInvoice}}
+      {{> showOrder}}
     </div>
     <div class="d-block col-12 col-md-6">
       <div class="card mb-3" id="files-container">
@@ -69,6 +92,7 @@
 {{#if data.order.customer}}
 {{> emptyOrderModal}}
 {{/if}}
+
 <script src="/static/orders.js"></script>
 <script>
 
@@ -198,6 +222,31 @@
     });
   });
 
+
+  const emailInvoiceFromBody = function (elem) {
+    const orderId = $(elem).attr('order-id');
+    if (!orderId) {
+      alert('no order id found');
+      return;
+    }
+    const currentBtnHTML = $(elem).html();
+    $(elem).html(`<span class="spinner-border spinner-border-sm me-2" role="status"></span> Sending email...`);
+    $.ajax({
+      url: `/emailInvoice/${orderId}`,
+      method: 'POST',
+      contentType: 'application/json',
+      success: (response) => {
+        $(elem).html('Sent!');
+        setTimeout(function () {
+          $(elem).html(currentBtnHTML);
+        }, 3000);
+      },
+      error: (error) => {
+        $(elem).html(currentBtnHTML);
+        alert(error.responseText);
+      },
+    });
+  };
 
 
 </script>

@@ -13,12 +13,13 @@ const checkValidForm = require('../modules/checkValidForm');
 const { saveLog, customerLogs, visibleLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
+const { visibleProjectDateFields } = require('../modules/projectEntries');
 const Order = require('../models/Order');
 
 exports.getCustomerData = async (req, res) => {
     try {
         const customer = await Customer.findOne({
-            _id: req.session.user._id
+            _id: req.session.user._id,
         }).lean();
 
         res.render('partials/showCustomer', {
@@ -39,7 +40,7 @@ exports.getCustomerData = async (req, res) => {
 exports.editModal = async (req, res) => {
     try {
         const customer = await Customer.findOne({
-            _id: req.session.user._id
+            _id: req.session.user._id,
         }).lean();
 
         res.render('partials/editCustomerModal', {
@@ -60,7 +61,7 @@ exports.editModal = async (req, res) => {
 
 exports.updateCustomer = async (req, res) => {
     try {
-        const { name, organization, location  } = req.body;
+        const { name, organization, location } = req.body;
 
         let check = [];
 
@@ -96,7 +97,7 @@ exports.updateCustomer = async (req, res) => {
                 }),
             );
 
-            await Customer.findByIdAndUpdate({_id: req.session.user._id}, updatedFields);
+            await Customer.findByIdAndUpdate({ _id: req.session.user._id }, updatedFields);
         }
 
         res.status(200).send('Customer updated successfully!');
@@ -127,7 +128,17 @@ exports.customer = async (req, res) => {
         }
 
         const customer = await Customer.findById(req.session.user._id).lean();
+
+        const projects = await Project.find({ status: 'active' }).lean();
         
+        let visibleDateFields = [];
+
+        if (!projects) {
+            projects = [];
+        } else {
+            visibleDateFields = await visibleProjectDateFields(projects[0]);
+        }        
+
         const orders = await Order.find({
             customerId: req.session.user._id,
         })
@@ -141,7 +152,8 @@ exports.customer = async (req, res) => {
                 userName: req.session.user.name,
                 userRole: req.session.user.role.charAt(0).toUpperCase() + req.session.user.role.slice(1),
                 activeMenu: 'customers',
-                projects: await Project.find({ status: 'active' }).lean(),
+                projects,
+                visibleDateFields,
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
                 customerLogs: await customerLogs(req, res),
