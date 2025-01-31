@@ -14,6 +14,7 @@
                 <th>Category</th>
                 <th>Size</th>
                 <th>Upload Date</th>
+                <th>Uploaded By</th>
             </tr>
         </thead>
         <tbody>
@@ -25,6 +26,17 @@
                 </td>
                 <td>{{this.size}} Kb</td>
                 <td>{{formatDate this.uploadDate}}</td>
+                <td>
+                    {{#if (eq this.uploadedBy.actorType 'user')}}
+                    <span class="badge bg-green-lt">
+                        AKEurope Team
+                    </span>
+                    {{else}}
+                    <span class="badge bg-red-lt">
+                        {{this.actorName}}
+                    </span>
+                    {{/if}}
+                </td>
             </tr>
             {{/each}}
         </tbody>
@@ -33,7 +45,8 @@
 {{else}}
 <div class="card-body">
     {{#if beneficiary}}
-    <div class="text-center py-4">So far no reports have been added. As they are added to beneficiaries, these will be listed here.</div>
+    <div class="text-center py-4">So far no reports have been added. As they are added to beneficiaries, these will be
+        listed here.</div>
     {{/if}}
     {{#if order}}
     <div class="text-center py-4">No documents found.</div>

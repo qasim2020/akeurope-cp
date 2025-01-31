@@ -664,7 +664,6 @@ const uploadPaymentProof = function (elem) {
         $(elem).closest('.modal').find('.file-input').click();
     } else {
         $(document).find('.file-input').click();
-        console.log($(document).find('.file-input'));
     }
 };
 

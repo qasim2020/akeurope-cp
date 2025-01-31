@@ -10,6 +10,6 @@ router.get('/overlay/:id', widgetController.overlay);
 router.get('/get-prices/:code', widgetController.getPrices);
 router.get('/store-prices', widgetController.storePrices);
 router.post('/create-payment-intent', widgetController.createPaymentIntent);
-
+router.get('/countries', widgetController.countries);
 
 module.exports = router;

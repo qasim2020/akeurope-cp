@@ -97,14 +97,20 @@ exports.filesByEntity = async (req, res) => {
 
 exports.renderEntityFiles = async (req, res) => {
     try {
-        let files;
-        if (req.userPermissions.includes('changeFilesAccess')) {
-            files = await File.find({ 'links.entityId': req.params.entityId }).sort({ uploadDate: -1 }).lean();
-        } else {
-            files = await File.find({ 'links.entityId': req.params.entityId, access: 'customers' })
+        
+        const files = await File.find({ 'links.entityId': req.params.entityId, access: 'customers' })
                 .sort({ uploadDate: -1 })
                 .lean();
+        
+        for (const file of files) {
+            if (file.uploadedBy?.actorType === 'user') {
+                file.actorName = (await User.findById(file.uploadedBy?.actorId).lean()).name;
+            }
+            if (file.uploadedBy?.actorType === 'customer') {
+                file.actorName = (await Customer.findById(file.uploadedBy?.actorId).lean()).name;
+            }
         }
+
         res.status(200).render('partials/showEntityFiles', {
             layout: false,
             data: {

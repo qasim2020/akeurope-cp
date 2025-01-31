@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const User = require('../models/User');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
@@ -70,6 +71,23 @@ exports.viewOrder = async (req, res) => {
         }
 
         const order = await getSingleOrder(req, res);
+
+        const files = await File.find({
+            'links.entityId': req.params.orderId,
+            access: {
+                $in: ['customer', 'customers'],
+            },
+        }).lean();
+
+        for (const file of files) {
+            if (file.uploadedBy?.actorType === 'user') {
+                file.actorName = (await User.findById(file.uploadedBy?.actorId).lean()).name;
+            }
+            if (file.uploadedBy?.actorType === 'customer') {
+                file.actorName = (await Customer.findById(file.uploadedBy?.actorId).lean()).name;
+            }
+        }
+
         res.render('order', {
             layout: 'dashboard',
             data: {
@@ -82,12 +100,7 @@ exports.viewOrder = async (req, res) => {
                 orderLogs: await orderLogs(req, res),
                 activeMenu: 'orders',
                 order,
-                files: await File.find({
-                    'links.entityId': req.params.orderId,
-                    access: {
-                        $in: ['customer', 'customers'],
-                    },
-                }).lean(),
+                files,
             },
         });
     } catch (error) {

@@ -216,13 +216,6 @@
     $(projectBody).toggleClass('d-none');
   }
 
-  $(document).ajaxStart(function () {
-    $(document).ajaxSend(function (event, jqXHR, settings) {
-      console.log("URL:", settings.url);
-    });
-  });
-
-
   const emailInvoiceFromBody = function (elem) {
     const orderId = $(elem).attr('order-id');
     if (!orderId) {
