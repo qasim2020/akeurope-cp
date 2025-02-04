@@ -1,5 +1,6 @@
 {{#if data.order.projects}}
 <div class="total-cost" total-cost="{{data.order.totalCost}}">
+    {{#if (gt data.order.totalCost 0)}}
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between border-0 text-red">
             <div class="card-title">Total Cost</div>
@@ -17,6 +18,7 @@
         </svg>
         Email invoice to your inbox <span class="d-none d-xl-block ms-1">({{data.order.customer.email}})</span>
     </button>
+    {{/if}}
     <div class="card mb-3">
         <div class="card-body">
             <h3 class="card-title">Invoice status</h3>

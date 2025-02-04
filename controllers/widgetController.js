@@ -1,7 +1,5 @@
 require('dotenv').config();
-const stripe = require('stripe')(
-    'sk_test_51Ql5j1CseHPTMVKXKG3DwPMuyQkjhUo0JogugesklgEs45LJP5vTzT8xEEZVRPah6pVCH4koCBuD33Z7PFxAC9IX00zhqLyOzJ',
-);
+const stripe = require('stripe')(process.env.STRIPE_TEST_KEY);
 const path = require('path');
 const fs = require('fs').promises;
 const { getCurrencyRates } = require('../modules/getCurrencyRates');
@@ -71,7 +69,7 @@ exports.getPrices = async (req, res) => {
     try {
         const { code } = req.params;
         const country = await Country.findOne({ code: code }).lean();
-        const countries = await Country.find({}, { name: 1, code: 1, currency: 1, callingCodes: 1, _id: 0 }).lean();
+        const countries = await Country.find().lean().sort({ name: 1 });
         const sortedCountries = countries.sort((a, b) => a.currency.code.localeCompare(b.name, 'en'));
         const baseCurrency = 'NOK';
 
@@ -162,6 +160,7 @@ exports.createPaymentIntent = async (req, res) => {
 
         res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {
+        console.log(error);
         res.status(400).json({ error: error.message });
     }
 };
@@ -169,7 +168,7 @@ exports.createPaymentIntent = async (req, res) => {
 exports.countries = async (req, res) => {
     try {
         const countries = await Country.find().lean().sort({ name: 1 });
-        res.json(countries);  
+        res.json(countries);
     } catch (err) {
         res.status(500).json({ error: 'Unable to fetch countries' });
     }
