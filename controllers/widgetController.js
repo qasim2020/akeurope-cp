@@ -33,7 +33,7 @@ exports.overlay = async (req, res) => {
 
 exports.script = async (req, res) => {
     try {
-        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.id}`;
+        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.id}?${new Date().getTime()}`;
         const scriptPath = path.join(__dirname, '..', 'static', 'script.js');
 
         console.log('Loading script from:', scriptPath);

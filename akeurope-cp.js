@@ -57,6 +57,10 @@ app.use(customerRoutes);
 app.use(filesRoutes);
 app.use(widgetRoutes);
 
+app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
+  res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));
+});
+
 app.get('/', (req, res) => {
   if (req.session.user) {
     return res.redirect('/dashboard');

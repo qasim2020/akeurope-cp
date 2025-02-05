@@ -64,6 +64,8 @@
         $('body').append($button);
 
         $button.on('click', function () {
+            
+            $('#iframe-loading-overlay').remove();
 
             var $loadingOverlay = $('<div id="iframe-loading-overlay"></div>').css({
                 position: 'fixed',
@@ -74,45 +76,61 @@
                 background: 'rgba(0, 0, 0, 0.7)',
                 opacity: 0,
                 zIndex: '9998',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
             });
 
             function showLoadingOverlay() {
-                $loadingOverlay.stop().animate({ opacity: 1 }, 300);
+                $loadingOverlay.stop().animate({ opacity: 1 }, 300).promise().done(function () {
+                    if ($(window).width() < 768) {
+                        $('body > *').not($iframe).hide();
+                    }
+                });
             }
-
+            
             function hideLoadingOverlay() {
+                if ($(window).width() < 768) {
+                    $('body > *').show();
+                };
                 $loadingOverlay.stop().fadeOut(300);
             }
-
 
             $('body').append($loadingOverlay);
             showLoadingOverlay();
 
-            var $iframe = $('<iframe id="iframe-loaded"></iframe>')
-                .css({
-                    position: 'fixed',
-                    top: '0',
-                    left: '0',
-                    width: '100vw',
-                    height: '100vh',
-                    border: 'none',
-                    zIndex: '9999',
-                    opacity: '0',
-                    background: 'transparent',
-                })
+            var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>')
                 .attr('src', '__OVERLAY_URL__')
+                .css({
+                    "display": "block",
+                    "margin": "0",
+                    "padding": "0",
+                    "border": "0",
+                    "width": "100%",
+                    "height": "100%",
+                    "position": "fixed",
+                    "opacity": 0,
+                    "top": "0",
+                    "left": "0",
+                    "right": "0",
+                    "bottom": "0",
+                    "transform": "translateZ(100px)",
+                    "z-index": "9999"
+                })
                 .on('load', function () {
                     $(this).animate({ opacity: 1 }, 300);
                 });
 
             $('body').append($iframe);
+            $('body').css({
+                overflow: 'hidden',
+                height: '100vh'
+            })
 
             $(window).on('message', function (event) {
                 if (event.originalEvent.data === 'close-overlay') {
                     $iframe.remove();
+                    $('body').css({
+                        overflow: 'scroll',
+                        height: 'auto'
+                    })
                     hideLoadingOverlay();
                 }
             });
