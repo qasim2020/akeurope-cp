@@ -4,6 +4,8 @@ const path = require('path');
 const fs = require('fs').promises;
 const { getCurrencyRates } = require('../modules/getCurrencyRates');
 const Country = require('../models/Country');
+const { createDynamicModel } = require('../models/createDynamicModel');
+const Project = require('../models/Project');
 
 exports.widgets = async (req, res) => {
     try {
@@ -22,18 +24,30 @@ exports.widget = async (req, res) => {
 };
 
 exports.overlay = async (req, res) => {
-    res.render('overlays/paymentModal', {
-        layout: false,
-        buttonText: 'Pay Now',
-        color: '#ff6600',
-        apiUrl: '123',
-        tablerCss: 'https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css',
-    });
+    try {
+        const project = await Project.findOne({slug: req.params.slug}).lean();
+
+        if (!project) throw new Error('No project found');
+    
+        const DynamicModel = await createDynamicModel(req.params.slug);
+        const entries = await DynamicModel.find().limit(10).lean();
+
+        res.render('overlays/paymentModal', {
+            layout: false,
+            data: {
+                entries
+            }
+        });   
+        
+    } catch (error) {
+        console.log(error);
+        res.send(error);
+    }
 };
 
 exports.script = async (req, res) => {
     try {
-        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.id}?${new Date().getTime()}`;
+        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/sweden-orphans?${new Date().getTime()}`;
         const scriptPath = path.join(__dirname, '..', 'static', 'script.js');
 
         console.log('Loading script from:', scriptPath);

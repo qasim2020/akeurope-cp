@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Overlay</title>
-    <link rel="stylesheet" href="{{tablerCss}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0/dist/css/tabler-flags.min.css">
     <style>
@@ -121,36 +122,6 @@
             max-width: 320px;
             margin: auto;
             overflow: hidden;
-        }
-
-        @media (min-width: 768px) {
-            #payment-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding-top: 20px;
-            }
-
-            #slide-parent {
-                padding: 0px;
-                margin: 0px;
-                max-width: 320px;
-            }
-
-            #slide-wrapper {
-                height: 100%;
-                max-width: 100%;
-            }
-
-            .rounded-md-4 {
-                border-radius: 1rem;
-            }
         }
 
         #slide-container {
@@ -328,6 +299,45 @@
         .rotated {
             transform: rotate(90deg);
         }
+
+        #project-card {
+            min-height: 500px;
+        }
+
+        @media (min-width: 768px) {
+            #payment-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding-top: 20px;
+            }
+
+            #project-card {
+                min-height: 580px;
+                min-width: 500px;
+            }
+
+            #slide-parent {
+                padding: 0px;
+                margin: 0px;
+                max-width: 320px;
+            }
+
+            #slide-wrapper {
+                height: 100%;
+                max-width: 100%;
+            }
+
+            .rounded-md-4 {
+                border-radius: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -336,21 +346,25 @@
     <div id="payment-overlay">
         <div class="row justify-content-center">
 
-            <div
+            <div id="project-card"
                 class="col-12 col-md-6 col-lg-4 card shadow-lg border-0 ms-md-2 me-md-3 p-0 rounded-md-4 overflow-hidden">
-                <div class="img-responsive img-responsive-21x9 card-img-top"
-                    style="height: 300px; background-image: url(https://images.unsplash.com/photo-1591522810850-58128c5fb089?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)">
-                </div>
-                <div class="card-body p-4">
+                <div class="card-body p-4 d-flex flex-column align-items-start">
                     <img class="mb-3"
                         src="https://res.cloudinary.com/miscellaneous/image/upload/v1737903106/akeurope/Group_427320398.png"
                         style="height: 40px">
-                    <h2 class="fw-medium mb-2">Save Families in Palestine</h2>
-                    <p class="fs-3">The Messenger of Allah, peace and blessings be upon him, said, “Whoever relieves the
-                        hardship of a believer in this world, Allah will relieve his hardship on the Day of
-                        Resurrection. Whoever helps ease one in difficulty, Allah will make it easy for him in this
-                        world and in the Hereafter. (Sahih Muslim). Donate generously to help our brothers and sisters
-                        in Palestine today.</p>
+                    <h2 class="fw-medium mb-2">{{data.project.slogan}}</h2>
+                    <div class="flex-grow-1 w-100 h-100">
+                        <div class="row g-2">
+                            {{#each data.entries}}
+                            <div class="card col-3">
+                                <img src="{{resizeCloudinaryUrl this.photo 't_w-250'}}" alt="">
+                                <div class="card-title">{{this.name}}</div>
+                                <p>{{formatDate this.dob}}</p>
+                            </div>
+                            {{/each}}
+                        </div>
+
+                    </div>
                     <a href="" class="d-none d-md-block mt-4 text-small">Manage your donation</a>
                 </div>
             </div>
@@ -784,6 +798,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta24/dist/js/tabler.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/static/maskList.js"></script>
     <script>
@@ -795,7 +810,6 @@
             answer.toggleClass('d-none');
             icon.toggleClass('ti-chevron-right ti-chevron-down');
         });
-
 
         document.addEventListener('click', function (event) {
             const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
@@ -1453,7 +1467,7 @@
         }
 
     </script>
-    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+
 </body>
 
 </html>

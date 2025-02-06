@@ -14,7 +14,7 @@
 
     function initOverlay() {
         const css = `
-        <style akeurope-script=true>
+        <style akeurope-script="true">
             #donate-button-akeurope {
                 position: fixed;
                 right: -67px;
@@ -50,7 +50,7 @@
         `;
 
         var $button = $(`
-            <div id="donate-button-akeurope" akeurope-script=true>
+            <div id="donate-button-akeurope" akeurope-script="true">
                 <svg width="30px" 
                 viewBox="-2.4 -2.4 28.80 28.80" 
                 fill="none" 
@@ -59,7 +59,7 @@
             </div>
         `);
 
-        $('body').find('[akeurope-script=true]').remove();
+        $('body').find('[akeurope-script="true"]').remove();
         $('body').append(css);
         $('body').append($button);
 
@@ -79,18 +79,12 @@
             });
 
             function showLoadingOverlay() {
-                $loadingOverlay.stop().animate({ opacity: 1 }, 300).promise().done(function () {
-                    if ($(window).width() < 768) {
-                        $('body > *').not($iframe).hide();
-                    }
-                });
+                $loadingOverlay.stop().animate({ opacity: 1 }, 300);
             }
             
             function hideLoadingOverlay() {
-                if ($(window).width() < 768) {
-                    $('body > *').show();
-                };
                 $loadingOverlay.stop().fadeOut(300);
+                $loadingOverlay.remove();
             }
 
             $('body').append($loadingOverlay);
@@ -136,6 +130,6 @@
             });
         });
 
-        $button.click();
+        // $button.click();
     }
 })();

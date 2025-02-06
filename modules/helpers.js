@@ -46,6 +46,7 @@ const browserDate = function (dateString) {
 };
 
 const resizeCloudinaryUrl = function (url, template) {
+    if (!url) return '/static/no-image-placement.png';
     return url.replace('/upload/', `/upload/${template}/`);
 };
 
