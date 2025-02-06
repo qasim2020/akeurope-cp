@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Overlay</title>
     <link rel="stylesheet" href="{{tablerCss}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0/dist/css/tabler-flags.min.css">
     <style>
         #payment-overlay {
@@ -310,6 +311,23 @@
             color: rgba(var(--tblr-body-color-rgb), .65);
             transform: scale(.85) translateY(-.5rem) translateX(.15rem);
         }
+
+        .faq-answer {
+            padding-left: 21px;
+            padding-right: 21px;
+        }
+
+        #manage-donation {
+            padding-left: 21px;
+        }
+
+        .transition {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .rotated {
+            transform: rotate(90deg);
+        }
     </style>
 </head>
 
@@ -333,7 +351,7 @@
                         Resurrection. Whoever helps ease one in difficulty, Allah will make it easy for him in this
                         world and in the Hereafter. (Sahih Muslim). Donate generously to help our brothers and sisters
                         in Palestine today.</p>
-                    <a href="" class="mt-4 text-small">Manage your donation</a>
+                    <a href="" class="d-none d-md-block mt-4 text-small">Manage your donation</a>
                 </div>
             </div>
 
@@ -722,6 +740,35 @@
                 </a>
             </div>
 
+            <div class="d-md-none col-12 p-3 fs-4 card border-0">
+                <div class="faq-item">
+                    <h4 class="mb-1 fw-normal toggle-faq" style="cursor: pointer;">
+                        <i class="ti ti-chevron-right me-1 transition"></i>
+                        Is my donation secure?
+                    </h4>
+                    <div class="faq-answer d-none mb-3">
+                        Yes, we use industry-standard SSL technology to keep your information secure. We partner with
+                        Stripe, the industry's established payment processor trusted by some of the world's largest
+                        companies.
+                        Your sensitive financial information never touches our servers. We send all data directly to
+                        Stripe's PCI-compliant servers through SSL.
+                    </div>
+                </div>
+
+                <div class="faq-item mt-1">
+                    <h4 class="mb-1 fw-normal toggle-faq" style="cursor: pointer;">
+                        <i class="ti ti-chevron-right me-1 transition"></i>
+                        Can I cancel my recurring donation?
+                    </h4>
+                    <div class="faq-answer d-none mb-3">
+                        Of course. You always remain in full control of your recurring donation, and you’re free to
+                        change or cancel it at any time.
+                    </div>
+                </div>
+
+                <a id="manage-donation" href="" class="mt-1 text-small">Manage your donation</a>
+            </div>
+
         </div>
         <button id="close-overlay" class="btn rounded-circle btn-icon text-dark p-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -740,6 +787,16 @@
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/static/maskList.js"></script>
     <script>
+
+        $('.toggle-faq').on('click', function () {
+            let answer = $(this).next('.faq-answer');
+            let icon = $(this).find('i');
+            $(this).toggleClass('fw-normal fw-bold');
+            answer.toggleClass('d-none');
+            icon.toggleClass('ti-chevron-right ti-chevron-down');
+        });
+
+
         document.addEventListener('click', function (event) {
             const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
             popoverTriggerList.forEach(function (popoverTriggerEl) {
@@ -913,6 +970,12 @@
 
             $('#cardSubmit').on('click', async function (event) {
                 event.preventDefault();
+                const elem = $(this);
+                const currentBtnHtml = $(this).html();
+                $(this).html(`
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Processing
+                `);
                 $('#payment-error').addClass('d-none');
 
                 const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
@@ -923,7 +986,27 @@
 
                 if (error) {
                     console.log(error);
-                    $('#payment-error').removeClass('d-none').html(error.message);
+                    $(elem).addClass('bg-danger').html(`<i class="ti ti-credit-card-off me-1"></i> Error!`);
+                    $('#cardSubmit').popover('dispose');
+                    $('#cardSubmit').popover({
+                        content: `<div class="text-red fw-bold m-0" 
+                                    style="border-radius: 4px; padding: 10px;">
+                                    ${error.message}
+                                  </div>`,
+                        placement: 'top',
+                        trigger: 'manual',
+                        html: true,
+                        template: `<div class="popover bg-danger-lt border-0 shadow-md" role="tooltip">
+                                    <div class="popover-arrow d-none"></div>
+                                    <div class="popover-body p-2"></div>
+                                  </div>`
+                    }).popover('show');
+
+                    setTimeout(function () {
+                        $('#cardSubmit').popover('hide');
+                        $(elem).removeClass('bg-danger').html(currentBtnHtml);
+                    }, 6000);
+
                 } else {
                     savePaymentInfo();
                 }
@@ -1330,8 +1413,16 @@
             if (isValid) {
                 $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
                 $('.back-btn').attr({ index: 2 });
+                $('#payment-button').popover({
+                    content: 'hello',
+                    placement: 'top',
+                    trigger: 'manual'
+                }).popover('show');
             }
         };
+
+        $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
+        $('.back-btn').attr({ index: 2 });
 
         const savePaymentInfo = function (elem) {
             $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
