@@ -32,6 +32,24 @@ const formatDate = function (date) {
     return moment(date).format('DD-MM-YYYY');
 };
 
+const getMonthYear = function (date) {
+    return moment(date).format('MM-YYYY');
+};
+
+const getAgeInYearsAndMonths = function (date) {
+    const birthDate = moment(date);
+    const today = moment();
+
+    const years = today.diff(birthDate, 'years');
+    const months = today.diff(birthDate.add(years, 'years'), 'months');
+
+    if (years === 0) {
+        return `${months} months`;
+    } else {
+        return `${years} years`;
+    }
+};
+
 const formatTime = function (timestamp) {
     return moment(timestamp).format('D MMM YYYY [at] h:mm A');
 };
@@ -46,9 +64,15 @@ const browserDate = function (dateString) {
 };
 
 const resizeCloudinaryUrl = function (url, template) {
-    if (!url) return '/static/no-image-placement.png';
+    if (!url) return '/static/images/no-photo-placement.png';
     return url.replace('/upload/', `/upload/${template}/`);
 };
+
+function transformCloudinaryUrl(url) {
+    if (!url) return '/static/images/no-photo-placement.png';
+    const transformation = "ar_1:1,c_fill,g_auto:face,h_550,w_550";
+    return url.replace('/upload/', `/upload/${transformation}/`);
+}
 
 const capitalizeFirstLetter = function (str) {
     if (!str) return '';
@@ -267,6 +291,14 @@ const shortenFileName = function(string) {
     return `${start}...${end}`;       
 }
 
+const shortenName = function(string) {
+    if (string.length <= 40) {
+        return string;
+    }
+    const start = string.slice(0, 37); 
+    return `${start}...`;       
+}
+
 module.exports = {
     eq,
     gt,
@@ -275,8 +307,11 @@ module.exports = {
     dec,
     formatDate,
     formatTime,
+    getMonthYear,
+    getAgeInYearsAndMonths,
     browserDate,
     resizeCloudinaryUrl,
+    transformCloudinaryUrl,
     neq,
     capitalizeFirstLetter,
     lowerCaseFirstLetter,
@@ -302,4 +337,5 @@ module.exports = {
     getOrderIcon,
     removeLinks,
     shortenFileName,
+    shortenName,
 };

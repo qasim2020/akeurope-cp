@@ -21,25 +21,32 @@ require('dotenv').config();
 mongoose();
 
 const app = express();
-app.engine('handlebars', exphbs.engine({helpers: hbsHelpers}));
+app.engine('handlebars', exphbs.engine({ helpers: hbsHelpers }));
 app.set('view engine', 'handlebars');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(
-  session({
-    name: 'akeurope-cp-id',
-    secret: process.env.SESSION_SECRET, 
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI, 
-      collectionName: 'sessions_customer_portal',    
+    session({
+        name: 'akeurope-cp-id',
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({
+            mongoUrl: process.env.MONGO_URI,
+            collectionName: 'sessions_customer_portal',
+        }),
+        cookie: {
+            maxAge: 1000 * 60 * 60 * 24, 
+        },
     }),
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24, 
-    }
-  })
 );
+
+// app.use((req, res, next) => {
+//     console.log(req.originalUrl);
+//     console.log('Session ID:', req.sessionID);
+//     console.log(req.session);
+//     next();
+// });
 
 app.use(flash());
 
@@ -58,15 +65,15 @@ app.use(filesRoutes);
 app.use(widgetRoutes);
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
-  res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));
+    res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));
 });
 
 app.get('/', (req, res) => {
-  if (req.session.user) {
-    return res.redirect('/dashboard');
-  } else {
-    res.redirect('/login');
-  }
+    if (req.session.user) {
+        return res.redirect('/dashboard');
+    } else {
+        res.redirect('/login');
+    }
 });
 
 const PORT = 3009;

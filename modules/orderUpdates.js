@@ -10,7 +10,7 @@ const {
 const { createDynamicModel } = require('../models/createDynamicModel');
 const { camelCaseWithCommaToNormalString } = require('../modules/helpers');
 
-const runQueriesOnOrder = async (req, res) => {
+const runQueriesOnOrder = async (req, res, saveLogs = false) => {
     await validateQuery(req, res);
     let order;
     const orderId = req.query.orderId;
@@ -118,6 +118,8 @@ const runQueriesOnOrder = async (req, res) => {
             }
         }
 
+        if (!saveLogs) return order;
+
         await saveLog(
             logTemplates({
                 type: 'orderColumnSubscriptionChanged',
@@ -198,6 +200,8 @@ const runQueriesOnOrder = async (req, res) => {
                 },
             );
         }
+
+        if (!saveLogs) return order;
 
         const project = existingOrder.projects.find(
             (p) => p.slug === projectSlug,

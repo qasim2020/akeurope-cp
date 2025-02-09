@@ -10,11 +10,10 @@ const OrderSchema = new mongoose.Schema(
         },
         customerId: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true,
         },
         status: {
             type: String,
-            enum: ['draft', 'pending payment', 'paid'],
+            enum: ['draft', 'pending payment', 'processing', 'paid'],
             default: 'draft',
         },
         currency: {
@@ -51,6 +50,10 @@ const OrderSchema = new mongoose.Schema(
                 ],
             },
         ],
+        // DONOR PORTAL REQUIRED
+        monthlySubscription: {
+            type: Boolean,
+        },
     },
     {
         timestamps: true,

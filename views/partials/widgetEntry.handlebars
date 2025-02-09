@@ -1,0 +1,48 @@
+<div class="col-12 pb-2">
+    <div
+        class="card card-beneficiary border-0 flex-row p-2 h-100 rounded-3 
+        {{#if (eq entry.totalCost entry.totalOrderedCost)}}active{{/if}}">
+        <div class="position-relative">
+            <img style="object-fit: cover; width: 201px;" class="rounded-3 border border-1 shadow-lg"
+                src="{{transformCloudinaryUrl entry.detail.photoOfOrphan}}" alt="">
+        </div>
+        <div class="ps-3 pe-2 pt-1 w-100 h-100 d-flex flex-column">
+            <div class="card-title mb-1 fs-3">{{shortenName entry.detail.name}}</div>
+            <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dob}}</div>
+            {{#each entry.costs as |cost|}}
+            {{#if (gt cost.totalCost 0)}}
+            {{#if cost.prevOrder}}
+            <div class="d-flex p-3 rounded-3 mt-2 border popover-card cursor-pointer">
+                <span class="me-2" data-bs-toggle="popover" data-bs-placement="top"
+                    data-bs-content="Already selected in <a class='' href='/order/{{cost.prevOrder.orderId}}'>{{capitalizeFirstLetter cost.prevOrder.status}}-{{cost.prevOrder.orderNo}}</a>. Invoice will expire on {{formatDate cost.prevOrder.expiry}}."
+                    data-bs-html="true">
+                    <span class="ti ti-lock"></span>
+                </span>
+                <div class="text-start">
+                    <div class="fw-bold text-primary">{{camelCaseToNormalString cost.fieldName}}</div>
+                    <div class="text-secondary">{{cost.totalCost}} {{../order.currency}} / Month</div>
+                </div>
+            </div>
+            {{else}}
+            <label class="form-selectgroup-item flex-fill mt-2">
+                <input type="checkbox" name="subscription" value="{{cost.fieldName}}" class="form-selectgroup-input"
+                    {{#if (eq cost.totalCost cost.totalOrderedCost)}}checked{{/if}}>
+                <div
+                    class="position-relative form-selectgroup-label d-flex align-items-start p-3 rounded-3 border shadow-none">
+                    {{#if (eq cost.totalCost cost.totalOrderedCost)}}
+                    <span class="ti ti-check text-blue me-2" style="padding-top: 3px"></span>
+                    {{else}}
+                    <span class="ti ti-plus text-black me-2" style="padding-top: 3px"></span>
+                    {{/if}}
+                    <div class="form-selectgroup-label-content text-start">
+                        <div class="fw-bold text-primary">{{camelCaseToNormalString cost.fieldName}}</div>
+                        <div class="text-secondary">{{cost.totalCost}} {{../order.currency}} / Month</div>
+                    </div>
+                </div>
+            </label>
+            {{/if}}
+            {{/if}}
+            {{/each}}
+        </div>
+    </div>
+</div>

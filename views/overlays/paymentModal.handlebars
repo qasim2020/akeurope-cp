@@ -36,6 +36,41 @@
             background-color: rgb(240, 240, 240);
         }
 
+        .card-beneficiary.active {
+            background-color: #e3f2fd;
+            color: rgb(25 109 187);
+            border: 1px solid #066fd1;
+        }
+
+        .card-beneficiary.active .card-title {
+            font-weight: bold;
+        }
+
+        .card-beneficiary .uncheck-icon,
+        .card-beneficiary .check-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 24px;
+        }
+
+        .card-beneficiary .uncheck-icon {
+            color: #dedede;
+            display: block;
+        }
+
+        .card-beneficiary .check-icon {
+            display: none;
+        }
+
+        .card-beneficiary.active .check-icon {
+            display: block;
+        }
+
+        .card-beneficiary.active .uncheck-icon {
+            display: none;
+        }
+
         .slide .btn:not(.btn-primary).active {
             background-color: #e3f2fd;
             color: rgb(25 109 187);
@@ -53,7 +88,7 @@
             border-radius: 5px;
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            background: rgb(179 179 179);
+            background: rgb(213 215 217);
             transition: background-color 0.3s ease;
         }
 
@@ -147,7 +182,7 @@
             padding: 0px;
         }
 
-        #slide-payment-info>.header {
+        .slide>.header {
             margin: 0 27px;
         }
 
@@ -304,6 +339,22 @@
             min-height: 500px;
         }
 
+        #project-entries {
+            max-height: 435px;
+            overflow: scroll;
+        }
+
+        .form-selectgroup-input:checked+.form-selectgroup-label {
+            background-color: #e3f2fd;
+            color: rgb(25 109 187);
+            border: 1px solid #066fd1 !important;
+            font-weight: normal;
+        }
+
+        #slide-parent {
+            box-shadow: none !important;
+        }
+
         @media (min-width: 768px) {
             #payment-overlay {
                 position: fixed;
@@ -323,6 +374,11 @@
                 min-width: 500px;
             }
 
+            #project-entries {
+                max-height: 430px;
+                overflow: scroll;
+            }
+
             #slide-parent {
                 padding: 0px;
                 margin: 0px;
@@ -336,6 +392,10 @@
 
             .rounded-md-4 {
                 border-radius: 1rem;
+            }
+
+            .slide>.header {
+                margin: 0;
             }
         }
     </style>
@@ -354,16 +414,7 @@
                         style="height: 40px">
                     <h2 class="fw-medium mb-2">{{data.project.slogan}}</h2>
                     <div class="flex-grow-1 w-100 h-100">
-                        <div class="row g-2">
-                            {{#each data.entries}}
-                            <div class="card col-3">
-                                <img src="{{resizeCloudinaryUrl this.photo 't_w-250'}}" alt="">
-                                <div class="card-title">{{this.name}}</div>
-                                <p>{{formatDate this.dob}}</p>
-                            </div>
-                            {{/each}}
-                        </div>
-
+                        {{> widgetEntries}}
                     </div>
                     <a href="" class="d-none d-md-block mt-4 text-small">Manage your donation</a>
                 </div>
@@ -430,7 +481,7 @@
                                             Monthly</a>
                                     </div>
 
-                                    <div class="tab-content mt-2">
+                                    <div class="tab-content my-2 d-none">
                                         <div class="tab-pane show active" id="one-time-products">
                                             <div class="row g-2" id="one-time-products-list">
                                                 <div
@@ -803,6 +854,207 @@
     <script src="/static/maskList.js"></script>
     <script>
 
+        const startWidget = async function () {
+            try {
+                const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
+                const data = await response.json();
+                let countryCode = data.country_code ? data.country_code : 'NO';
+                await createNewOrder(countryCode);
+                const orderId = $('#project-entries').attr('order-id');
+                if (!orderId) {
+                    console.log('no order available');
+                    return;
+                };
+                const order = await getOrderData(orderId);
+                await drawEntries(order);
+                await getPrices(countryCode);
+            } catch (error) {
+                alert(error);
+                console.error('Error fetching location:', error);
+            }
+        };
+
+        window.onload = startWidget;
+
+        const createNewOrder = async function (countryCode) {
+            try {
+                const response = await $.ajax({
+                    url: `/widget-new-order/{{data.project.slug}}?countryCode=${countryCode}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                });
+
+                $('#project-entries').replaceWith(response);
+
+                initializePopovers();
+
+                let loadingMoreContent = false;
+
+                $("#project-entries").on("scroll", function () {
+                    let $this = $(this);
+                    console.log('scrolling');
+                    if ($this.scrollTop() + $this.innerHeight() >= $this[0].scrollHeight - 10) {
+                        if (loadingMoreContent) return;
+                        const orderId = $('#project-entries').attr('order-id');
+                        const slug = $('#project-entries').attr('project-slug');
+                        loadMoreContent(orderId, slug);
+                    }
+                });
+
+                function loadMoreContent(orderId, slug) {
+                    if (!orderId || !slug) return alert('orderId and slug is required to load more content!');
+                    loadingMoreContent = true;
+                    const currentScrolHtml = $('#scroll-loader').html();
+                    $('#scroll-loader').html('<h3 class="fw-normal">Loading cards...</h3>');
+                    $.ajax({
+                        url: `/widget-update-order/${orderId}/${slug}?addEntries=true`,
+                        method: 'POST',
+                        contentType: 'application/json',
+                        success: response => {
+                            loadingMoreContent = false;
+                            $('#scroll-loader').html(currentScrolHtml);
+                            $('#scroll-loader').before(response);
+                            initializePopovers();
+                        },
+                        error: error => {
+                            loadingMoreContent = false;
+                            $('#scroll-loader').html(`<h3 class="fw-normal">${error.responseText}</h3>`);
+                        }
+                    })
+                }
+
+            } catch (xhr) {
+                console.error("Error:", xhr);
+                alert(xhr.responseText || "An error occurred while creating the order.");
+            }
+        }
+
+        $(document).on('click', ".popover-card", function (event) {
+            $('[data-bs-toggle="popover"]').not($(this).find('[data-bs-toggle="popover"]')).popover("hide");
+            let popoverElement = $(this).find('[data-bs-toggle="popover"]');
+            popoverElement.popover("toggle");
+            event.stopPropagation();
+        });
+
+        const getOrderData = async function (orderId) {
+            try {
+                const order = await $.ajax({
+                    url: `/widget-order/${orderId}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                });
+                return order;
+            } catch (xhr) {
+                console.error("Error:", xhr);
+                alert(xhr.responseText || "An error occurred while creating the order.");
+            }
+        }
+
+        const getPrices = async function (userCountry) {
+            fetch(`/get-prices/${userCountry}`)
+                .then((response) => response.json())
+                .then((data) => {
+
+                    populateCurrencyDropdown(data.countries);
+                    populateTelephoneDropdown(data.countries);
+
+                    $('.donation-amount').first().addClass('active');
+
+                    $('.currency-dropdown').val(data.country.code);
+
+                    $('#tel-toggle').html(`
+                        <span class="flag flag-country-${data.country.code.toLowerCase()} me-1"></span>
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                    `);
+
+                    $('#tel-toggle').data({ value: data.country.code.toLowerCase() });
+
+                    $('#contact-number').val(data.country.callingCodes[0].toString());
+
+                    $('.btn.amount').on('click', function (e) {
+                        $(this).closest('.body').find('input.active, button.active').removeClass('active');
+                        $(this).toggleClass('active');
+                        const value = $(this).attr('value');
+                        const input = $(this).closest('.row').find('input');
+                        input.val(value);
+                        input.removeClass('is-invalid');
+                        input.addClass('active');
+                    });
+
+                    $('input.amount').on('keyup', function (e) {
+                        $('.donation-amount').removeClass('active');
+                        $(this).addClass('active');
+                        const value = $(this).val();
+                        const btns = $(this).closest('.row').find('.btn.amount');
+                        for (const btn of btns) {
+                            $(btn).removeClass('active');
+                            if ($(btn).attr('value') === value) {
+                                $(btn).addClass('active');
+                            }
+                        }
+                    });
+
+                    $('.currency-dropdown').on('change', function (e) {
+                        const value = $(this).val();
+                        getPrices(value);
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error fetching pricing data:', error);
+                });
+        };
+
+        const drawEntries = async function (order) {
+            $('#monthly-products-list, #one-time-products-list').html('');
+
+            const createPriceButton = (entry) => {
+                return `
+                    <div class="col-12">
+                        <div class="w-100 card shadow p-2">
+                            <div class="text-small">${entry.detail.name}</div>
+                            ${entry.costs
+                        .filter(cost => cost.totalCost !== 0)
+                        .map(cost => `
+                                    <button class="btn btn-sm amount ${cost.totalCost === cost.totalOrderedCost ? 'active' : ''}" 
+                                            value="${cost.totalCost}">
+                                        ${cost.fieldName} ${cost.totalCost}
+                                    </button>
+                                `).join('')} 
+                        </div>
+                    </div>
+                `;
+            };
+
+            const inputGroup = `
+                        <div class="col-12">
+                            <div class="currency-input-container border-1 rounded-2">
+                                <input type="number" class="donation-amount amount form-control py-2 fs-2" min="0">
+                                <div class="currency-selector">
+                                    ${order.currency}
+                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="ms-1 icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                                </div>
+                                <select class="currency-dropdown">
+                                </select>
+                            </div>
+                        </div>
+                    `;
+
+            let monthlyHTML = '';
+            order.projects[0].entries.forEach((entry) => {
+                monthlyHTML += createPriceButton(entry);
+            });
+            monthlyHTML += inputGroup;
+            $('#monthly-products-list').prepend(monthlyHTML);
+
+            let oneTimeHTML = '';
+            order.projects[0].entries.forEach((product) => {
+                oneTimeHTML += createPriceButton(product);
+            });
+            oneTimeHTML += inputGroup;
+            $('#one-time-products-list').prepend(monthlyHTML);
+
+        }
+
         $('.toggle-faq').on('click', function () {
             let answer = $(this).next('.faq-answer');
             let icon = $(this).find('i');
@@ -837,6 +1089,15 @@
 
             return number.toString();
         }
+
+        function initializePopovers() {
+            var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.forEach(function (popoverTriggerEl) {
+                new bootstrap.Popover(popoverTriggerEl);
+            });
+        }
+
+        initializePopovers();
 
         $('[freq]').on('click', function (e) {
             const freq = $(this).attr('freq');
@@ -907,6 +1168,12 @@
 
             paymentRequest.canMakePayment().then((result) => {
 
+                if (!result) {
+                    $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
+                    $('#expressPaySelector').remove();
+                    return;
+                }
+
                 let paymentMethods = {
                     applePay: result.applePay ? 'auto' : 'never',
                     googlePay: result.googlePay ? 'auto' : 'never',
@@ -933,8 +1200,7 @@
                 } else if (result.googlePay) {
                     $('#expressPaySelector').html('Google Pay')
                 } else {
-                    $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
-                    $('#expressPaySelector').remove();
+                    $('#expressPaySelector').html('Apple / Google Pay')
                 }
             });
 
@@ -1230,129 +1496,16 @@
             $('.currency-dropdown').append(otherGroup);
         };
 
-        const getPrices = async function (userCountry) {
-            fetch(`/get-prices/${userCountry}`)
-                .then((response) => response.json())
-                .then((data) => {
-                    $('#monthly-products-list, #one-time-products-list').html('');
-
-                    const createPriceButton = (product) => {
-                        return `
-                        <div class="col-4">
-                            <button class="btn py-2 w-100 fs-3 amount" value="${product.amount}">
-                                ${data.country.currency.symbol} ${formatNumberToShortenedVersion(product.amount)}
-                            </button>
-                        </div>
-                    `;
-                    };
-
-                    const inputGroup = `
-                        <div class="col-12">
-                            <div class="currency-input-container border-1 rounded-2">
-                                <input type="number" class="donation-amount amount form-control py-2 fs-2" min="0">
-                                <div class="currency-selector">
-                                    ${data.country.currency.code}
-                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="ms-1 icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
-                                </div>
-                                <select class="currency-dropdown">
-                                </select>
-                            </div>
-                        </div>
-                    `;
-
-                    const sortedMonthly = data.monthly.sort((a, b) => a.price - b.price);
-
-                    let monthlyHTML = '';
-                    sortedMonthly.forEach((product) => {
-                        monthlyHTML += createPriceButton(product);
-                    });
-                    monthlyHTML += inputGroup;
-                    $('#monthly-products-list').prepend(monthlyHTML);
-
-                    const sortedOneTime = data.oneTime.sort((a, b) => a.price - b.price);
-
-                    let oneTimeHTML = '';
-                    sortedOneTime.forEach((product) => {
-                        oneTimeHTML += createPriceButton(product);
-                    });
-                    oneTimeHTML += inputGroup;
-                    $('#one-time-products-list').prepend(monthlyHTML);
-
-                    populateCurrencyDropdown(data.countries);
-                    populateTelephoneDropdown(data.countries);
-
-                    $('.donation-amount').first().addClass('active');
-
-                    $('.currency-dropdown').val(data.country.code);
-
-                    $('#tel-toggle').html(`
-                <span class="flag flag-country-${data.country.code.toLowerCase()} me-1"></span>
-                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
-            `);
-
-                    $('#tel-toggle').data({ value: data.country.code.toLowerCase() });
-
-                    $('#contact-number').val(data.country.callingCodes[0].toString());
-
-                    $('.btn.amount').on('click', function (e) {
-                        $(this).closest('.body').find('input.active, button.active').removeClass('active');
-                        $(this).toggleClass('active');
-                        const value = $(this).attr('value');
-                        const input = $(this).closest('.row').find('input');
-                        input.val(value);
-                        input.removeClass('is-invalid');
-                        input.addClass('active');
-                    });
-
-                    $('input.amount').on('keyup', function (e) {
-                        $('.donation-amount').removeClass('active');
-                        $(this).addClass('active');
-                        const value = $(this).val();
-                        const btns = $(this).closest('.row').find('.btn.amount');
-                        for (const btn of btns) {
-                            $(btn).removeClass('active');
-                            if ($(btn).attr('value') === value) {
-                                $(btn).addClass('active');
-                            }
-                        }
-                    });
-
-                    $('.currency-dropdown').on('change', function (e) {
-                        const value = $(this).val();
-                        getPrices(value);
-                    });
-                })
-                .catch((error) => {
-                    console.error('Error fetching pricing data:', error);
-                });
-        };
-
-        const getCurrencyByLocation = async function () {
-            try {
-                const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
-                const data = await response.json();
-                if (!data.country_code) {
-                    getPrices('NO');
-                } else {
-                    getPrices(data.country_code);
-                }
-            } catch (error) {
-                console.error('Error fetching location:', error);
-            }
-        };
-
-        window.onload = getCurrencyByLocation;
-
         $('#organizationCheckbox').on('change', function () {
             const inputContainer = $('#organizationInputContainer');
             if ($(this).prop('checked')) {
                 inputContainer.removeClass('d-none');
                 inputContainer.html(`
-        <div class="form-floating">
-            <input type="text" class="user-info form-control" id="organizationName" placeholder="Organization Name">
-            <label for="organizationName">Organization Name</label>
-        </div>
-    `);
+                    <div class="form-floating">
+                        <input type="text" class="user-info form-control" id="organizationName" placeholder="Organization Name">
+                        <label for="organizationName">Organization Name</label>
+                    </div>
+                `);
             } else {
                 inputContainer.addClass('d-none');
                 inputContainer.html('');
@@ -1435,9 +1588,6 @@
             }
         };
 
-        $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
-        $('.back-btn').attr({ index: 2 });
-
         const savePaymentInfo = function (elem) {
             $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
             $('.back-btn').attr({ index: 3 });
@@ -1466,6 +1616,23 @@
             }
         }
 
+        const selectBeneficiary = function (elem) {
+            $(elem).toggleClass('active');
+            $.ajax({
+                url: '/widget-update-order/{{data.project.slug}}?selectBeneficiary',
+                method: 'POST',
+                contentType: 'application/json',
+                dataType: 'json',
+                data: JSON.stringify({ entryId: $(elem).data('entryId') }),
+                success: response => {
+                    console.log(response);
+                },
+                error: (xhr, status, error) => {
+                    console.log(error);
+                    alert(`${xhr.responseText || error}`);
+                }
+            })
+        }
     </script>
 
 </body>

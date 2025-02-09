@@ -257,6 +257,8 @@
       });
     }
 
+    initializePopovers();
+
     document.addEventListener('click', function (event) {
       const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
       popoverTriggerList.forEach(function (popoverTriggerEl) {
@@ -267,7 +269,6 @@
       });
     });
 
-    initializePopovers();
 
     $(document).ajaxStart(function () {
       $(document).ajaxSend(function (event, jqXHR, settings) {

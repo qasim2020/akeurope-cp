@@ -350,6 +350,7 @@ const calculateOrder = async (order) => {
 };
 
 const formatOrder = async (req, order) => {
+    if (!order) throw new Error('Order might have been deleted. Refresh page and try again.');
     order.customer = await Customer.findOne({
         _id: order.customerId,
     }).lean();
@@ -665,6 +666,31 @@ const getPendingOrderEntries = async (req, res) => {
     };
 };
 
+const formatOrderWidget = async (order) => {
+    for (const project of order.projects) {
+        const entryModel = await createDynamicModel(project.slug);
+        for (const entry of project.entries) {
+            entry.detail = await entryModel.findOne({ _id: entry.entryId }).lean();
+            entry.lastPaid = await getPreviousOrdersForEntry(entry.entryId, order._id);
+            if (entry.lastPaid) {
+                for (const order of entry.lastPaid) {
+                    entry.costs = entry.costs.map((cost) => {
+                        if (order.selectedSubscriptions && order.selectedSubscriptions.includes(cost.fieldName)) {
+                            Object.assign(cost, {
+                                prevOrder: order,
+                            });
+                            return cost;
+                        }
+                        return cost;
+                    });
+                }
+            }
+        }
+        order.project = project;
+    }
+    return order;
+}
+
 module.exports = {
     createDraftOrder,
     updateDraftOrder,
@@ -675,4 +701,6 @@ module.exports = {
     openOrderProjectWithEntries,
     getPendingOrderEntries,
     formatOrder,
+    formatOrderWidget,
+    calculateOrder,
 };

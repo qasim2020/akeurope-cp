@@ -30,8 +30,8 @@ const validateQuery = async (req, res) => {
                     $match: {
                         _id: { $ne: order._id },
                         'projects.entries.entryId': entry.entryId,
-                        'projects.entries.totalCost': { $gt: 0 },
-                        status: 'paid',
+                        // 'projects.entries.totalCost': { $gt: 0 },
+                        // status: 'paid',
                     },
                 },
                 {
@@ -111,8 +111,8 @@ const validateQuery = async (req, res) => {
                 $match: {
                     _id: { $ne: order._id },
                     'projects.entries.entryId': entryId,
-                    'projects.entries.totalCost': { $gt: 0 },
-                    status: 'paid',
+                    // 'projects.entries.totalCost': { $gt: 0 },
+                    // status: 'paid',
                 },
             },
             {
@@ -154,7 +154,7 @@ const validateQuery = async (req, res) => {
                 });
                 if (isAlreadyOrdered)
                     throw new Error(
-                        `Couldn't select ${entryId} for subscription as it is already subscribed!`,
+                        `Couldn't select ${entryId} as already selected in another invoice!`,
                     );
             }
         }
@@ -174,8 +174,8 @@ const getPreviousOrdersForEntry = async (entryId, orderId) => {
             $match: {
                 _id: { $ne: orderId },
                 'projects.entries.entryId': entryId,
-                'projects.entries.totalCost': { $gt: 0 },
-                status: 'paid',
+                // 'projects.entries.totalCost': { $gt: 0 },
+                // status: 'paid',
             },
         },
         {
@@ -205,6 +205,7 @@ const getPreviousOrdersForEntry = async (entryId, orderId) => {
                 costs: '$projects.entries.costs',
                 orderNo: '$orderNo',
                 expiry: '$projectExpiry',
+                status: '$status'
             },
         },
         { $sort: { lastPaid: 1 } },
@@ -251,8 +252,8 @@ const getNonFullySubscribedEntries = async (
         const orders = await Order.find({
             _id: { $ne: orderId },
             'projects.entries.entryId': entry._id,
-            'projects.entries.totalCost': { $gt: 0 },
-            status: 'paid',
+            // 'projects.entries.totalCost': { $gt: 0 },
+            // status: 'paid',
         }).lean();
 
         let isFullySubscribed = false;
@@ -285,9 +286,6 @@ const getNonFullySubscribedEntries = async (
                     projEntry.entryId.toString() === entry._id.toString(),
             );
             if (projectEntries.length === 0) break;
-
-            if (order.orderNo == 266 || entry.name == 'Dustin Guzman') {
-            }
 
             for (const projEntry of projectEntries) {
                 for (const sub of requiredSubscriptions) {
@@ -351,7 +349,7 @@ const getNonFullySubscribedEntries = async (
     return { nonFullySubscribed, fullySubscribed };
 };
 
-const getOldestPaidEntries = async (req, project) => {
+const getOldestPaidEntries = async (req, project, pickDraft = true) => {
     const DynamicModel = await createDynamicModel(project.slug);
     const collectionName = DynamicModel.collection.name;
 
@@ -396,6 +394,19 @@ const getOldestPaidEntries = async (req, project) => {
     let entriesToPay = [];
 
     if (countNotSelected > selectCount) {
+        entriesToPay = await DynamicModel.find({
+            _id: { $nin: alreadySelectedEntries },
+            ...searchQuery,
+        })
+            .limit(selectCount)
+            .lean();
+        return {
+            project,
+            allEntries: entriesToPay,
+        };
+    }
+
+    if (!pickDraft) {
         entriesToPay = await DynamicModel.find({
             _id: { $nin: alreadySelectedEntries },
             ...searchQuery,
@@ -479,10 +490,10 @@ const getOldestPaidEntries = async (req, project) => {
     };
 };
 
-const makeProjectForOrder = (project, allEntries) => {
+const makeProjectForOrder = (project, allEntries, months = 12) => {
     return {
         slug: project.slug,
-        months: 12,
+        months,
         entries: allEntries.map((entry) => {
             return {
                 entryId: entry._id,
