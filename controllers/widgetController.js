@@ -554,7 +554,7 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
         const inviteExpires = moment().add(24, 'hours').toDate();
 
         const newCustomer = new Customer({
-            email,
+            email: donor.email,
             name: `${donor.firstName} ${donor.lastName}`,
             role: 'donor',
             location: (await Country.findOne({ code: donor.countryCode }).lean()).name,

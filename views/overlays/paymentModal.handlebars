@@ -868,14 +868,14 @@
                 }),
             })
 
-            const { cardNumber } = await mountStripeElems(stripe, data.clientSecret);
+            const { cardNumber, elements } = await mountStripeElems(stripe, data.clientSecret);
 
-            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false);
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false, elements);
 
             return true;
         }
 
-        const chargeOneTime = async function (stripe, clientSecret, cardNumber) {
+        const chargeOneTime = async function (stripe, clientSecret, cardNumber, elements) {
             const elem = $('#stripe-submit');
             const currentBtnHtml = $('#stripe-submit').html();
             $(elem).html(`
@@ -886,20 +886,38 @@
 
             try {
 
-                const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-                    payment_method: {
-                        card: cardNumber,
-                        billing_details: {
-                            name: `${$('[name=firstName]').val()} ${$('[name=lastName]').val()}`,
-                            email: $('[name=email]').val(),
-                        },
-                    },
-                });
+                let paymentIntent, error;
 
-                if (error) {
-                    console.error("Payment Intent Error:", error);
-                    showCardError(elem, error.message);
-                    return;
+                if (cardNumber) {
+                    ({ paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                        payment_method: {
+                            card: cardNumber,
+                            billing_details: {
+                                name: `${$('[name=firstName]').val()} ${$('[name=lastName]').val()}`,
+                                email: $('[name=email]').val(),
+                            },
+                        },
+                    }));
+                    if (error) {
+                        console.error("Payment Intent Error:", error);
+                        showCardError(elem, error.message, currentBtnHtml);
+                        return;
+                    }
+                } else if (elements) {
+                    const orderId = $('#project-entries').attr('order-id');
+                    ({ paymentIntent, error } = await stripe.confirmPayment({
+                        elements,
+                        clientSecret,
+                        confirmParams: {
+                            return_url: `https://partner.akeurope.org/widget-payment-success/${orderId}/{{data.project.slug}}`,
+                        },
+                        redirect: "if_required",
+                    }));
+                    if (error) {
+                        console.error("Payment Intent Error:", error);
+                        alert(error.message);
+                        return;
+                    }
                 }
 
                 const orderId = $('#project-entries').attr('order-id');
@@ -927,12 +945,12 @@
                     $('.back-btn').attr({ index: 3 });
                 } else {
                     console.log(paymentData);
-                    showCardError(elem, paymentData.responseText);
+                    showCardError(elem, paymentData.responseText, currentBtnHtml);
                 }
 
             } catch (error) {
                 console.log(error);
-                showCardError(elem, error.responseText);
+                showCardError(elem, error.responseText, currentBtnHtml);
             }
         }
 
@@ -961,15 +979,15 @@
                 }),
             })
 
-            const { cardNumber } = await mountStripeElems(stripe, data.clientSecret);
+            const { cardNumber, elements } = await mountStripeElems(stripe, data.clientSecret);
 
-            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, true);
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, true, elements);
 
             return true;
 
         }
 
-        const startMonthlySubscription = async function (stripe, clientSecret, cardNumber) {
+        const startMonthlySubscription = async function (stripe, clientSecret, cardNumber, elements) {
 
             const elem = $('#stripe-submit');
             const currentBtnHtml = $('#stripe-submit').html();
@@ -981,20 +999,39 @@
 
             try {
 
-                const { setupIntent, error } = await stripe.confirmCardSetup(clientSecret, {
-                    payment_method: {
-                        card: cardNumber,
-                        billing_details: {
-                            name: `${$('[name=firstName]').val()} ${$('[name=lastName]').val()}`,
-                            email: $('[name=email]').val(),
-                        },
-                    },
-                });
+                let setupIntent, error;
 
-                if (error) {
-                    console.error("SetupIntent Error:", error);
-                    showCardError(elem, error.message);
-                    return;
+                if (cardNumber) {
+                    ({ setupIntent, error } = await stripe.confirmCardSetup(clientSecret, {
+                        payment_method: {
+                            card: cardNumber,
+                            billing_details: {
+                                name: `${$('[name=firstName]').val()} ${$('[name=lastName]').val()}`,
+                                email: $('[name=email]').val(),
+                            },
+                        },
+                    }));
+
+                    if (error) {
+                        console.error("SetupIntent Error:", error);
+                        showCardError(elem, error.message, currentBtnHtml);
+                        return;
+                    }
+                } else if (elements) {
+                    const orderId = $('#project-entries').attr('order-id');
+                    ({ setupIntent, error } = await stripe.confirmSetup({
+                        elements,
+                        clientSecret,
+                        confirmParams: {
+                            return_url: `https://partner.akeurope.org/widget-payment-success/${orderId}/{{data.project.slug}}`,
+                        },
+                        redirect: "if_required",
+                    }));
+                    if (error) {
+                        console.error("Payment Intent Error:", error);
+                        alert(error.message);
+                        return;
+                    }
                 }
 
                 const orderId = $('#project-entries').attr('order-id');
@@ -1022,11 +1059,12 @@
                 } else {
                     console.log(subscriptionData);
                     alert(subscriptionData);
+                    showCardError(elem, subscriptionData, currentBtnHtml);
                 }
 
             } catch (error) {
                 console.log(error);
-                showCardError(elem, error.responseText);
+                showCardError(elem, error.responseText, currentBtnHtml);
             }
         }
 
@@ -1104,10 +1142,10 @@
             handleFloatingLabel(cardExpiry, '#card-expiry-element');
             handleFloatingLabel(cardCvc, '#card-cvc-element');
 
-            return { cardNumber, cardExpiry, cardCvc };
+            return { cardNumber, cardExpiry, cardCvc, elements };
         }
 
-        const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly) {
+        const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly, elements) {
 
             const orderId = $('#project-entries').attr('order-id');
 
@@ -1144,6 +1182,8 @@
                 requestPayerEmail: true,
             });
 
+            console.log(paymentRequest);
+            
             paymentRequest.canMakePayment().then((result) => {
 
                 if (!result) {
@@ -1169,6 +1209,14 @@
                         googlePay: 'black',
                     },
                     buttonHeight: 55,
+                });
+
+                expressCheckoutElement.on("confirm", async (event) => {
+                    if (monthly) {
+                        startMonthlySubscription(stripe, clientSecret, null, elements);
+                    } else {
+                        chargeOneTime(stripe, clientSecret, null, elements);
+                    }
                 });
 
                 expressCheckoutElement.mount('#express-checkout-element');
@@ -1284,7 +1332,7 @@
 
         };
 
-        const showCardError = function (elem, message) {
+        const showCardError = function (elem, message, currentBtnHtml) {
             $(elem).addClass('bg-danger').html(`<i class="ti ti-credit-card-off me-1"></i> Error!`);
             $(elem).popover('dispose');
             $(elem)
