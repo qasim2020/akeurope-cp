@@ -6,22 +6,12 @@ const { createDynamicModel } = require('../models/createDynamicModel');
 const { generatePagination } = require('../modules/generatePagination');
 const { getCurrencyRates } = require('./getCurrencyRates');
 const { runQueriesOnOrder } = require('../modules/orderUpdates');
-const {
-    getOldestPaidEntries,
-    makeProjectForOrder,
-    getPreviousOrdersForEntry,
-} = require('../modules/ordersFetchEntries');
+const { getOldestPaidEntries, makeProjectForOrder, getPreviousOrdersForEntry } = require('../modules/ordersFetchEntries');
 const { saveLog } = require('./logAction');
 const { logTemplates } = require('./logTemplates');
 const { capitalizeFirstLetter } = require('./helpers');
 
-const createPagination = ({
-    req,
-    totalEntries,
-    fieldFilters,
-    filtersQuery,
-    pageType,
-}) => {
+const createPagination = ({ req, totalEntries, fieldFilters, filtersQuery, pageType }) => {
     const limit = parseInt(req.query.limit) || 10;
     const totalPages = Math.ceil(totalEntries / limit);
     const page = parseInt(req.query.page) || 1;
@@ -56,51 +46,35 @@ const calculationOnProject = async (projectOrdered, requestedCurrencyRate) => {
     const DynamicModel = await createDynamicModel(projectOrdered.slug);
 
     const currencyRates = await getCurrencyRates(requestedCurrencyRate);
-    const currencyRate = parseFloat(
-        currencyRates.rates[projectOriginal.currency].toFixed(2),
-    );
+    const currencyRate = parseFloat(currencyRates.rates[projectOriginal.currency].toFixed(2));
 
-    let allEntries = await Promise.all(
-        projectOrdered.entries.map((entry) =>
-            DynamicModel.findById(entry.entryId).lean(),
-        ),
-    );
+    let allEntries = await Promise.all(projectOrdered.entries.map((entry) => DynamicModel.findById(entry.entryId).lean()));
 
     allEntries = allEntries.filter((entry) => entry != null);
 
     allEntries.forEach((entry) => {
         const matchingOrderedEntry = projectOrdered.entries.find(
-            (entryOrdered) =>
-                entryOrdered.entryId.toString() === entry._id.toString(),
+            (entryOrdered) => entryOrdered.entryId.toString() === entry._id.toString(),
         );
 
         if (matchingOrderedEntry) {
-            entry.selectedSubscriptions =
-                matchingOrderedEntry.selectedSubscriptions || [];
+            entry.selectedSubscriptions = matchingOrderedEntry.selectedSubscriptions || [];
         } else {
             entry.selectedSubscriptions = [];
         }
 
         projectOriginal.fields.forEach((field) => {
             if (field.subscription == true) {
-                entry[field.name] = parseFloat(
-                    (entry[field.name] / currencyRate).toFixed(2),
-                );
+                entry[field.name] = parseFloat((entry[field.name] / currencyRate).toFixed(2));
             }
         });
 
-        entry.totalOrderedCost = projectOriginal.fields.reduce(
-            (total, field) => {
-                if (
-                    field.subscription == true &&
-                    entry.selectedSubscriptions.includes(field.name)
-                ) {
-                    total = total + entry[field.name];
-                }
-                return parseFloat(total.toFixed(2));
-            },
-            0,
-        );
+        entry.totalOrderedCost = projectOriginal.fields.reduce((total, field) => {
+            if (field.subscription == true && entry.selectedSubscriptions.includes(field.name)) {
+                total = total + entry[field.name];
+            }
+            return parseFloat(total.toFixed(2));
+        }, 0);
 
         entry.totalCost = projectOriginal.fields.reduce((total, field) => {
             if (field.subscription == true) {
@@ -154,12 +128,8 @@ const calculationOnProject = async (projectOrdered, requestedCurrencyRate) => {
     projectOriginal.totalSubscriptionCosts = totalSubscriptionCosts;
     projectOriginal.months = parseFloat(projectOrdered.months.toFixed(2));
     projectOriginal.totalCost = parseFloat(projectTotalSingleMonth.toFixed(2));
-    projectOriginal.totalOrderedCost = parseFloat(
-        projectOrderedSingleMonth.toFixed(2),
-    );
-    projectOriginal.totalOrderedCostAllMonths = parseFloat(
-        (projectOrderedSingleMonth * projectOrdered.months).toFixed(2),
-    );
+    projectOriginal.totalOrderedCost = parseFloat(projectOrderedSingleMonth.toFixed(2));
+    projectOriginal.totalOrderedCostAllMonths = parseFloat((projectOrderedSingleMonth * projectOrdered.months).toFixed(2));
     projectOriginal.selectedCurrency = requestedCurrencyRate;
 
     return {
@@ -172,8 +142,7 @@ const updateDraftOrder = async (req, res) => {
     const checkProject = await Project.findOne({
         slug: req.params.slug,
     }).lean();
-    if (!checkProject)
-        throw new Error(`Project "${req.params.slug}" not found`);
+    if (!checkProject) throw new Error(`Project "${req.params.slug}" not found`);
 
     const order = await runQueriesOnOrder(req, res);
 
@@ -210,13 +179,9 @@ const createDraftOrder = async (req, res) => {
         const checkProject = await Project.findOne({
             slug: req.params.slug,
         }).lean();
-        if (!checkProject)
-            throw new Error(`Project "${req.params.slug}" not found`);
+        if (!checkProject) throw new Error(`Project "${req.params.slug}" not found`);
 
-        const { project, allEntries } = await getOldestPaidEntries(
-            req,
-            checkProject,
-        );
+        const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
 
         const updatedProject = makeProjectForOrder(project, allEntries);
 
@@ -261,7 +226,7 @@ const createDraftOrder = async (req, res) => {
                     actor: req.session.user,
                 }),
             );
-        };
+        }
 
         const customer = await Customer.findById(order.customerId).lean();
         await saveLog(
@@ -286,7 +251,7 @@ const createDraftOrder = async (req, res) => {
 };
 
 const getPaginatedOrders = async (req, res) => {
-    const orders = await Order.find({customerId: req.session.user._id}).sort({ _id: -1 }).lean();
+    const orders = await Order.find({ customerId: req.session.user._id }).sort({ _id: -1 }).lean();
 
     const pagination = createPagination({
         req,
@@ -306,9 +271,7 @@ const getPaginatedOrders = async (req, res) => {
             order.projects.map((val) =>
                 Project.findOne({ slug: val.slug })
                     .lean()
-                    .then((projectDetails) =>
-                        Object.assign(val, { details: projectDetails }),
-                    ),
+                    .then((projectDetails) => Object.assign(val, { details: projectDetails })),
             ),
         );
     }
@@ -320,17 +283,13 @@ const getPaginatedOrders = async (req, res) => {
 };
 
 const countSubscribedEntries = (entries) => {
-    return entries.filter((entry) => entry.selectedSubscriptions.length > 0)
-        .length;
+    return entries.filter((entry) => entry.selectedSubscriptions.length > 0).length;
 };
 
 const calculateOrder = async (order) => {
     order.projects = await Promise.all(
         order.projects.map(async (val) => {
-            const { project, allEntries } = await calculationOnProject(
-                val,
-                order.currency,
-            );
+            const { project, allEntries } = await calculationOnProject(val, order.currency);
             Object.assign(project, {
                 select: countSubscribedEntries(allEntries),
                 allEntries,
@@ -341,9 +300,10 @@ const calculateOrder = async (order) => {
         }),
     );
     order.totalCost = order.projects.reduce((total, project) => {
-        return parseFloat(
-            (total + project.totalOrderedCostAllMonths).toFixed(2),
-        );
+        return parseFloat((total + project.totalOrderedCostAllMonths).toFixed(2));
+    }, 0);
+    order.totalCostSingleMonth = order.projects.reduce((total, project) => {
+        return parseFloat((total + project.totalOrderedCost).toFixed(2));
     }, 0);
 
     return order;
@@ -378,20 +338,12 @@ const formatOrder = async (req, order) => {
         project.entries = project.entries.slice(skip, skip + limit);
 
         for (const entry of project.entries) {
-            entry.detail = await entryModel
-                .findOne({ _id: entry.entryId })
-                .lean();
-            entry.lastPaid = await getPreviousOrdersForEntry(
-                entry.entryId,
-                order._id,
-            );
+            entry.detail = await entryModel.findOne({ _id: entry.entryId }).lean();
+            entry.lastPaid = await getPreviousOrdersForEntry(entry.entryId, order._id);
             if (entry.lastPaid) {
                 for (const order of entry.lastPaid) {
                     entry.costs = entry.costs.map((cost) => {
-                        if (
-                            order.selectedSubscriptions &&
-                            order.selectedSubscriptions.includes(cost.fieldName)
-                        ) {
+                        if (order.selectedSubscriptions && order.selectedSubscriptions.includes(cost.fieldName)) {
                             Object.assign(cost, {
                                 prevOrder: order,
                             });
@@ -432,16 +384,15 @@ const getSingleOrder = async (req, res) => {
 };
 
 const updateOrderStatus = async (req, res) => {
-    
     const orderId = req.params.orderId || req.query.orderId;
     const { status } = req.body;
     const checkOrder = await Order.findById(orderId).lean();
 
     if (checkOrder.totalCost == 0) {
-        throw new Error('Invoice has no selected beneficiaries.')
+        throw new Error('Invoice has no selected beneficiaries.');
     }
 
-    const projectsWithZeroSubscriptions = checkOrder.projects.filter(project => project.totalCostSingleMonth == 0);
+    const projectsWithZeroSubscriptions = checkOrder.projects.filter((project) => project.totalCostSingleMonth == 0);
 
     if (projectsWithZeroSubscriptions.length > 0) {
         for (const project of projectsWithZeroSubscriptions) {
@@ -454,12 +405,8 @@ const updateOrderStatus = async (req, res) => {
         }
     }
 
-    const order = await Order.findOneAndUpdate(
-        { _id: orderId },
-        { $set: { status: status } },
-        { new: true, lean: true },
-    );
-    
+    const order = await Order.findOneAndUpdate({ _id: orderId }, { $set: { status: status } }, { new: true, lean: true });
+
     if (checkOrder.status != order.status) {
         if (order.status == 'paid') {
             await saveLog(
@@ -468,7 +415,7 @@ const updateOrderStatus = async (req, res) => {
                     entity: order,
                     actor: req.session.user,
                 }),
-            ); 
+            );
         } else {
             await saveLog(
                 logTemplates({
@@ -484,7 +431,7 @@ const updateOrderStatus = async (req, res) => {
                     actor: req.session.user,
                 }),
             );
-        };   
+        }
         for (const project of order.projects) {
             const model = await createDynamicModel(project.slug);
             project.detail = await Project.findOne({
@@ -503,9 +450,7 @@ const updateOrderStatus = async (req, res) => {
                         changes: [
                             {
                                 key: 'status',
-                                oldValue: capitalizeFirstLetter(
-                                    checkOrder.status,
-                                ),
+                                oldValue: capitalizeFirstLetter(checkOrder.status),
                                 newValue: capitalizeFirstLetter(order.status),
                             },
                         ],
@@ -525,10 +470,11 @@ const addPaymentsToOrder = async (order) => {
             {
                 $set: {
                     totalCost: order.totalCost,
+                    totalCostSingleMonth: order.totalCostSingleMonth,
                 },
             },
         );
-    };
+    }
     for (const project of order.projects) {
         const projectSlug = project.slug;
         const entries = project.allEntries;
@@ -543,11 +489,7 @@ const addPaymentsToOrder = async (order) => {
                     costs.push({
                         fieldName: field.name,
                         totalCost: entry[field.name],
-                        totalOrderedCost: entry.selectedSubscriptions.includes(
-                            field.name,
-                        )
-                            ? entry[field.name]
-                            : 0,
+                        totalOrderedCost: entry.selectedSubscriptions.includes(field.name) ? entry[field.name] : 0,
                     });
                 }
             });
@@ -567,28 +509,20 @@ const addPaymentsToOrder = async (order) => {
                 {
                     $set: {
                         totalCost: order.totalCost,
-                        'projects.$[project].totalCostSingleMonth':
-                            project.totalOrderedCost,
-                        'projects.$[project].totalSubscriptionCosts':
-                            project.totalSubscriptionCosts,
-                        'projects.$[project].totalCostAllMonths':
-                            project.totalOrderedCostAllMonths,
+                        totalCostSingleMonth: order.totalCostSingleMonth,
+                        'projects.$[project].totalCostSingleMonth': project.totalOrderedCost,
+                        'projects.$[project].totalSubscriptionCosts': project.totalSubscriptionCosts,
+                        'projects.$[project].totalCostAllMonths': project.totalOrderedCostAllMonths,
                         'projects.$[project].months': project.months,
                         'projects.$[project].totalCost': project.totalCost,
-                        'projects.$[project].entries.$[entry].totalCost':
-                            totalCost,
-                        'projects.$[project].entries.$[entry].totalCostAllSubscriptions':
-                            totalCostAllSubscriptions,
-                        'projects.$[project].entries.$[entry].selectedSubscriptions':
-                            selectedSubscriptions,
+                        'projects.$[project].entries.$[entry].totalCost': totalCost,
+                        'projects.$[project].entries.$[entry].totalCostAllSubscriptions': totalCostAllSubscriptions,
+                        'projects.$[project].entries.$[entry].selectedSubscriptions': selectedSubscriptions,
                         'projects.$[project].entries.$[entry].costs': costs,
                     },
                 },
                 {
-                    arrayFilters: [
-                        { 'project.slug': projectSlug },
-                        { 'entry.entryId': entryId },
-                    ],
+                    arrayFilters: [{ 'project.slug': projectSlug }, { 'entry.entryId': entryId }],
                 },
             );
         }
@@ -625,9 +559,7 @@ const openOrderProjectWithEntries = async (req, order) => {
         project.entries = project.entries.slice(skip, skip + limit);
 
         for (const entry of project.entries) {
-            entry.detail = await entryModel
-                .findOne({ _id: entry.entryId })
-                .lean();
+            entry.detail = await entryModel.findOne({ _id: entry.entryId }).lean();
         }
 
         project.detail = detail;
@@ -642,9 +574,7 @@ const getPendingOrderEntries = async (req, res) => {
     const orderId = req.params.orderId;
     const projectSlug = req.params.slug;
     const order = await Order.findById(orderId).lean();
-    const project = order.projects.find(
-        (project) => project.slug === projectSlug,
-    );
+    const project = order.projects.find((project) => project.slug === projectSlug);
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -689,7 +619,31 @@ const formatOrderWidget = async (order) => {
         order.project = project;
     }
     return order;
-}
+};
+
+const cleanOrder = async (orderId) => {
+    await Order.findOneAndUpdate(
+        { _id: orderId },
+        {
+            $pull: {
+                'projects.$[].entries': { selectedSubscriptions: { $size: 0 } },
+            },
+        },
+        { new: true },
+    );
+
+    await Order.findOneAndUpdate(
+        { _id: orderId },
+        {
+            $pull: {
+                projects: { totalCost: 0 },
+            },
+        },
+        { new: true },
+    );
+
+    return true;
+};
 
 module.exports = {
     createDraftOrder,
@@ -703,4 +657,5 @@ module.exports = {
     formatOrder,
     formatOrderWidget,
     calculateOrder,
+    cleanOrder,
 };

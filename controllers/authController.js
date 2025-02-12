@@ -152,7 +152,6 @@ exports.registerCustomer = async (req, res) => {
             {
                 $set: {
                     name,
-                    role: 'viewer',
                     password,
                     organization,
                     location,

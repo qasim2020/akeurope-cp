@@ -41,12 +41,10 @@ app.use(
     }),
 );
 
-// app.use((req, res, next) => {
-//     console.log(req.originalUrl);
-//     console.log('Session ID:', req.sessionID);
-//     console.log(req.session);
-//     next();
-// });
+app.use((req, res, next) => {
+    console.log(req.originalUrl);
+    next();
+});
 
 app.use(flash());
 

@@ -1,7 +1,7 @@
 {{#with data.order as |order|}}
 {{#with ../data.project as |project|}}
 {{#each order.project.entries as |entry|}}
-{{> widgetEntry order=order project=project entry=entry}}
+{{> widgetEntry order=order entry=entry}}
 {{/each}}
 {{/with}}
 {{/with}}

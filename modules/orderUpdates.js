@@ -10,13 +10,22 @@ const {
 const { createDynamicModel } = require('../models/createDynamicModel');
 const { camelCaseWithCommaToNormalString } = require('../modules/helpers');
 
-const runQueriesOnOrder = async (req, res, saveLogs = false) => {
+const runQueriesOnOrder = async (req, res, saveLogs = true) => {
     await validateQuery(req, res);
     let order;
     const orderId = req.query.orderId;
     const projectSlug = req.params.slug;
     const checkProject = await Project.findOne({ slug: projectSlug }).lean();
     const existingOrder = await Order.findById(req.query.orderId).lean();
+
+    if (req.query.monthlySubscription) {
+        const updatedSubscription = req.query.monthlySubscription;
+        order = await Order.findOneAndUpdate(
+            { _id: orderId },
+            { $set: { monthlySubscription: updatedSubscription } },
+            { new: true, lean: true },
+        );
+    }
 
     if (req.query.currency) {
         const currency = req.query.currency;
@@ -25,6 +34,8 @@ const runQueriesOnOrder = async (req, res, saveLogs = false) => {
             { $set: { currency: currency } },
             { new: true, lean: true },
         );
+
+        if (!saveLogs) return order;
 
         if (order.currency != existingOrder.currency) {
             await saveLog(

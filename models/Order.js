@@ -54,6 +54,12 @@ const OrderSchema = new mongoose.Schema(
         monthlySubscription: {
             type: Boolean,
         },
+        totalCostSingleMonth: {
+            type: Number,
+        },
+        countryCode: {
+            type: String,
+        }
     },
     {
         timestamps: true,

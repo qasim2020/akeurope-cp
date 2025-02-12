@@ -4,12 +4,16 @@ const bcrypt = require('bcryptjs');
 const CustomerSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    role: { type: String, default: 'viewer' }, 
+    role: { type: String, default: 'donor' },
     organization: { type: String },
     location: { type: String },
-    password: { type : String },
+    password: { type: String },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
     emailStatus: { type: String },
+    tel: { type: String},
+    organization: { type: String},
+    anonymous: { type: String},
+    countryCode: { type: String},
     inviteToken: String,
     inviteExpires: Date,
     resetPasswordToken: String,
@@ -33,7 +37,5 @@ CustomerSchema.pre('save', async function (next) {
 CustomerSchema.methods.comparePassword = function (password) {
     return bcrypt.compare(password, this.password);
 };
-
-
 
 module.exports = mongoose.model('Customer', CustomerSchema);

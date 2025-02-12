@@ -36,10 +36,19 @@
             background-color: rgb(240, 240, 240);
         }
 
+        .subscription.active,
         .card-beneficiary.active {
             background-color: #e3f2fd;
             color: rgb(25 109 187);
-            border: 1px solid #066fd1;
+            border: 1px solid #066fd1 !important;
+            cursor: pointer;
+        }
+
+        .subscription.paid {
+            background-color: #e4fde3;
+            color: rgb(25 109 187);
+            border: 1px solid #0ed106 !important;
+            cursor: pointer;
         }
 
         .card-beneficiary.active .card-title {
@@ -74,7 +83,7 @@
         .slide .btn:not(.btn-primary).active {
             background-color: #e3f2fd;
             color: rgb(25 109 187);
-            border: 1px solid #066fd1;
+            border: 1px solid #066fd1 !important;
             font-weight: bold;
         }
 
@@ -121,6 +130,18 @@
             transition: background-color 0.3s ease;
         }
 
+        .month-tab {
+            position: absolute;
+            height: 20px;
+            right: 8px;
+            top: 13px;
+            margin: 0px 4px;
+            padding: 0 6px;
+            width: 60px;
+            border-radius: 3px;
+            color: #192433;
+        }
+
         .currency-selector {
             position: absolute;
             height: 37px;
@@ -144,7 +165,8 @@
             padding: 4px 31px;
         }
 
-        input.amount {
+        .month,
+        .amount {
             width: 100%;
             color: #066fd1 !important;
             font-weight: bold;
@@ -371,11 +393,11 @@
 
             #project-card {
                 min-height: 580px;
-                min-width: 500px;
+                width: 500px;
             }
 
             #project-entries {
-                max-height: 430px;
+                height: 430px;
                 overflow: scroll;
             }
 
@@ -396,6 +418,16 @@
 
             .slide>.header {
                 margin: 0;
+            }
+
+            #monthly-products .entries-selected {
+                max-height: 200px;
+                overflow: scroll;
+            }
+
+            #one-time-products .entries-selected {
+                max-height: 100px;
+                overflow: scroll;
             }
         }
     </style>
@@ -481,61 +513,29 @@
                                             Monthly</a>
                                     </div>
 
-                                    <div class="tab-content my-2 d-none">
+                                    <div class="tab-content my-2">
                                         <div class="tab-pane show active" id="one-time-products">
                                             <div class="row g-2" id="one-time-products-list">
-                                                <div
-                                                    class="p-0 col-12 row g-2 placeholder-glow d-flex align-items-center mt-1 m-auto">
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-12"><a href="#" tabindex="-1"
-                                                            class="btn w-100 disabled placeholder col-12 fs-3"
-                                                            style="height:43px" aria-hidden="true"></a> </div>
+                                                <div class="card placeholder-glow w-100 border-0 p-1">
+                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-100 placeholder">
+                                                    </div>
+                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-66 placeholder">
+                                                    </div>
+                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-33 placeholder">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="tab-pane" id="monthly-products">
                                             <div class="row g-2" id="monthly-products-list">
-                                                <div
-                                                    class="p-0 col-12 row g-2 placeholder-glow d-flex align-items-center mt-1 m-auto">
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-4"><a href="#" tabindex="-1"
-                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
-                                                            style="height:41px" aria-hidden="true"></a></div>
-                                                    <div class="col-12"><a href="#" tabindex="-1"
-                                                            class="btn w-100 disabled placeholder col-12 fs-3"
-                                                            style="height:43px" aria-hidden="true"></a> </div>
+                                                <div class="card placeholder-glow w-100 border-0 p-0">
+                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-100 placeholder">
+                                                    </div>
+                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-66 placeholder">
+                                                    </div>
+                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-33 placeholder">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -546,18 +546,7 @@
                             <div class="footer border-0">
                                 <button id="donate-btn" class="btn btn-primary w-100 py-3 fw-bold fs-3"
                                     onclick="saveDonationAmount(this)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="icon icon-tabler icons-tabler-outline icon-tabler-credit-card-pay">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
-                                        <path d="M3 10h18" />
-                                        <path d="M16 19h6" />
-                                        <path d="M19 16l3 3l-3 3" />
-                                        <path d="M7.005 15h.005" />
-                                        <path d="M11 15h2" />
-                                    </svg>
+                                    <i class="ti ti-credit-card-pay me-2"></i>
                                     <span>Donate Once</span>
                                 </button>
                             </div>
@@ -583,18 +572,19 @@
                             <div class="body">
                                 <div class="mb-3 position-relative" id="donor-info-form">
                                     <div class="form-floating">
-                                        <input type="text" class="user-info form-control rounded-top-3 rounded-bottom-0"
+                                        <input name="firstName" type="text"
+                                            class="user-info form-control rounded-top-3 rounded-bottom-0"
                                             id="first-name" placeholder="Your name">
                                         <label for="first-name">First name</label>
                                     </div>
                                     <div class="form-floating">
-                                        <input type="text" class="user-info form-control rounded-0" id="last-name"
-                                            placeholder="Last name">
+                                        <input name="lastName" type="text" class="user-info form-control rounded-0"
+                                            id="last-name" placeholder="Last name">
                                         <label for="last-name">Last name</label>
                                     </div>
                                     <div class="form-floating">
-                                        <input type="email" class="user-info form-control rounded-0" id="email"
-                                            placeholder="your@email.com">
+                                        <input name="email" type="email" class="user-info form-control rounded-0"
+                                            id="email" placeholder="your@email.com">
                                         <label for="floatingPassword">Email address</label>
                                     </div>
                                     <div id="tel-wrapper">
@@ -604,7 +594,7 @@
                                             <div class="dropdown-menu" id="tel-codes"> </div>
                                         </div>
                                         <div class="form-floating">
-                                            <input type="tel"
+                                            <input name="tel" type="tel"
                                                 class="user-info form-control rounded-bottom-3 rounded-top-0"
                                                 id="contact-number" placeholder="9292929" inputmode="tel">
                                             <label for="contact-number">Phone number</label>
@@ -617,8 +607,8 @@
 
                                     <div class="d-flex">
                                         <div class="form-check">
-                                            <input class="user-info form-check-input" type="checkbox"
-                                                id="organizationCheckbox">
+                                            <input name="organization" class="user-info form-check-input"
+                                                type="checkbox" id="organizationCheckbox">
                                             <label class="form-check-label" for="organizationCheckbox">
                                                 Donate as an organization
                                             </label>
@@ -631,7 +621,7 @@
 
                                     <div class="d-flex">
                                         <div class="form-check">
-                                            <input class="user-info form-check-input" type="checkbox"
+                                            <input name="anonymous" class="user-info form-check-input" type="checkbox"
                                                 id="anonymousCheckbox">
                                             <label class="form-check-label" for="anonymousCheckbox">
                                                 Donate anonymously
@@ -730,12 +720,12 @@
                                 <div class="d-flex justify-content-between flex-wrap py-3">
                                     <hr class="w-100 mb-3">
                                     <div class="text-dark fw-strong">Total</div>
-                                    <div class="text-dark fw-strong">300 NOK / month</div>
+                                    <div class="text-dark fw-strong" id="stripe-total">300 NOK / month</div>
                                 </div>
                                 <div class="w-100 d-none" id="express-checkout-element">
 
                                 </div>
-                                <button id="cardSubmit" class="btn btn-primary w-100 py-3 fw-bold fs-3">
+                                <button id="stripe-submit" class="btn btn-primary w-100 py-3 fw-bold fs-3">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -756,7 +746,7 @@
                         <div class="slide" id="slide-thank-you">
                             <div
                                 class="header d-flex align-items-center justify-content-center position-relative pt-4 pb-2">
-                                <h3 class="fw-bold">Thank you for your payment!</h3>
+                                <h3 class="fw-normal">Thank you for your payment!</h3>
                             </div>
                             <div class="d-flex h-100 justify-content-center align-items-center">
                                 <dotlottie-player
@@ -854,281 +844,197 @@
     <script src="/static/maskList.js"></script>
     <script>
 
-        const startWidget = async function () {
-            try {
-                const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
-                const data = await response.json();
-                let countryCode = data.country_code ? data.country_code : 'NO';
-                await createNewOrder(countryCode);
-                const orderId = $('#project-entries').attr('order-id');
-                if (!orderId) {
-                    console.log('no order available');
-                    return;
-                };
-                const order = await getOrderData(orderId);
-                await drawEntries(order);
-                await getPrices(countryCode);
-            } catch (error) {
-                alert(error);
-                console.error('Error fetching location:', error);
-            }
-        };
+        // STRIPE CHARGE ONE TIME
 
-        window.onload = startWidget;
-
-        const createNewOrder = async function (countryCode) {
-            try {
-                const response = await $.ajax({
-                    url: `/widget-new-order/{{data.project.slug}}?countryCode=${countryCode}`,
-                    method: 'GET',
-                    contentType: 'application/json',
-                });
-
-                $('#project-entries').replaceWith(response);
-
-                initializePopovers();
-
-                let loadingMoreContent = false;
-
-                $("#project-entries").on("scroll", function () {
-                    let $this = $(this);
-                    console.log('scrolling');
-                    if ($this.scrollTop() + $this.innerHeight() >= $this[0].scrollHeight - 10) {
-                        if (loadingMoreContent) return;
-                        const orderId = $('#project-entries').attr('order-id');
-                        const slug = $('#project-entries').attr('project-slug');
-                        loadMoreContent(orderId, slug);
-                    }
-                });
-
-                function loadMoreContent(orderId, slug) {
-                    if (!orderId || !slug) return alert('orderId and slug is required to load more content!');
-                    loadingMoreContent = true;
-                    const currentScrolHtml = $('#scroll-loader').html();
-                    $('#scroll-loader').html('<h3 class="fw-normal">Loading cards...</h3>');
-                    $.ajax({
-                        url: `/widget-update-order/${orderId}/${slug}?addEntries=true`,
-                        method: 'POST',
-                        contentType: 'application/json',
-                        success: response => {
-                            loadingMoreContent = false;
-                            $('#scroll-loader').html(currentScrolHtml);
-                            $('#scroll-loader').before(response);
-                            initializePopovers();
-                        },
-                        error: error => {
-                            loadingMoreContent = false;
-                            $('#scroll-loader').html(`<h3 class="fw-normal">${error.responseText}</h3>`);
-                        }
-                    })
-                }
-
-            } catch (xhr) {
-                console.error("Error:", xhr);
-                alert(xhr.responseText || "An error occurred while creating the order.");
-            }
-        }
-
-        $(document).on('click', ".popover-card", function (event) {
-            $('[data-bs-toggle="popover"]').not($(this).find('[data-bs-toggle="popover"]')).popover("hide");
-            let popoverElement = $(this).find('[data-bs-toggle="popover"]');
-            popoverElement.popover("toggle");
-            event.stopPropagation();
-        });
-
-        const getOrderData = async function (orderId) {
-            try {
-                const order = await $.ajax({
-                    url: `/widget-order/${orderId}`,
-                    method: 'GET',
-                    contentType: 'application/json',
-                });
-                return order;
-            } catch (xhr) {
-                console.error("Error:", xhr);
-                alert(xhr.responseText || "An error occurred while creating the order.");
-            }
-        }
-
-        const getPrices = async function (userCountry) {
-            fetch(`/get-prices/${userCountry}`)
-                .then((response) => response.json())
-                .then((data) => {
-
-                    populateCurrencyDropdown(data.countries);
-                    populateTelephoneDropdown(data.countries);
-
-                    $('.donation-amount').first().addClass('active');
-
-                    $('.currency-dropdown').val(data.country.code);
-
-                    $('#tel-toggle').html(`
-                        <span class="flag flag-country-${data.country.code.toLowerCase()} me-1"></span>
-                        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
-                    `);
-
-                    $('#tel-toggle').data({ value: data.country.code.toLowerCase() });
-
-                    $('#contact-number').val(data.country.callingCodes[0].toString());
-
-                    $('.btn.amount').on('click', function (e) {
-                        $(this).closest('.body').find('input.active, button.active').removeClass('active');
-                        $(this).toggleClass('active');
-                        const value = $(this).attr('value');
-                        const input = $(this).closest('.row').find('input');
-                        input.val(value);
-                        input.removeClass('is-invalid');
-                        input.addClass('active');
-                    });
-
-                    $('input.amount').on('keyup', function (e) {
-                        $('.donation-amount').removeClass('active');
-                        $(this).addClass('active');
-                        const value = $(this).val();
-                        const btns = $(this).closest('.row').find('.btn.amount');
-                        for (const btn of btns) {
-                            $(btn).removeClass('active');
-                            if ($(btn).attr('value') === value) {
-                                $(btn).addClass('active');
-                            }
-                        }
-                    });
-
-                    $('.currency-dropdown').on('change', function (e) {
-                        const value = $(this).val();
-                        getPrices(value);
-                    });
-                })
-                .catch((error) => {
-                    console.error('Error fetching pricing data:', error);
-                });
-        };
-
-        const drawEntries = async function (order) {
-            $('#monthly-products-list, #one-time-products-list').html('');
-
-            const createPriceButton = (entry) => {
-                return `
-                    <div class="col-12">
-                        <div class="w-100 card shadow p-2">
-                            <div class="text-small">${entry.detail.name}</div>
-                            ${entry.costs
-                        .filter(cost => cost.totalCost !== 0)
-                        .map(cost => `
-                                    <button class="btn btn-sm amount ${cost.totalCost === cost.totalOrderedCost ? 'active' : ''}" 
-                                            value="${cost.totalCost}">
-                                        ${cost.fieldName} ${cost.totalCost}
-                                    </button>
-                                `).join('')} 
-                        </div>
-                    </div>
-                `;
-            };
-
-            const inputGroup = `
-                        <div class="col-12">
-                            <div class="currency-input-container border-1 rounded-2">
-                                <input type="number" class="donation-amount amount form-control py-2 fs-2" min="0">
-                                <div class="currency-selector">
-                                    ${order.currency}
-                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="ms-1 icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
-                                </div>
-                                <select class="currency-dropdown">
-                                </select>
-                            </div>
-                        </div>
-                    `;
-
-            let monthlyHTML = '';
-            order.projects[0].entries.forEach((entry) => {
-                monthlyHTML += createPriceButton(entry);
-            });
-            monthlyHTML += inputGroup;
-            $('#monthly-products-list').prepend(monthlyHTML);
-
-            let oneTimeHTML = '';
-            order.projects[0].entries.forEach((product) => {
-                oneTimeHTML += createPriceButton(product);
-            });
-            oneTimeHTML += inputGroup;
-            $('#one-time-products-list').prepend(monthlyHTML);
-
-        }
-
-        $('.toggle-faq').on('click', function () {
-            let answer = $(this).next('.faq-answer');
-            let icon = $(this).find('i');
-            $(this).toggleClass('fw-normal fw-bold');
-            answer.toggleClass('d-none');
-            icon.toggleClass('ti-chevron-right ti-chevron-down');
-        });
-
-        document.addEventListener('click', function (event) {
-            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-            popoverTriggerList.forEach(function (popoverTriggerEl) {
-                const popover = bootstrap.Popover.getInstance(popoverTriggerEl);
-                if (popover && popover._isShown && !popoverTriggerEl.contains(event.target)) {
-                    popover.hide();
-                }
-            });
-        });
-
-        document.getElementById('close-overlay').addEventListener('click', function () {
-            document.getElementById('payment-overlay').remove();
-            window.parent.postMessage('close-overlay', '*');
-        });
-
-        function formatNumberToShortenedVersion(number) {
-            if (number >= 1000) {
-                const suffixes = ['k', 'M', 'B', 'T'];
-                const orderOfMagnitude = Math.floor(Math.log10(number) / 3);
-                const shortNumber = (number / Math.pow(1000, orderOfMagnitude)).toFixed(0);
-
-                return `${shortNumber}${suffixes[orderOfMagnitude - 1]}`;
-            }
-
-            return number.toString();
-        }
-
-        function initializePopovers() {
-            var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
-            popoverTriggerList.forEach(function (popoverTriggerEl) {
-                new bootstrap.Popover(popoverTriggerEl);
-            });
-        }
-
-        initializePopovers();
-
-        $('[freq]').on('click', function (e) {
-            const freq = $(this).attr('freq');
-            $('.donation-amount').removeClass('active');
-            if (freq === 'once') {
-                $('#donate-btn').find('span').html('Donate Once');
-                $('.donation-amount').first().addClass('active');
-            } else {
-                $('#donate-btn').find('span').html('Donate Monthly');
-                $('.donation-amount').last().addClass('active');
-            }
-        });
-
-        $('.back-btn').on('click', function (e) {
-            console.log('clicked back');
-            const index = $(this).attr('index');
-            $('.back-btn').attr({ index: index - 1 });
-            $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
-        });
-
-        async function fetchClientSecret() {
-            const response = await fetch('/create-payment-intent', { method: 'POST' });
-            const data = await response.json();
-            console.log(data);
-            return data.clientSecret;
-        }
-
-        fetchClientSecret().then((clientSecret) => {
+        const handleOneTimePayment = async function () {
             const stripe = Stripe(
                 'pk_test_51OzgG82KJohMNjOSieXVuRBiBI6TFbXkZkWOF4Qsr2H563351MojVy7tE8arnbFbr6zJEPlKA1Nl2H6AZY9cZphg00zG07zi2A',
             );
+
+            const orderId = $('#project-entries').attr('order-id');
+
+            const data = await $.ajax({
+                url: `/create-payment-intent/${orderId}/{{data.project.slug}}`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    email: $('[name=email]').val(),
+                    firstName: $('[name=firstName]').val(),
+                    lastName: $('[name=lastName]').val(),
+                    tel: $('[name=tel]').val(),
+                    organization: $('[name=organization]').is(':checked') ? $('#organizationName').val() : '',
+                    anonymous: $('[name=anonymous]').is(':checked'),
+                    countryCode: localStorage.getItem('countryCode'),
+                }),
+            })
+
+            const { cardNumber } = await mountStripeElems(stripe, data.clientSecret);
+
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false);
+
+            return true;
+        }
+
+        const chargeOneTime = async function (stripe, clientSecret, cardNumber) {
+            const elem = $('#stripe-submit');
+            const currentBtnHtml = $('#stripe-submit').html();
+            $(elem).html(`
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Processing
+                `);
+            $('#payment-error').addClass('d-none');
+
+            try {
+
+                const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardNumber,
+                        billing_details: {
+                            name: `${$('[name=firstName]').val()} ${$('[name=lastName]').val()}`,
+                            email: $('[name=email]').val(),
+                        },
+                    },
+                });
+
+                if (error) {
+                    console.error("Payment Intent Error:", error);
+                    showCardError(elem, error.message);
+                    return;
+                }
+
+                const orderId = $('#project-entries').attr('order-id');
+
+                const paymentData = await $.ajax({
+                    url: `/create-one-time/${orderId}/{{data.project.slug}}`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        paymentIntentId: paymentIntent.id,
+                        paymentMethodId: paymentIntent.payment_method,
+                        email: $('[name=email]').val(),
+                    }),
+                });
+
+                if (paymentData.success) {
+                    await drawOrderEntries();
+                    await $.ajax({
+                        url: `/widget-order-customer/${orderId}/${paymentData.customerId}`,
+                        method: 'POST',
+                        contentType: 'application/json',
+                    });
+                    $(elem).removeClass('bg-danger').html(currentBtnHtml);
+                    $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
+                    $('.back-btn').attr({ index: 3 });
+                } else {
+                    console.log(paymentData);
+                    showCardError(elem, paymentData.responseText);
+                }
+
+            } catch (error) {
+                console.log(error);
+                showCardError(elem, error.responseText);
+            }
+        }
+
+        // STRIPE CHARGE MONTHLY
+
+        const handleMonthlyPayment = async function () {
+
+            const stripe = Stripe(
+                'pk_test_51OzgG82KJohMNjOSieXVuRBiBI6TFbXkZkWOF4Qsr2H563351MojVy7tE8arnbFbr6zJEPlKA1Nl2H6AZY9cZphg00zG07zi2A',
+            );
+
+            const orderId = $('#project-entries').attr('order-id');
+
+            const data = await $.ajax({
+                url: `/create-setup-intent/${orderId}/{{data.project.slug}}`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    email: $('[name=email]').val(),
+                    firstName: $('[name=firstName]').val(),
+                    lastName: $('[name=lastName]').val(),
+                    tel: $('[name=tel]').val(),
+                    organization: $('[name=organization]').is(':checked') ? $('#organizationName').val() : '',
+                    anonymous: $('[name=anonymous]').is(':checked'),
+                    countryCode: localStorage.getItem('countryCode'),
+                }),
+            })
+
+            const { cardNumber } = await mountStripeElems(stripe, data.clientSecret);
+
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, true);
+
+            return true;
+
+        }
+
+        const startMonthlySubscription = async function (stripe, clientSecret, cardNumber) {
+
+            const elem = $('#stripe-submit');
+            const currentBtnHtml = $('#stripe-submit').html();
+            $(elem).html(`
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Processing
+                `);
+            $('#payment-error').addClass('d-none');
+
+            try {
+
+                const { setupIntent, error } = await stripe.confirmCardSetup(clientSecret, {
+                    payment_method: {
+                        card: cardNumber,
+                        billing_details: {
+                            name: `${$('[name=firstName]').val()} ${$('[name=lastName]').val()}`,
+                            email: $('[name=email]').val(),
+                        },
+                    },
+                });
+
+                if (error) {
+                    console.error("SetupIntent Error:", error);
+                    showCardError(elem, error.message);
+                    return;
+                }
+
+                const orderId = $('#project-entries').attr('order-id');
+
+                const subscriptionData = await $.ajax({
+                    url: `/create-subscription/${orderId}/{{data.project.slug}}`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        paymentMethodId: setupIntent.payment_method,
+                        email: $('[name=email]').val(),
+                    }),
+                });
+
+                if (subscriptionData.success) {
+                    await drawOrderEntries();
+                    await $.ajax({
+                        url: `/widget-order-customer/${orderId}/${subscriptionData.customerId}`,
+                        method: 'POST',
+                        contentType: 'application/json',
+                    });
+                    $(elem).removeClass('bg-danger').html(currentBtnHtml);
+                    $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
+                    $('.back-btn').attr({ index: 3 });
+                } else {
+                    console.log(subscriptionData);
+                    alert(subscriptionData);
+                }
+
+            } catch (error) {
+                console.log(error);
+                showCardError(elem, error.responseText);
+            }
+        }
+
+        // STRIPE MOUNT ELEMENTS
+
+        const mountStripeElems = async function (stripe, clientSecret) {
+
+            const elements = stripe.elements({ clientSecret });
 
             const elementStyles = {
                 base: {
@@ -1146,7 +1052,6 @@
                 invalid: 'is-invalid',
             };
 
-            const elements = stripe.elements({ clientSecret });
             const cardNumber = elements.create('cardNumber', {
                 style: elementStyles,
                 classes: elementClasses,
@@ -1154,56 +1059,7 @@
             });
             const cardExpiry = elements.create('cardExpiry', { style: elementStyles, classes: elementClasses, placeholder: '12 / 34' });
             const cardCvc = elements.create('cardCvc', { style: elementStyles, classes: elementClasses, placeholder: '123' });
-
-            const paymentRequest = stripe.paymentRequest({
-                country: 'US',
-                currency: 'usd',
-                total: {
-                    label: 'Test Payment',
-                    amount: 1000,
-                },
-                requestPayerName: true,
-                requestPayerEmail: true,
-            });
-
-            paymentRequest.canMakePayment().then((result) => {
-
-                if (!result) {
-                    $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
-                    $('#expressPaySelector').remove();
-                    return;
-                }
-
-                let paymentMethods = {
-                    applePay: result.applePay ? 'auto' : 'never',
-                    googlePay: result.googlePay ? 'auto' : 'never',
-                };
-
-                const expressCheckoutElement = elements.create('expressCheckout', {
-                    paymentMethodOrder: ['apple_pay', 'google_pay'],
-                    paymentMethods: paymentMethods,
-                    buttonType: {
-                        applePay: 'buy',
-                        googlePay: 'buy',
-                    },
-                    buttonTheme: {
-                        applePay: 'black',
-                        googlePay: 'black',
-                    },
-                    buttonHeight: 55,
-                });
-
-                expressCheckoutElement.mount('#express-checkout-element');
-
-                if (result.applePay) {
-                    $('#expressPaySelector').html('Apply Pay')
-                } else if (result.googlePay) {
-                    $('#expressPaySelector').html('Google Pay')
-                } else {
-                    $('#expressPaySelector').html('Apple / Google Pay')
-                }
-            });
-
+            $('.card-input').html('');
             cardNumber.mount('#card-number-element');
             cardExpiry.mount('#card-expiry-element');
             cardCvc.mount('#card-cvc-element');
@@ -1248,49 +1104,577 @@
             handleFloatingLabel(cardExpiry, '#card-expiry-element');
             handleFloatingLabel(cardCvc, '#card-cvc-element');
 
-            $('#cardSubmit').on('click', async function (event) {
-                event.preventDefault();
-                const elem = $(this);
-                const currentBtnHtml = $(this).html();
-                $(this).html(`
-                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                Processing
-                `);
-                $('#payment-error').addClass('d-none');
+            return { cardNumber, cardExpiry, cardCvc };
+        }
 
-                const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-                    payment_method: {
-                        card: cardNumber,
+        const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly) {
+
+            const orderId = $('#project-entries').attr('order-id');
+
+            if (!orderId) return alert('order id is not given');
+
+            const order = await getOrderData(orderId);
+
+            if (monthly) {
+                $('#stripe-total').html(`${order.totalCostSingleMonth} ${order.currency} / Month`);
+                $('#stripe-submit').find('span').html('Subscribe');
+                $('#stripe-submit').off('click').on('click', function (e) {
+                    startMonthlySubscription(stripe, clientSecret, cardNumber);
+                })
+            } else {
+                $('#stripe-total').html(`${order.totalCost} ${order.currency}`);
+                $('#stripe-submit').find('span').html('Pay Now');
+                $('#stripe-submit').off('click').on('click', function (e) {
+                    chargeOneTime(stripe, clientSecret, cardNumber);
+                })
+            }
+
+            const amount = monthly
+                ? Math.max(1, Math.round(order.totalCostSingleMonth * 100))
+                : Math.max(1, Math.round(order.totalCost * 100));
+
+            const paymentRequest = stripe.paymentRequest({
+                country: order.countryCode,
+                currency: order.currency.toLowerCase(),
+                total: {
+                    label: monthly ? `Monthly Subscription - ${order.orderNo}` : `One Time Payment - ${order.orderNo}`,
+                    amount
+                },
+                requestPayerName: true,
+                requestPayerEmail: true,
+            });
+
+            paymentRequest.canMakePayment().then((result) => {
+
+                if (!result) {
+                    $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
+                    $('#expressPaySelector').remove();
+                    return;
+                }
+
+                let paymentMethods = {
+                    applePay: result.applePay ? 'auto' : 'never',
+                    googlePay: result.googlePay ? 'auto' : 'never',
+                };
+
+                const expressCheckoutElement = elements.create('expressCheckout', {
+                    paymentMethodOrder: ['apple_pay', 'google_pay'],
+                    paymentMethods: paymentMethods,
+                    buttonType: {
+                        applePay: 'buy',
+                        googlePay: 'buy',
                     },
+                    buttonTheme: {
+                        applePay: 'black',
+                        googlePay: 'black',
+                    },
+                    buttonHeight: 55,
                 });
 
-                if (error) {
-                    console.log(error);
-                    $(elem).addClass('bg-danger').html(`<i class="ti ti-credit-card-off me-1"></i> Error!`);
-                    $('#cardSubmit').popover('dispose');
-                    $('#cardSubmit').popover({
-                        content: `<div class="text-red fw-bold m-0" 
-                                    style="border-radius: 4px; padding: 10px;">
-                                    ${error.message}
-                                  </div>`,
-                        placement: 'top',
-                        trigger: 'manual',
-                        html: true,
-                        template: `<div class="popover bg-danger-lt border-0 shadow-md" role="tooltip">
-                                    <div class="popover-arrow d-none"></div>
-                                    <div class="popover-body p-2"></div>
-                                  </div>`
-                    }).popover('show');
+                expressCheckoutElement.mount('#express-checkout-element');
 
-                    setTimeout(function () {
-                        $('#cardSubmit').popover('hide');
-                        $(elem).removeClass('bg-danger').html(currentBtnHtml);
-                    }, 6000);
-
+                if (result.applePay) {
+                    $('#expressPaySelector').html('Apply Pay');
+                } else if (result.googlePay) {
+                    $('#expressPaySelector').html('Google Pay');
                 } else {
-                    savePaymentInfo();
+                    $('#expressPaySelector').html('Apple / Google Pay');
                 }
             });
+
+        }
+
+        // START WIDGET
+
+        const startWidget = async function () {
+            let countryCode = 'NO';
+            try {
+                const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
+                const data = await response.json();
+                countryCode = data.country_code ? data.country_code : 'NO';
+            } catch (error) {
+                console.log(error);
+            }
+            localStorage.setItem('countryCode', countryCode);
+            await createNewOrder();
+            const orderId = $('#project-entries').attr('order-id');
+            if (!orderId) return alert('no order available');
+            const order = await getOrderData(orderId);
+            await drawTotalCosts(order);
+            await refreshDropdowns();
+            initializePopovers();
+
+            $('[name=email]').val('qasimali24@gmail.com');
+            $('[name=firstName]').val('Qasim');
+            $('[name=lastName]').val('Ali');
+            $('[name=tel]').val('+4792916581');
+
+        };
+
+        window.onload = startWidget;
+
+        function initializePopovers() {
+            var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.forEach(function (popoverTriggerEl) {
+                new bootstrap.Popover(popoverTriggerEl);
+            });
+        }
+
+        const saveUserInfo = async function (elem) {
+            let isValid = true;
+
+            $('.shake').removeClass('shake');
+
+            $('.user-info').each(function () {
+                let isValidInput = true;
+                $(this).removeClass('is-invalid');
+                const type = $(this).attr('type');
+                const value = $(this).val();
+                if (type === 'email') {
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailPattern.test(value)) {
+                        isValidInput = false;
+                    }
+                }
+
+                if (type === 'tel') {
+                    const phoneDigits = value.replace(/\D/g, '');
+                    if (phoneDigits.length < 5) {
+                        isValidInput = false;
+                    }
+                }
+
+                if (type === 'text') {
+                    if (value.length < 3) {
+                        isValidInput = false;
+                    }
+                }
+
+                if (!isValidInput) {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                    $(this).closest('.body').addClass('shake');
+                }
+            });
+
+            $('.shake').one('animationend', function () {
+                $(this).removeClass('shake');
+            });
+
+            try {
+                if (isValid) {
+                    const currentBtnHtml = $('#save-user-btn').html();
+                    $('#save-user-btn').html(`<span class="spinner-border spinner-border-sm mx-2" role="status"></span> Processing ...`);
+                    const monthly = $('#project-entries').attr('monthly');
+                    if (monthly) {
+                        await handleMonthlyPayment();
+                    } else {
+                        await handleOneTimePayment();
+                    }
+
+                    $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
+                    $('.back-btn').attr({ index: 2 });
+
+                    $('#save-user-btn').html(currentBtnHtml);
+                }
+            } catch (error) {
+                console.log(error);
+                alert(error);
+            }
+
+        };
+
+        const showCardError = function (elem, message) {
+            $(elem).addClass('bg-danger').html(`<i class="ti ti-credit-card-off me-1"></i> Error!`);
+            $(elem).popover('dispose');
+            $(elem)
+                .popover({
+                    content: `<div class="text-red fw-bold m-0" 
+                                    style="border-radius: 4px; padding: 10px;">
+                                    ${message}
+                                  </div>`,
+                    placement: 'top',
+                    trigger: 'manual',
+                    html: true,
+                    template: `<div class="popover bg-danger-lt border-0 shadow-md" role="tooltip">
+                                    <div class="popover-arrow d-none"></div>
+                                    <div class="popover-body p-2"></div>
+                                  </div>`,
+                })
+                .popover('show');
+            setTimeout(function () {
+                $(elem).popover('hide');
+                $(elem).removeClass('bg-danger').html(currentBtnHtml);
+            }, 6000);
+            return;
+        }
+
+        const createNewOrder = async function () {
+            try {
+                const countryCode = localStorage.getItem('countryCode');
+                if (!countryCode) return alert('no country code found!');
+                const response = await $.ajax({
+                    url: `/widget-new-order/{{data.project.slug}}?countryCode=${countryCode}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                });
+
+                $('#project-entries').replaceWith(response);
+                initializePopovers();
+            } catch (xhr) {
+                console.error("Error:", xhr);
+                alert(xhr.responseText || "An error occurred while creating the order.");
+            }
+        }
+
+        const loadMoreContent = function (elem) {
+            const orderId = $('#project-entries').attr('order-id');
+            const slug = $('#project-entries').attr('project-slug');
+            if (!orderId || !slug) return alert('orderId and slug is required to load more content!');
+            const currentBtnHtml = $(elem).html();
+            $(elem).html(`<span class="spinner-border spinner-border-sm mx-2" role="status"></span> Loading ...`);
+            $.ajax({
+                url: `/widget-update-order/${orderId}/${slug}?addEntries=true`,
+                method: 'POST',
+                contentType: 'application/json',
+                success: response => {
+                    $(elem).html(currentBtnHtml);
+                    $('#scroll-loader').before(response);
+                    initializePopovers();
+                },
+                error: error => {
+                    $(elem).html(currentBtnHtml);
+                    alert(error);
+                }
+            })
+        }
+
+        const drawOrderEntries = async function () {
+            try {
+                const orderId = $('#project-entries').attr('order-id');
+                const slug = $('#project-entries').attr('project-slug');
+                const response = await $.ajax({
+                    url: `/widget-render-entries/${orderId}/${slug}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                });
+                $('#project-entries').replaceWith(response);
+                initializePopovers();
+            } catch (xhr) {
+                console.error("Error:", xhr);
+                alert(xhr.responseText || "An error occurred while creating the order.");
+            }
+        }
+
+        const getOrderData = async function (orderId) {
+            try {
+                const order = await $.ajax({
+                    url: `/widget-order/${orderId}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                });
+                return order;
+            } catch (xhr) {
+                console.error("Error:", xhr);
+                alert(xhr.responseText || "An error occurred while creating the order.");
+            }
+        }
+
+        const refreshDropdowns = async function () {
+            try {
+                const userCountry = localStorage.getItem('countryCode');
+                if (!userCountry) return alert('no country found!');
+
+                const data = await $.ajax({
+                    url: `/get-country-list/${userCountry}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                    dataType: 'json'
+                });
+
+                populateCurrencyDropdown(data.countries);
+                populateTelephoneDropdown(data.countries);
+
+                $('.donation-amount').first().addClass('active');
+
+                $('.currency-dropdown').val(data.country.currency.code);
+
+                $('#tel-toggle').html(`
+                        <span class="flag flag-country-${data.country.code.toLowerCase()} me-1"></span>
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                    `);
+
+                $('#tel-toggle').data({ value: data.country.code.toLowerCase() });
+
+                $('#contact-number').val(data.country.callingCodes[0].toString());
+
+                $('.currency-dropdown').on('change', function () {
+                    const selectedOption = $(this).find(':selected');
+                    const value = selectedOption.val();
+                    const countryCode = selectedOption.attr('country-code');
+                    if (!value || !countryCode) return alert('value and code missing');
+                    if (value === 'N/A') return alert('Currency is not supported');
+                    $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
+                    localStorage.setItem('countryCode', countryCode);
+                    changeOrderCurrency(value);
+                });
+            } catch (error) {
+                console.log(error);
+                alert(error);
+            }
+
+        };
+
+        const changeOrderCurrency = async function (currency) {
+            try {
+                const orderId = $('#project-entries').attr('order-id');
+                await $.ajax({
+                    url: `/widget-update-order/${orderId}/{{data.project.slug}}?currency=${currency}`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    success: response => {
+                        console.log(response);
+                    },
+                    error: (xhr, status, error) => {
+                        console.log(error);
+                        alert(`${xhr.responseText || error}`);
+                    }
+                })
+                const order = await getOrderData(orderId);
+                drawTotalCosts(order);
+                drawOrderEntries();
+                refreshDropdowns();
+            } catch (error) {
+                alert(error);
+            }
+        }
+
+        const drawTotalCosts = async function (order) {
+            $('#monthly-products-list, #one-time-products-list').html('');
+
+            if (order.totalCost === 0) {
+                const html = '<h3 class="fw-normal text-center mt-4">No beneficiary selected.</h3>';
+                $('#monthly-products-list').prepend(html);
+                $('#one-time-products-list').prepend(html);
+                $('#donate-btn').addClass('d-none');
+                return;
+            }
+
+            $('#donate-btn').removeClass('d-none');
+
+            const entryHeader = '<h4 class="fw-normal mt-2 mb-0">Select Beneficiaries</h4>';
+
+            const createPriceButton = (entry) => {
+                if (entry.totalCost === 0) return '';
+                return `
+                    <div class="col-12 mb-1">
+                        <div entry-id="${entry.entryId}" class="w-100 card card-beneficiary active shadow p-2 d-flex flex-row justify-content-between">
+                            <div class="text-small">${entry.detail.name}</div>
+                            <div class="text-small">${entry.totalCost} ${order.currency}</div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const inputGroupOneTime = `
+                <h4 class="fw-normal mt-2 mb-0">Total Amount</h4>
+                <div class="col-12">
+                    <div class="currency-input-container border-1 rounded-2">
+                        <div class="donation-amount amount p-2 ms-1 fs-2" order-cost="${order.totalCost}">${order.totalCost}</div>
+                        <div class="currency-selector">
+                            ${order.currency}
+                            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="ms-1 icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                        </div>
+                        <select class="currency-dropdown">
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            const inputGroupMonthly = `
+                <h4 class="fw-normal mt-2 mb-0">Total Amount</h4>
+                <div class="col-12">
+                    <div class="currency-input-container border-1 rounded-2">
+                        <div class="donation-amount amount p-2 fs-2" order-cost="${order.totalCostSingleMonth}">${order.totalCostSingleMonth}</div>
+                        <div class="currency-selector">
+                            ${order.currency}
+                            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="ms-1 icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                        </div>
+                        <select class="currency-dropdown">
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            const monthSelector = `
+                <h4 class="fw-normal mt-2 mb-0">Select Months</h4>
+                <div class="col-4">
+                    <button class="month border btn py-2 w-100 fs-3 amount ${order.project.months === 1 ? 'active' : ''}" value="1">
+                        1 M
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button class="month border btn py-2 w-100 fs-3 amount ${order.project.months === 6 ? 'active' : ''}" value="6">
+                        6 Ms
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button class="month border btn py-2 w-100 fs-3 amount ${order.project.months === 12 ? 'active' : ''}" value="12">
+                        1 Yr
+                    </button>
+                </div>
+                <div class="col-12">
+                    <div class="position-relative" id="month-input-container">
+                        <input type="number" class="border month-input amount form-control py-2 fs-2" min="1" max="48" value="${order.project.months}">
+                        <div class="month-tab"> Months </div>
+                    </div>
+                </div>
+            `;
+
+            let monthlyHTML = entryHeader + '<div class="entries-selected">';
+            order.projects[0].entries.forEach((entry) => {
+                monthlyHTML += createPriceButton(entry);
+            });
+            monthlyHTML += '</div>' + inputGroupMonthly;
+            $('#monthly-products-list').prepend(monthlyHTML);
+
+            let oneTimeHTML = entryHeader + '<div class="entries-selected">';
+            order.projects[0].entries.forEach((product) => {
+                oneTimeHTML += createPriceButton(product);
+            });
+            oneTimeHTML = oneTimeHTML + '</div>' + monthSelector + inputGroupOneTime;
+            $('#one-time-products-list').prepend(oneTimeHTML);
+
+            if (order.monthlySubscription) {
+                var tab = new bootstrap.Tab($('#monthly-tab')[0]);
+                tab.show();
+                $('#donate-btn').find('span').html('Donate Monthly');
+                $('.donation-amount').last().addClass('active');
+            }
+
+            $('.card-beneficiary').on('click', async function () {
+                const orderId = $('#project-entries').attr('order-id');
+                const entryId = $(this).attr('entry-id');
+                if (!orderId || !entryId) {
+                    console.log({ orderId, entryId });
+                    return alert('no order id or entry id provided');
+                }
+                await $.ajax({
+                    url: `/widget-update-order/${orderId}/{{data.project.slug}}?entryId=${entryId}&subscriptions=empty`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    success: response => {
+                        console.log('subscription removed for entry');
+                    },
+                    error: (xhr, status, error) => {
+                        console.log(error);
+                        alert(`${xhr.responseText || error}`);
+                    }
+                })
+                const order = await getOrderData(orderId);
+                drawTotalCosts(order);
+                drawOrderEntries();
+                refreshDropdowns();
+            })
+
+            $('.btn.month').on('click', function (e) {
+                $(this).closest('.body').find('input.active, button.active').removeClass('active');
+                $(this).toggleClass('active');
+                const value = $(this).attr('value');
+                const input = $(this).closest('.row').find('input');
+                input.val(value);
+                input.removeClass('is-invalid');
+                input.addClass('active');
+                changeOrderMonths();
+            });
+
+            $('input.month-input').on('keyup blue', function (e) {
+                $(this).closest('.body').find('input.active, button.active').removeClass('active');
+                $(this).addClass('active');
+                const value = $(this).val();
+                const btns = $(this).closest('.row').find('.btn.month');
+                for (const btn of btns) {
+                    $(btn).removeClass('active');
+                    if ($(btn).attr('value') === value) {
+                        $(btn).addClass('active');
+                    }
+                }
+                if (e.type === 'blur' || e.key === 'Enter' || e.key === ' ' || e.key === 'Tab') {
+                    changeOrderMonths();
+                }
+            });
+
+            const changeOrderMonths = async function () {
+                const orderId = $('#project-entries').attr('order-id');
+                const months = $('input.month-input').val() > 48 ? 48 : $('input.month-input').val();
+                await $.ajax({
+                    url: `/widget-update-order/${orderId}/{{data.project.slug}}?months=${months}`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    success: response => {
+                        console.log('months changed!');
+                    },
+                    error: (xhr, status, error) => {
+                        console.log(error);
+                        alert(`${xhr.responseText || error}`);
+                    }
+                })
+                const order = await getOrderData(orderId);
+                drawTotalCosts(order);
+                drawOrderEntries();
+                refreshDropdowns();
+            }
+
+        }
+
+        $('.toggle-faq').on('click', function () {
+            let answer = $(this).next('.faq-answer');
+            let icon = $(this).find('i');
+            $(this).toggleClass('fw-normal fw-bold');
+            answer.toggleClass('d-none');
+            icon.toggleClass('ti-chevron-right ti-chevron-down');
+        });
+
+        function formatNumberToShortenedVersion(number) {
+            if (number >= 1000) {
+                const suffixes = ['k', 'M', 'B', 'T'];
+                const orderOfMagnitude = Math.floor(Math.log10(number) / 3);
+                const shortNumber = (number / Math.pow(1000, orderOfMagnitude)).toFixed(0);
+
+                return `${shortNumber}${suffixes[orderOfMagnitude - 1]}`;
+            }
+
+            return number.toString();
+        }
+
+        $('[freq]').on('click', async function (e) {
+            const freq = $(this).attr('freq');
+            const orderId = $('#project-entries').attr('order-id');
+            if (!orderId) return alert('no order id provided');
+            let url;
+            $('.donation-amount').removeClass('active');
+            if (freq === 'once') {
+                $('#donate-btn').find('span').html('Donate Once');
+                $('.donation-amount').first().addClass('active');
+                url = `/widget-update-order/${orderId}/{{data.project.slug}}?monthlySubscription=false`;
+            } else {
+                $('#donate-btn').find('span').html('Donate Monthly');
+                $('.donation-amount').last().addClass('active');
+                url = `/widget-update-order/${orderId}/{{data.project.slug}}?monthlySubscription=true`;
+            }
+            await $.ajax({
+                url,
+                method: 'POST',
+                contentType: 'application/json',
+                success: response => {
+                    console.log(response);
+                },
+                error: (xhr, status, error) => {
+                    console.log(error);
+                    alert(`${xhr.responseText || error}`);
+                }
+            })
+            drawOrderEntries();
         });
 
         $('#tel-toggle').on('show.bs.dropdown', function () {
@@ -1477,7 +1861,8 @@
 
             priorityCurrencies.forEach((country) => {
                 const option = document.createElement('option');
-                option.value = country.countryCode;
+                option.value = country.currency;
+                option.setAttribute('country-code', country.countryCode);
                 option.textContent = `${country.currency} · ${country.country}`;
                 priorityGroup.appendChild(option);
             });
@@ -1488,7 +1873,8 @@
 
             currencies.forEach((country) => {
                 const option = document.createElement('option');
-                option.value = country.code;
+                option.value = country.currency.code;
+                option.setAttribute('country-code', country.code);
                 option.textContent = `${country.currency.code} · ${country.name}`;
                 otherGroup.appendChild(option);
             });
@@ -1512,85 +1898,46 @@
             }
         });
 
-        const saveDonationAmount = function (elem) {
-            let isValid = true;
-
-            $('.shake').removeClass('shake');
-
-            const value = $('.donation-amount.active').val();
-            $('.donation-amount.active').removeClass('is-invalid');
-
-            if (!value) {
-                isValid = false;
-                $('.donation-amount.active').addClass('is-invalid');
-                $('.donation-amount.active').closest('.body').addClass('shake');
+        $('.back-btn').on('click', async function (e) {
+            try {
+                const index = Number($(this).attr('index'));
+                if (index === 1) {
+                    const orderId = $('#project-entries').attr('order-id');
+                    await $.ajax({
+                        url: `/widget-update-order/${orderId}/{{data.project.slug}}?checkin=true`,
+                        method: 'POST',
+                        contentType: 'application/json',
+                    });
+                    drawOrderEntries();
+                }
+                $('.back-btn').attr({ index: index - 1 });
+                $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
+            } catch (error) {
+                console.log(error);
+                alert(error);
             }
+        });
 
-            $('.shake').one('animationend', function () {
-                $(this).removeClass('shake');
-            });
-
-            if (isValid) {
+        const saveDonationAmount = async function (elem) {
+            try {
+                const orderId = $('#project-entries').attr('order-id');
+                await $.ajax({
+                    url: `/widget-update-order/${orderId}/{{data.project.slug}}?checkout=true`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                });
                 $('#slide-container').css({ transform: `translateX(-${1 * 100}%)` });
                 $('.back-btn').attr({ index: 1 });
+                drawOrderEntries();
+            } catch (error) {
+                console.log(error);
+                alert(error);
             }
-        };
 
-        const saveUserInfo = function (elem) {
-            let isValid = true;
-
-            $('.shake').removeClass('shake');
-
-            $('.user-info').each(function () {
-                let isValidInput = true;
-                $(this).removeClass('is-invalid');
-                const type = $(this).attr('type');
-                const value = $(this).val();
-                if (type === 'email') {
-                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailPattern.test(value)) {
-                        isValidInput = false;
-                    }
-                }
-
-                if (type === 'tel') {
-                    const phoneDigits = value.replace(/\D/g, '');
-                    if (phoneDigits.length < 5) {
-                        isValidInput = false;
-                    }
-                }
-
-                if (type === 'text') {
-                    if (value.length < 3) {
-                        isValidInput = false;
-                    }
-                }
-
-                if (!isValidInput) {
-                    isValid = false;
-                    $(this).addClass('is-invalid');
-                    $(this).closest('.body').addClass('shake');
-                }
-            });
-
-            $('.shake').one('animationend', function () {
-                $(this).removeClass('shake');
-            });
-
-            if (isValid) {
-                $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
-                $('.back-btn').attr({ index: 2 });
-                $('#payment-button').popover({
-                    content: 'hello',
-                    placement: 'top',
-                    trigger: 'manual'
-                }).popover('show');
-            }
         };
 
         const savePaymentInfo = function (elem) {
-            $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
-            $('.back-btn').attr({ index: 3 });
+
         }
 
         $(document).on('input change', 'input', function (e) {
@@ -1607,32 +1954,102 @@
                 $('#express-checkout-element').addClass('d-none');
                 $('#credit-checkout').addClass('d-none');
                 $('#payment-form').removeClass('d-none');
-                $('#cardSubmit').removeClass('d-none');
+                $('#stripe-submit').removeClass('d-none');
             } else if (value === 'expressPay') {
                 $('#express-checkout-element').removeClass('d-none');
                 $('#credit-checkout').removeClass('d-none');
-                $('#cardSubmit').addClass('d-none');
+                $('#stripe-submit').addClass('d-none');
                 $('#payment-form').addClass('d-none');
             }
         }
 
-        const selectBeneficiary = function (elem) {
-            $(elem).toggleClass('active');
-            $.ajax({
-                url: '/widget-update-order/{{data.project.slug}}?selectBeneficiary',
+        const selectBeneficiary = async function (elem) {
+            $(elem).find('.subscription').toggleClass('active');
+            const entry = $(elem).closest('.entry');
+            $(elem).find('.ti').replaceWith(`
+            <span class="text-small spinner-border spinner-border-sm mt-1" role="status" 
+            style="width: 10px; height: 10px; margin-right: 12px"></span>`);
+            const subArray = entry.find('.subscription.active').get().map(input => $(input).attr('subscription'));
+            const subscriptions = subArray.length > 0 ? subArray.join(',') : 'empty';
+            const entryId = entry.attr('entry-id');
+            const orderId = entry.attr('order-id');
+            await $.ajax({
+                url: `/widget-update-order/${orderId}/{{data.project.slug}}?entryId=${entryId}&subscriptions=${subscriptions}`,
                 method: 'POST',
                 contentType: 'application/json',
-                dataType: 'json',
-                data: JSON.stringify({ entryId: $(elem).data('entryId') }),
                 success: response => {
-                    console.log(response);
+                    $(entry).replaceWith(response);
                 },
                 error: (xhr, status, error) => {
                     console.log(error);
                     alert(`${xhr.responseText || error}`);
                 }
             })
+            const order = await getOrderData(orderId);
+            await drawTotalCosts(order);
+            refreshDropdowns();
         }
+
+        $(document).on('click', ".popover-card", function (event) {
+            $('[data-bs-toggle="popover"]').not($(this).find('[data-bs-toggle="popover"]')).popover("hide");
+            let popoverElement = $(this).find('[data-bs-toggle="popover"]');
+            popoverElement.popover("toggle");
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', function (event) {
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            popoverTriggerList.forEach(function (popoverTriggerEl) {
+                const popover = bootstrap.Popover.getInstance(popoverTriggerEl);
+                if (popover && popover._isShown && !popoverTriggerEl.contains(event.target)) {
+                    popover.hide();
+                }
+            });
+        });
+
+        document.getElementById('close-overlay').addEventListener('click', async function () {
+            deleteOrder();
+            document.getElementById('payment-overlay').remove();
+            window.parent.postMessage('close-overlay', '*');
+        });
+
+        const deleteOrder = async function () {
+            const orderId = $('#project-entries').attr('order-id');
+            await $.ajax({
+                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true`,
+                method: 'POST',
+                contentType: 'application/json',
+                success: response => {
+                    console.log(response);
+                    alert('order has been deleted. refresh window!');
+                },
+                fail: error => {
+                    console.log(error);
+                    alert(error);
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', deleteOrder);
+
+        let idleTimer;
+
+        function resetTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => deleteOrder(), 5 * 60 * 1000);
+        }
+
+        document.addEventListener('mousemove', resetTimer);
+        document.addEventListener('keydown', resetTimer);
+
+        resetTimer();
+
+        $(document).ajaxStart(function () {
+            $(document).ajaxSend(function (event, jqXHR, settings) {
+                console.log("URL:", settings.url);
+            });
+        });
+
     </script>
 
 </body>

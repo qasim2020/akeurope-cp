@@ -1,6 +1,6 @@
 const roles = {
     owner: [
-        'viewDashboard', 
+        'viewDashboard',
         'viewEntry',
         'viewOrders',
         'uploadPdf',
@@ -21,7 +21,7 @@ const roles = {
         'viewWidgets',
     ],
     partner: [
-        'viewDashboard', 
+        'viewDashboard',
         'viewEntry',
         'viewOrders',
         'uploadPdf',
@@ -37,8 +37,27 @@ const roles = {
         'deleteFiles',
         'updateFiles',
         'editSelf',
-        'viewSelf'  
-    ]
+        'viewSelf',
+    ],
+    donor: [
+        'viewDashboard',
+        'viewEntry',
+        'viewOrders',
+        'uploadPdf',
+        'uploadImage',
+        'editNotifications',
+        'createOrders',
+        'editOrders',
+        'deleteOrders',
+        'viewInvoices',
+        'viewFiles',
+        'uploadFiles',
+        'editFiles',
+        'deleteFiles',
+        'updateFiles',
+        'editSelf',
+        'viewSelf',
+    ],
 };
 
 function hasPermission(role, permission) {

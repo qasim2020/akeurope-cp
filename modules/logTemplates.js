@@ -303,7 +303,14 @@ const logTemplates = ({ type, entity, actor, project, order, entry, color, custo
         newCustomerDirectRegistrationStarted: {
             ...commons('customer', entity._id),
             action: `<a href="/customer/${entity._id}">${entity.name}</a> started registration and sent a registration link to his/her email`,
-            color: 'red',
+            color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
+        },
+        newCustomerStartedSubscription: {
+            ...commons('customer', entity._id),
+            action: `<a href="/customer/${entity._id}">${entity.name}</a> created, sent a registration link to his/her email`,
+            color: 'green',
             isNotification: true,
             isReadByCustomer: true,
         },

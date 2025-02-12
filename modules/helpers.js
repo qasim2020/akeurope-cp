@@ -11,6 +11,10 @@ const gt = function (a, b) {
     return a > b;
 };
 
+const or = function (a,b) {
+    return a || b;
+}
+
 const compareIds = function (a, b) {
     if (!a || !b) return false;
     return a.toString() === b.toString();
@@ -303,6 +307,7 @@ module.exports = {
     eq,
     gt,
     compareIds,
+    or,
     inc,
     dec,
     formatDate,

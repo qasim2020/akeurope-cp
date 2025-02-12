@@ -1,16 +1,27 @@
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_TEST_KEY);
+
 const path = require('path');
 const fs = require('fs').promises;
-const { getCurrencyRates } = require('../modules/getCurrencyRates');
+const crypto = require('crypto');
+const handlebars = require('handlebars');
+const moment = require('moment');
+const nodemailer = require('nodemailer');
+
 const Country = require('../models/Country');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
 const Customer = require('../models/Customer');
-const { calculateOrder, addPaymentsToOrder, formatOrderWidget } = require('../modules/orders');
-const { getOldestPaidEntries, makeProjectForOrder } = require('../modules/ordersFetchEntries');
+const Donor = require('../models/Donor');
+
+const { calculateOrder, addPaymentsToOrder, formatOrderWidget, cleanOrder } = require('../modules/orders');
+const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder } = require('../modules/ordersFetchEntries');
 const { runQueriesOnOrder } = require('../modules/orderUpdates');
-const { projectEntries } = require('../modules/projectEntries');
+const { default: mongoose } = require('mongoose');
+const { isValidEmail } = require('../modules/checkValidForm');
+const { saveLog } = require('../modules/logAction');
+const { getChanges } = require('../modules/getChanges');
+const { logTemplates } = require('../modules/logTemplates');
 
 exports.widgets = async (req, res) => {
     try {
@@ -48,7 +59,6 @@ exports.script = async (req, res) => {
         const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.slug}?${new Date().getTime()}`;
         const scriptPath = path.join(__dirname, '..', 'static', 'script.js');
 
-        console.log('Loading script from:', scriptPath);
         const file = await fs.readFile(scriptPath, 'utf8');
 
         const scriptContent = file.replace('__OVERLAY_URL__', overlayUrl);
@@ -77,48 +87,13 @@ const dynamicRound = (value) => {
     return Math.ceil(value / magnitude) * magnitude;
 };
 
-exports.getPrices = async (req, res) => {
+exports.getCountryList = async (req, res) => {
     try {
         const { code } = req.params;
         const country = await Country.findOne({ code: code }).lean();
         const countries = await Country.find().lean().sort({ name: 1 });
         const sortedCountries = countries.sort((a, b) => a.currency.code.localeCompare(b.name, 'en'));
-        const baseCurrency = 'NOK';
-
-        const data = await fs.readFile('products.json', 'utf8');
-        const products = JSON.parse(data);
-
-        const currencyRates = await getCurrencyRates(baseCurrency);
-        const currency = country.currency.code;
-        const conversionRate = currencyRates.rates[currency];
-
-        if (!conversionRate) {
-            return res.status(400).json({ error: 'Invalid or unsupported currency.' });
-        }
-
-        const monthly = [];
-        const oneTime = [];
-
-        for (const productId in products) {
-            products[productId].prices.forEach((price) => {
-                const convertedPrice = (price.price * conversionRate).toFixed(2);
-                const priceObject = {
-                    ...price,
-                    amount: dynamicRound(convertedPrice),
-                    currency: currency,
-                };
-
-                if (price.interval === 'one-time') {
-                    oneTime.push(priceObject);
-                } else {
-                    monthly.push(priceObject);
-                }
-            });
-        }
-
         res.json({
-            monthly,
-            oneTime,
             country,
             countries: sortedCountries,
         });
@@ -154,26 +129,10 @@ exports.storePrices = async (req, res) => {
         }
 
         await fs.writeFile('products.json', JSON.stringify(productPriceMapping, null, 2));
-        console.log('Products saved successfully!');
         res.json(productPriceMapping);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
-    }
-};
-
-exports.createPaymentIntent = async (req, res) => {
-    try {
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: 5000,
-            currency: 'usd',
-            payment_method_types: ['card'],
-        });
-
-        res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error) {
-        console.log(error);
-        res.status(400).json({ error: error.message });
     }
 };
 
@@ -184,28 +143,6 @@ exports.countries = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: 'Unable to fetch countries' });
     }
-};
-
-const unselectEntriesInOrder = async (req, order, project, count) => {
-    req.query = {
-        orderId: order._id,
-        subscriptions: 'empty',
-    };
-    req.params = {
-        slug: project.slug,
-    };
-    let updatedOrder;
-
-    project.entries.reverse();
-
-    for (const entry of project.entries) {
-        if (count < 1) break;
-        req.query.entryId = entry.entryId;
-        updatedOrder = await runQueriesOnOrder(req, '', false);
-        count--;
-    }
-
-    return updatedOrder;
 };
 
 exports.createNewOrder = async (req, res) => {
@@ -230,32 +167,18 @@ exports.createNewOrder = async (req, res) => {
 
         const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
 
-        if (allEntries.length === 0) {
-            return res.render('partials/widgetNoFreeEntries', {
-                layout: false,
-            });
-        }
-
-        const updatedProject = makeProjectForOrder(project, allEntries, 1);
+        const updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 1);
 
         let order = new Order({
             customerId: customer._id,
-            currency: req.query.currency,
+            currency: country.currency.code,
             projects: [updatedProject],
             monthlySubscription: true,
+            countryCode: country.code,
         });
 
         await order.save();
         order = order.toObject();
-
-        if (allEntries.length < 3) {
-            if (allEntries.length === 2) {
-                order = await unselectEntriesInOrder(req, order, updatedProject, 1);
-            }
-        } else {
-            order = await unselectEntriesInOrder(req, order, updatedProject, 2);
-        }
-
         const calculatedOrder = await calculateOrder(order);
         await addPaymentsToOrder(calculatedOrder);
 
@@ -275,6 +198,154 @@ exports.createNewOrder = async (req, res) => {
     }
 };
 
+exports.updateOrder = async (req, res) => {
+    try {
+        let order = await Order.findById({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+
+        if (!order) throw new Error('Order not found!');
+
+        if (req.query.checkin) {
+            order = await Order.findOneAndUpdate({ _id: order._id }, { $set: { status: 'draft' } }, { new: true, lean: true });
+            return res.status(200).send('order is checked in');
+        }
+
+        if (order.status !== 'draft') return res.status(404).send(`Order can not be edited in ${order.status} mode`);
+
+        const checkProject = await Project.findOne({ slug: req.params.slug }).lean();
+
+        if (!checkProject) throw new Error(`Project "${req.params.slug}" not found`);
+
+        if (req.query.addEntries) {
+            const currentEntries = order.projects.flatMap((project) => project.entries);
+            req.query.orderId = new mongoose.Types.ObjectId();
+            req.query.select = currentEntries.length + 3;
+
+            const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
+
+            const newEntries = allEntries
+                .filter((newEntry) => {
+                    return !currentEntries.some((existingEntry) => existingEntry.entryId.toString() === newEntry._id.toString());
+                })
+                .slice(0, 3);
+
+            const entriesForOrder = makeEntriesForWidgetOrder(newEntries, 0);
+            const updatedOrder = await Order.findOneAndUpdate(
+                { _id: order._id, 'projects.slug': checkProject.slug },
+                {
+                    $push: {
+                        'projects.$.entries': { $each: entriesForOrder },
+                    },
+                },
+                {
+                    lean: true,
+                    new: true,
+                },
+            );
+
+            const calculatedOrder = await calculateOrder(updatedOrder);
+            await addPaymentsToOrder(calculatedOrder);
+
+            const freshOrder = await Order.findById(order._id).lean();
+
+            const existingEntryIds = new Set(
+                order.projects.flatMap((project) => project.entries.map((entry) => entry.entryId.toString())),
+            );
+
+            freshOrder.projects.forEach((project) => {
+                project.entries = project.entries.filter((entry) => !existingEntryIds.has(entry.entryId.toString()));
+            });
+
+            const formattedOrder = await formatOrderWidget(freshOrder);
+
+            res.render('partials/widgetEntriesUpdated', {
+                layout: false,
+                data: {
+                    order: formattedOrder,
+                    project: checkProject,
+                },
+            });
+        }
+
+        if (req.query.subscriptions && req.query.entryId) {
+            req.query = {
+                orderId: order._id,
+                entryId: req.query.entryId,
+                subscriptions: req.query.subscriptions,
+            };
+            order = await runQueriesOnOrder(req, res, false);
+            const calculatedOrder = await calculateOrder(order);
+            await addPaymentsToOrder(calculatedOrder);
+            const updatedOrder = await Order.findById(order._id).lean();
+            const formattedOrder = await formatOrderWidget(updatedOrder);
+            let foundEntry;
+            for (const project of formattedOrder.projects) {
+                for (const entry of project.entries) {
+                    if (entry.entryId.toString() === req.query.entryId) {
+                        foundEntry = entry;
+                    }
+                }
+            }
+
+            if (!foundEntry) throw new Error('Entry not found.');
+
+            res.render('partials/widgetEntry', {
+                layout: false,
+                order: formattedOrder,
+                entry: foundEntry,
+            });
+        }
+
+        if (req.query.monthlySubscription) {
+            req.query.orderId = order._id;
+            order = await runQueriesOnOrder(req, res, false);
+            res.status(200).send('subscription monthly or one time updated');
+        }
+
+        if (req.query.months) {
+            if (req.query.months > 48) {
+                req.query.months = 48;
+            } else if (req.query.months < 1) {
+                req.query.months = 1;
+            }
+            req.query.orderId = order._id;
+            order = await runQueriesOnOrder(req, res, false);
+            const calculatedOrder = await calculateOrder(order);
+            await addPaymentsToOrder(calculatedOrder);
+            res.status(200).send('months changed');
+        }
+
+        if (req.query.currency) {
+            req.query.orderId = order._id;
+            order = await runQueriesOnOrder(req, res, false);
+            const calculatedOrder = await calculateOrder(order);
+            await addPaymentsToOrder(calculatedOrder);
+            res.status(200).send('currency changed');
+        }
+
+        if (req.query.checkout) {
+            if (order.totalCost === 0 || order.totalCostSingleMonth === 0)
+                throw new Error('order can not be checked out with 0 cost');
+            // await cleanOrder(order._id);
+            order = await Order.findOneAndUpdate(
+                { _id: order._id },
+                { $set: { status: 'pending payment' } },
+                { new: true, lean: true },
+            );
+            const calculatedOrder = await calculateOrder(order);
+            await addPaymentsToOrder(calculatedOrder);
+            res.status(200).send('order is checked out');
+        }
+
+        if (req.query.deleteOrder) {
+            await Order.deleteOne({ _id: order._id });
+            res.status(200).send('order deleted successfully');
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(400).send('Server error. Try refreshing your browser.');
+    }
+};
+
 exports.getOrderData = async (req, res) => {
     try {
         const order = await Order.findById(req.params.orderId).lean();
@@ -289,62 +360,379 @@ exports.getOrderData = async (req, res) => {
     }
 };
 
-exports.updateOrder = async (req, res) => {
+exports.renderOrderEntries = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.orderId).lean();
-        if (!order) throw new Error('Order not found!');
-        const checkProject = await Project.findOne({
-            slug: req.params.slug,
-        }).lean();
-        if (!checkProject) throw new Error(`Project "${req.params.slug}" not found`);
-        if (req.query.addEntries) {
-            const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
-            const updatedProject = makeProjectForOrder(project, allEntries, 1);
-            const currentEntries = order.projects.flatMap((project) => project.entries);
-            const entriesToAdd = updatedProject.entries;
-            const newEntries = entriesToAdd
-                .filter(
-                    (entryToAdd) =>
-                        !currentEntries.some(
-                            (existingEntry) => existingEntry.entryId.toString() === entryToAdd.entryId.toString(),
-                        ),
-                )
-                .slice(0, 3);
-            const updatedOrder = await Order.findOneAndUpdate(
-                { _id: order._id, 'projects.slug': checkProject.slug },
-                {
-                    $push: {
-                        'projects.$.entries': { $each: newEntries },
-                    },
-                },
-                {
-                    lean: true,
-                    new: true,
-                },
-            );
-            const calculatedOrder = await calculateOrder(updatedOrder);
-            await addPaymentsToOrder(calculatedOrder);
-        }
+        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        const project = await Project.findOne({ slug: req.params.slug }).lean();
+        if (!order || !project) throw new Error('Order or project not found!');
 
-        const freshOrder = await Order.findById(order._id).lean();
-        const existingEntryIds = new Set(
-            order.projects.flatMap((project) => project.entries.map((entry) => entry.entryId.toString())),
-        );
+        const formattedOrder = await formatOrderWidget(order);
 
-        freshOrder.projects.forEach((project) => {
-            project.entries = project.entries.filter((entry) => !existingEntryIds.has(entry.entryId.toString()));
-        });
-        const formattedOrder = await formatOrderWidget(freshOrder);
-
-        res.render('partials/widgetEntriesUpdated', {
+        res.render('partials/widgetEntries', {
             layout: false,
             data: {
                 order: formattedOrder,
-                project: checkProject,
+                project,
             },
         });
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Try refreshing your browser.');
+        res.status(400).send('Server error. Could not fetch entries!');
+    }
+};
+
+exports.createPaymentIntent = async (req, res) => {
+    try {
+        const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        if (!isValidEmail(email)) throw new Error('Email provided is invalid');
+
+        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        if (!order) throw new Error('Order not found');
+
+        const donor = await Donor.findOneAndUpdate(
+            { email },
+            {
+                $set: {
+                    firstName,
+                    lastName,
+                    tel,
+                    organization,
+                    anonymous,
+                    countryCode,
+                    status: 'active',
+                    role: 'donor',
+                },
+                $setOnInsert: { email },
+            },
+            { upsert: true, new: true },
+        ).lean();
+
+        const amount = Math.max(100, Math.round(order.totalCost * 100));
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: order.currency,
+            automatic_payment_methods: { enabled: true },
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.createSetupIntent = async (req, res) => {
+    try {
+        const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        if (!isValidEmail(email)) throw new Error('Email provided is invalid');
+        const donor = await Donor.findOneAndUpdate(
+            { email },
+            {
+                $set: {
+                    firstName,
+                    lastName,
+                    tel,
+                    organization,
+                    anonymous,
+                    countryCode,
+                    status: 'active',
+                    role: 'donor',
+                },
+                $setOnInsert: { email },
+            },
+            { upsert: true, new: true },
+        ).lean();
+        const setupIntent = await stripe.setupIntents.create({
+            payment_method_types: ['card'],
+            metadata: { email: donor.email },
+        });
+        res.json({ clientSecret: setupIntent.client_secret });
+    } catch (error) {
+        console.error('Error creating SetupIntent:', error);
+        res.status(500).send(error);
+    }
+};
+
+exports.createSubscription = async (req, res) => {
+    try {
+        const { paymentMethodId, email } = req.body;
+
+        const donor = await Donor.findOne({ email }).lean();
+        if (!donor) throw new Error('Donor not found.');
+
+        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        if (!order) throw new Error('Order not found!');
+
+        let customers = await stripe.customers.list({ email: donor.email });
+
+        let customer = customers.data.find((c) => c.metadata.currency === order.currency);
+
+        if (!customer) {
+            customer = await stripe.customers.create({
+                email: donor.email,
+                name: `${donor.firstName} ${donor.lastName}`,
+                phone: donor.tel,
+                payment_method: paymentMethodId,
+                invoice_settings: { default_payment_method: paymentMethodId },
+                metadata: {
+                    orderId: order._id.toString(),
+                    orderNo: order.orderNo,
+                    currency: order.currency,
+                },
+            });
+        }
+
+        const amount = Math.max(100, Math.round(order.totalCostSingleMonth * 100));
+
+        const price = await stripe.prices.create({
+            unit_amount: amount,
+            currency: order.currency,
+            recurring: { interval: 'month' },
+            product_data: {
+                name: `Order - ${order.orderNo}`,
+            },
+        });
+
+        const subscription = await stripe.subscriptions.create({
+            customer: customer.id,
+            items: [{ price: price.id }],
+            payment_settings: { payment_method_types: ['card'] },
+            expand: ['latest_invoice.payment_intent'],
+        });
+
+        const updatedDonor = await Donor.findOneAndUpdate(
+            { email },
+            {
+                stripeCustomerId: customer.id,
+                $push: {
+                    subscriptions: {
+                        subscriptionId: subscription.id,
+                        status: subscription.status,
+                        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+                        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                        price: subscription.items.data[0].price.unit_amount,
+                        currency: subscription.items.data[0].price.currency,
+                        interval: subscription.items.data[0].price.recurring.interval,
+                        paymentIntentId: subscription.latest_invoice?.payment_intent?.id || null,
+                        paymentStatus: subscription.latest_invoice?.payment_intent?.status || null,
+                        paymentMethodId: subscription.latest_invoice?.payment_intent?.payment_method || null,
+                    },
+                },
+            },
+            { new: true, lean: true },
+        );
+
+        let checkCustomer = await Customer.findOne({ email }).lean();
+
+        const customerId = await connectDonorInCustomer(updatedDonor, checkCustomer);
+
+        await cleanOrder(order._id);
+
+        await Order.updateOne({ _id: order._id }, { status: 'paid' });
+
+        res.json({ success: true, subscriptionId: subscription.id, customerId });
+    } catch (error) {
+        console.error('Subscription Error:', error);
+        res.status(400).send(error.message || error || 'Server Error');
+    }
+};
+
+const connectDonorInCustomer = async function (donor, checkCustomer) {
+    let transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    if (!checkCustomer) {
+        const inviteToken = crypto.randomBytes(32).toString('hex');
+        const inviteExpires = moment().add(24, 'hours').toDate();
+
+        const newCustomer = new Customer({
+            email,
+            name: `${donor.firstName} ${donor.lastName}`,
+            role: 'donor',
+            location: (await Country.findOne({ code: donor.countryCode }).lean()).name,
+            organization: donor.organization,
+            tel: donor.tel,
+            anonymous: donor.anonymous,
+            countryCode: donor.countryCode,
+            emailStatus: 'Email invite sent!',
+            inviteToken: inviteToken,
+            inviteExpires: inviteExpires,
+        });
+
+        const templatePath = path.join(__dirname, '../views/emails/donorInvite.handlebars');
+        const templateSource = await fs.readFile(templatePath, 'utf8');
+        const compiledTemplate = handlebars.compile(templateSource);
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: newCustomer.email,
+            subject: 'Registration Link for Akeurope Partner Portal',
+            html: compiledTemplate({
+                name: newCustomer.name,
+                inviteLink: `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`,
+            }),
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        await newCustomer.save();
+
+        await saveLog(
+            logTemplates({
+                type: 'newCustomerStartedSubscription',
+                entity: newCustomer,
+                actor: newCustomer,
+            }),
+        );
+
+        checkCustomer = newCustomer;
+    } else {
+        const newCustomer = await Customer.findOneAndUpdate(
+            { email: donor.email },
+            {
+                name: `${donor.firstName} ${donor.lastName}`,
+                role: 'donor',
+                organization: donor.organization,
+                tel: donor.tel,
+                anonymous: donor.anonymous,
+                countryCode: donor.countryCode,
+            },
+            {
+                upsert: true,
+                new: true,
+                lean: true,
+            },
+        );
+
+        const changes = getChanges(checkCustomer, newCustomer);
+
+        if (changes.length > 0) {
+            await saveLog(
+                logTemplates({
+                    type: 'customerUpdated',
+                    entity: newCustomer,
+                    changes,
+                    actor: newCustomer,
+                }),
+            );
+        }
+
+        const templatePath = path.join(__dirname, '../views/emails/donorSubscribed.handlebars');
+        const templateSource = await fs.readFile(templatePath, 'utf8');
+        const compiledTemplate = handlebars.compile(templateSource);
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: newCustomer.email,
+            subject: 'Login Link to Akeurope Partner Portal',
+            html: compiledTemplate({
+                name: newCustomer.name,
+                inviteLink: `${process.env.CUSTOMER_PORTAL_URL}/login`,
+            }),
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        checkCustomer = newCustomer;
+    }
+
+    return checkCustomer._id;
+};
+
+exports.createOneTime = async (req, res) => {
+    try {
+        const { paymentMethodId, paymentIntentId, email } = req.body;
+
+        const donor = await Donor.findOne({ email }).lean();
+        if (!donor) throw new Error('Donor not found.');
+
+        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        if (!order) throw new Error('Order not found!');
+
+        if (!email) throw new Error('Email is required');
+
+        let customers = await stripe.customers.list({ email: donor.email });
+        let customer = customers.data.find((c) => c.metadata.currency === order.currency);
+
+        if (!customer) {
+            customer = await stripe.customers.create({
+                email: donor.email,
+                name: `${donor.firstName} ${donor.lastName}`,
+                phone: donor.tel,
+                payment_method: paymentMethodId,
+                invoice_settings: { default_payment_method: paymentMethodId },
+                metadata: {
+                    orderId: order._id.toString(),
+                    orderNo: order.orderNo,
+                    currency: order.currency,
+                },
+            });
+        }
+
+        let paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+        if (!paymentIntent) {
+            throw new Error('PaymentIntent not found');
+        }
+
+        const updatedDonor = await Donor.findOneAndUpdate(
+            { email },
+            {
+                stripeCustomerId: customer.id,
+                $push: {
+                    payments: {
+                        paymentIntentId: paymentIntent.id,
+                        status: paymentIntent.status,
+                        amount: paymentIntent.amount / 100,
+                        currency: paymentIntent.currency,
+                        paymentMethodId: paymentIntent.payment_method,
+                        created: new Date(paymentIntent.created * 1000),
+                    },
+                },
+            },
+            { new: true, lean: true },
+        );
+
+        const checkCustomer = await Customer.findOne({ email }).lean();
+
+        const customerId = await connectDonorInCustomer(updatedDonor, checkCustomer);
+
+        await Order.updateOne({ _id: order._id }, { status: 'paid' });
+
+        res.json({ success: true, paymentIntentId: paymentIntent.id, customerId });
+    } catch (error) {
+        console.error('Payment Error:', error);
+        res.status(400).send(error.message || error || 'Server Error');
+    }
+};
+
+exports.linkOrderToCustomer = async (req, res) => {
+    try {
+        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        if (!order) throw new Error('Order not found');
+        const customer = await Customer.findById(req.params.customerId).lean();
+        if (!customer) throw new Error('Customer not found');
+        await Order.updateOne({ _id: order._id }, { customerId: customer._id });
+        await saveLog(
+            logTemplates({
+                type: 'customerAddedToOrder',
+                entity: order,
+                actor: customer,
+                order,
+                customer,
+            }),
+        );
+        res.status(200).send('Customer linked to order');
+    } catch (error) {
+        console.error('Link order to customer error:', error);
+        res.status(400).send(error.message || error || 'Server Error');
     }
 };
