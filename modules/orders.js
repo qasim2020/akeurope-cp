@@ -1,6 +1,7 @@
 const Project = require('../models/Project');
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
+const Donor = require('../models/Donor');
 
 const { createDynamicModel } = require('../models/createDynamicModel');
 const { generatePagination } = require('../modules/generatePagination');
@@ -645,6 +646,32 @@ const cleanOrder = async (orderId) => {
     return true;
 };
 
+const getSubscriptionByOrderId = async (orderId) => {
+    try {
+        const donor = await Donor.findOne({
+            "subscriptions.orderId": orderId
+        }, { "subscriptions.$": 1 }).lean();
+
+        return donor ? donor.subscriptions[0] : null;
+    } catch (error) {
+        console.error("Error fetching subscription:", error);
+        return null;
+    }
+};
+
+const getPaymentByOrderId = async (orderId) => {
+    try {
+        const donor = await Donor.findOne({
+            "payments.orderId": orderId
+        }, { "payments.$": 1 }).lean();
+
+        return donor ? donor.payments[0] : null;
+    } catch (error) {
+        console.error("Error fetching payment:", error);
+        return null;
+    }
+};
+
 module.exports = {
     createDraftOrder,
     updateDraftOrder,
@@ -658,4 +685,6 @@ module.exports = {
     formatOrderWidget,
     calculateOrder,
     cleanOrder,
+    getSubscriptionByOrderId,
+    getPaymentByOrderId,
 };

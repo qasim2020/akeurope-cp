@@ -41,11 +41,24 @@ exports.widget = async (req, res) => {
 
 exports.overlay = async (req, res) => {
     try {
-        const project = await Project.findOne({ slug: req.params.slug }).lean();
+        const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
+        let donor = {};
+        if (req.query.email) {
+            const donorCheck = await Donor.findOne({ email: req.query.email }).lean();
+            if (donorCheck) {
+                donor = {
+                    email: donorCheck.email,
+                    firstName: donorCheck.firstName,
+                    lastName: donorCheck.lastName,
+                    countryCode: donorCheck.countryCode
+                };
+            }
+        };
         res.render('overlays/paymentModal', {
             layout: false,
             data: {
                 project,
+                donor,
             },
         });
     } catch (error) {
@@ -381,47 +394,6 @@ exports.renderOrderEntries = async (req, res) => {
     }
 };
 
-exports.createPaymentIntent = async (req, res) => {
-    try {
-        const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
-        if (!isValidEmail(email)) throw new Error('Email provided is invalid');
-
-        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
-        if (!order) throw new Error('Order not found');
-
-        const donor = await Donor.findOneAndUpdate(
-            { email },
-            {
-                $set: {
-                    firstName,
-                    lastName,
-                    tel,
-                    organization,
-                    anonymous,
-                    countryCode,
-                    status: 'active',
-                    role: 'donor',
-                },
-                $setOnInsert: { email },
-            },
-            { upsert: true, new: true },
-        ).lean();
-
-        const amount = Math.max(100, Math.round(order.totalCost * 100));
-
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: order.currency,
-            automatic_payment_methods: { enabled: true },
-        });
-
-        res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error) {
-        console.log(error);
-        res.status(400).json({ error: error.message });
-    }
-};
-
 exports.createSetupIntent = async (req, res) => {
     try {
         const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
@@ -481,6 +453,16 @@ exports.createSubscription = async (req, res) => {
                     currency: order.currency,
                 },
             });
+        } else {
+            const customerDetails = await stripe.customers.retrieve(customer.id);
+
+            if (!customerDetails.invoice_settings.default_payment_method) {
+                await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
+
+                await stripe.customers.update(customer.id, {
+                    invoice_settings: { default_payment_method: paymentMethodId },
+                });
+            }
         }
 
         const amount = Math.max(100, Math.round(order.totalCostSingleMonth * 100));
@@ -501,12 +483,15 @@ exports.createSubscription = async (req, res) => {
             expand: ['latest_invoice.payment_intent'],
         });
 
+        const paymentMethod = await stripe.paymentMethods.retrieve(subscription.latest_invoice.payment_intent.payment_method);
+
         const updatedDonor = await Donor.findOneAndUpdate(
             { email },
             {
                 stripeCustomerId: customer.id,
                 $push: {
                     subscriptions: {
+                        orderId: order._id,
                         subscriptionId: subscription.id,
                         status: subscription.status,
                         currentPeriodStart: new Date(subscription.current_period_start * 1000),
@@ -517,6 +502,7 @@ exports.createSubscription = async (req, res) => {
                         paymentIntentId: subscription.latest_invoice?.payment_intent?.id || null,
                         paymentStatus: subscription.latest_invoice?.payment_intent?.status || null,
                         paymentMethodId: subscription.latest_invoice?.payment_intent?.payment_method || null,
+                        paymentMethodType: paymentMethod.type,
                     },
                 },
             },
@@ -549,23 +535,32 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
         },
     });
 
-    if (!checkCustomer) {
+    if (!checkCustomer || !(checkCustomer && checkCustomer.password)) {
         const inviteToken = crypto.randomBytes(32).toString('hex');
         const inviteExpires = moment().add(24, 'hours').toDate();
+        const location = (await Country.findOne({ code: donor.countryCode }).lean()).name;
 
-        const newCustomer = new Customer({
-            email: donor.email,
-            name: `${donor.firstName} ${donor.lastName}`,
-            role: 'donor',
-            location: (await Country.findOne({ code: donor.countryCode }).lean()).name,
-            organization: donor.organization,
-            tel: donor.tel,
-            anonymous: donor.anonymous,
-            countryCode: donor.countryCode,
-            emailStatus: 'Email invite sent!',
-            inviteToken: inviteToken,
-            inviteExpires: inviteExpires,
-        });
+        const newCustomer = await Customer.findOneAndUpdate(
+            {
+                email: donor.email,
+            },
+            {
+                $set: {
+                    name: `${donor.firstName} ${donor.lastName}`,
+                    role: 'donor',
+                    location,
+                    organization: donor.organization,
+                    tel: donor.tel,
+                    anonymous: donor.anonymous,
+                    countryCode: donor.countryCode,
+                    emailStatus: 'Email invite sent!',
+                    inviteToken: inviteToken,
+                    inviteExpires: inviteExpires,
+                },
+                $setOnInsert: { email: donor.email },
+            },
+            { new: true, lean: true, upsert: true },
+        );
 
         const templatePath = path.join(__dirname, '../views/emails/donorInvite.handlebars');
         const templateSource = await fs.readFile(templatePath, 'utf8');
@@ -583,15 +578,25 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
 
         await transporter.sendMail(mailOptions);
 
-        await newCustomer.save();
+        if (!checkCustomer) {
+            await saveLog(
+                logTemplates({
+                    type: 'newCustomerStartedSubscription',
+                    entity: newCustomer,
+                    actor: newCustomer,
+                }),
+            );
+        }
 
-        await saveLog(
-            logTemplates({
-                type: 'newCustomerStartedSubscription',
-                entity: newCustomer,
-                actor: newCustomer,
-            }),
-        );
+        if (!(checkCustomer && checkCustomer.password)) {
+            await saveLog(
+                logTemplates({
+                    type: 'sentEmailCustomerInvite',
+                    entity: newCustomer,
+                    actor: newCustomer,
+                }),
+            );
+        }
 
         checkCustomer = newCustomer;
     } else {
@@ -612,19 +617,6 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
             },
         );
 
-        const changes = getChanges(checkCustomer, newCustomer);
-
-        if (changes.length > 0) {
-            await saveLog(
-                logTemplates({
-                    type: 'customerUpdated',
-                    entity: newCustomer,
-                    changes,
-                    actor: newCustomer,
-                }),
-            );
-        }
-
         const templatePath = path.join(__dirname, '../views/emails/donorSubscribed.handlebars');
         const templateSource = await fs.readFile(templatePath, 'utf8');
         const compiledTemplate = handlebars.compile(templateSource);
@@ -641,10 +633,82 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
 
         await transporter.sendMail(mailOptions);
 
+        const changes = getChanges(checkCustomer, newCustomer);
+
+        if (changes.length > 0) {
+            await saveLog(
+                logTemplates({
+                    type: 'customerUpdated',
+                    entity: newCustomer,
+                    changes,
+                    actor: newCustomer,
+                }),
+            );
+        }
+
         checkCustomer = newCustomer;
     }
 
     return checkCustomer._id;
+};
+
+exports.createPaymentIntent = async (req, res) => {
+    try {
+        const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        if (!isValidEmail(email)) throw new Error('Email provided is invalid');
+
+        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        if (!order) throw new Error('Order not found');
+
+        const amount = Math.max(100, Math.round(order.totalCost * 100));
+
+        let customers = await stripe.customers.list({ email: email });
+        let customer = customers.data.find((c) => c.metadata.currency === order.currency);
+
+        if (!customer) {
+            customer = await stripe.customers.create({
+                email: email,
+                name: `${firstName} ${lastName}`,
+                phone: tel,
+                metadata: {
+                    orderId: order._id.toString(),
+                    orderNo: order.orderNo,
+                    currency: order.currency,
+                },
+            });
+        }
+
+        await Donor.findOneAndUpdate(
+            { email },
+            {
+                $set: {
+                    stripeCustomerId: customer.id,
+                    firstName,
+                    lastName,
+                    tel,
+                    organization,
+                    anonymous,
+                    countryCode,
+                    status: 'active',
+                    role: 'donor',
+                },
+                $setOnInsert: { email },
+            },
+            { upsert: true, new: true },
+        ).lean();
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: order.currency,
+            customer: customer.id,
+            automatic_payment_methods: { enabled: true },
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error.message });
+    }
 };
 
 exports.createOneTime = async (req, res) => {
@@ -659,41 +723,30 @@ exports.createOneTime = async (req, res) => {
 
         if (!email) throw new Error('Email is required');
 
-        let customers = await stripe.customers.list({ email: donor.email });
-        let customer = customers.data.find((c) => c.metadata.currency === order.currency);
-
-        if (!customer) {
-            customer = await stripe.customers.create({
-                email: donor.email,
-                name: `${donor.firstName} ${donor.lastName}`,
-                phone: donor.tel,
-                payment_method: paymentMethodId,
-                invoice_settings: { default_payment_method: paymentMethodId },
-                metadata: {
-                    orderId: order._id.toString(),
-                    orderNo: order.orderNo,
-                    currency: order.currency,
-                },
-            });
-        }
-
         let paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
         if (!paymentIntent) {
             throw new Error('PaymentIntent not found');
         }
 
+        if (paymentIntent.status !== 'succeeded') {
+            throw new Error('Payment intent not completed successfully');
+        }
+
+        const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+
         const updatedDonor = await Donor.findOneAndUpdate(
             { email },
             {
-                stripeCustomerId: customer.id,
                 $push: {
                     payments: {
+                        orderId: order._id,
                         paymentIntentId: paymentIntent.id,
                         status: paymentIntent.status,
                         amount: paymentIntent.amount / 100,
                         currency: paymentIntent.currency,
-                        paymentMethodId: paymentIntent.payment_method,
+                        paymentMethodId: paymentMethodId,
+                        paymentMethodType: paymentMethod.type,
                         created: new Date(paymentIntent.created * 1000),
                     },
                 },

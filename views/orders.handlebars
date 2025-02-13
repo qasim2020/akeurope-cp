@@ -5,32 +5,23 @@
       <div class="col">
         <!-- Page pre-title -->
         <div class="page-pretitle"> Overview </div>
-        <h2 class="page-title"> Invoices
+        <h2 class="page-title"> Payments
         </h2>
       </div>
-      <!-- Page title actions -->
       <div class="col-auto ms-auto d-print-none">
         <div class="btn-list">
-          <a href="#" class="btn btn-primary d-none d-md-inline-block" id="createNewOrder" data-bs-toggle="modal"
+          {{#if (findInArray data.role 'gaza-orphans')}}
+          <button class="btn btn-primary cursor-pointer ps-md-2 pe-md-3" onclick="loadDonationOverlay('gaza-orphans')">
+            <i class="ti ti-plus"></i>
+            <span class="d-none d-md-block ms-2">Select New Beneficiaries</span>
+          </button>
+          {{else}}
+          <button class="btn btn-primary cursor-pointer ps-md-2 pe-md-3" data-bs-toggle="modal"
             data-bs-target="#modal-new-order">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M12 5l0 14" />
-              <path d="M5 12l14 0" />
-            </svg>
-            Create new invoice
-          </a>
-          <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
-            data-bs-target="#modal-new-order" aria-label="modal-new-order">
-            <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-              stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M12 5l0 14" />
-              <path d="M5 12l14 0" />
-            </svg>
-          </a>
+            <i class="ti ti-plus"></i>
+            <span class="d-none d-md-block ms-2">Select New Beneficiaries</span>
+          </button>
+          {{/if}}
         </div>
       </div>
     </div>
@@ -106,7 +97,7 @@
     }
 
     const isCreateModal = $(document).find(`.modal[order-id=${orderId}]`).length > 0;
-    console.log({isCreateModal});
+    console.log({ isCreateModal });
     if (isCreateModal) {
       const modal = new bootstrap.Modal(document.getElementById('modal-new-order'))
       modal.show();

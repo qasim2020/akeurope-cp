@@ -16,6 +16,8 @@ const DonorSchema = new mongoose.Schema(
         stripePaymentMethodId: { type: String },
         subscriptions: [
             {
+                orderId: { type: mongoose.Schema.Types.ObjectId },
+                paymentMethodType: { type: String, enum: ["card", "apple_pay", "google_pay"] },
                 subscriptionId: { type: String, required: true },
                 status: { type: String, required: true },
                 currentPeriodStart: { type: Date },
@@ -30,6 +32,8 @@ const DonorSchema = new mongoose.Schema(
         ],
         payments: [
             {
+                orderId: { type: mongoose.Schema.Types.ObjectId },
+                paymentMethodType: { type: String, enum: ["card", "apple_pay", "google_pay"] },
                 paymentIntentId: { type: String, required: true },
                 status: { type: String, required: true },
                 amount: { type: Number, required: true },

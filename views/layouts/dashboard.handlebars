@@ -7,13 +7,8 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Dashboard · akeurope</title>
   <link href="/tabler/css/tabler.min.css?1692870487" rel="stylesheet" />
-  <link href="/tabler/css/tabler-flags.min.css?1692870487" rel="stylesheet" />
-  <link href="/tabler/css/tabler-payments.min.css?1692870487" rel="stylesheet" />
-  <link href="/tabler/css/tabler-vendors.min.css?1692870487" rel="stylesheet" />
-  <link href="/tabler/css/demo.min.css?1692870487" rel="stylesheet" />
-
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   {{>components/rootStyling}}
-
 </head>
 
 <body>
@@ -111,7 +106,7 @@
                         </svg>
                       </span>
                       <span class="nav-link-title">
-                        Invoices
+                        Payments
                       </span>
                     </a>
                   </li>
@@ -275,6 +270,75 @@
         console.log("URL:", settings.url);
       });
     });
+
+    const loadDonationOverlay = function (slug) {
+
+      $('#iframe-loading-overlay').remove();
+
+      var $loadingOverlay = $('<div id="iframe-loading-overlay"></div>').css({
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0, 0, 0, 0.7)',
+        opacity: 0,
+        zIndex: '9998',
+      });
+
+      function showLoadingOverlay() {
+        $loadingOverlay.stop().animate({ opacity: 1 }, 300);
+      }
+
+      function hideLoadingOverlay() {
+        $loadingOverlay.stop().fadeOut(300);
+        $loadingOverlay.remove();
+      }
+
+      $('body').append($loadingOverlay);
+      showLoadingOverlay();
+
+      var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>')
+        .attr('src', `/overlay/${slug}?email={{data.customer.email}}`)
+        .css({
+          "display": "block",
+          "margin": "0",
+          "padding": "0",
+          "border": "0",
+          "width": "100%",
+          "height": "100%",
+          "position": "fixed",
+          "opacity": 0,
+          "top": "0",
+          "left": "0",
+          "right": "0",
+          "bottom": "0",
+          "transform": "translateZ(100px)",
+          "z-index": "9999"
+        })
+        .on('load', function () {
+          $(this).animate({ opacity: 1 }, 300);
+        });
+
+      $(this).animate({ opacity: 1 }, 300).promise().done(function () {
+        $('body').css({
+          overflow: 'hidden',
+          height: '100vh'
+        });
+      });
+      $('body').append($iframe);
+
+      $(window).on('message', function (event) {
+        if (event.originalEvent.data === 'close-overlay') {
+          $iframe.remove();
+          $('body').css({
+            overflow: 'scroll',
+            height: 'auto'
+          })
+          hideLoadingOverlay();
+        }
+      });
+    }
 
 
   </script>

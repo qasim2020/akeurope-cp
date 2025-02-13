@@ -57,6 +57,8 @@ const roles = {
         'updateFiles',
         'editSelf',
         'viewSelf',
+
+        'gaza-orphans',
     ],
 };
 

@@ -7,6 +7,7 @@ const handlebars = require('handlebars');
 const moment = require('moment');
 const nodemailer = require('nodemailer');
 
+const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const checkValidForm = require('../modules/checkValidForm');
@@ -14,7 +15,7 @@ const { saveLog, customerLogs, visibleLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
-const Order = require('../models/Order');
+const { getSubscriptionByOrderId, getPaymentByOrderId } = require('../modules/orders');
 
 exports.getCustomerData = async (req, res) => {
     try {
@@ -144,6 +145,10 @@ exports.customer = async (req, res) => {
         })
             .sort({ _id: -1 })
             .lean();
+
+        for (const order of orders) {
+            order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
+        };
 
         res.render('customer', {
             layout: 'dashboard',

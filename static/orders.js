@@ -95,10 +95,10 @@ const searchBeneficiaries = function (elem) {
 
 const doSearch = function (elem, href, refreshAll) {
     const modal = $(elem).closest('.modal');
-    const isDashboardPage = $(elem).closest('.card-footer').attr('page-type') == 'orders';
+    const isOrdersPage = $(elem).closest('.card-footer').attr('page-type') == 'orders';
 
-    if (isDashboardPage) {
-        loadOrderInContainer(elem, href);
+    if (isOrdersPage) {
+        loadOrdersInContainer(elem, href);
         return;
     }
 

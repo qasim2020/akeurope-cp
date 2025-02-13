@@ -13,6 +13,8 @@ const {
     getPaginatedOrders,
     getSingleOrder,
     updateOrderStatus,
+    getPaymentByOrderId,
+    getSubscriptionByOrderId,
     addPaymentsToOrder,
     openOrderProjectWithEntries,
 } = require('../modules/orders');
@@ -31,6 +33,11 @@ exports.viewOrders = async (req, res) => {
             visibleDateFields = await visibleProjectDateFields(projects[0]);
         }
         const { orders, pagination } = await getPaginatedOrders(req, res);
+
+        for (const order of orders) {
+            order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
+        };
+
         const customers = await Customer.find().lean();
         res.render('orders', {
             layout: 'dashboard',
@@ -41,6 +48,7 @@ exports.viewOrders = async (req, res) => {
                 activeMenu: 'orders',
                 projects,
                 visibleDateFields,
+                customer: req.session.user,
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
                 sidebarCollapsed: req.session.sidebarCollapsed,
@@ -115,6 +123,11 @@ exports.viewOrder = async (req, res) => {
 exports.getOrdersData = async (req, res) => {
     try {
         const { orders, pagination } = await getPaginatedOrders(req, res);
+
+        for (const order of orders) {
+            order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
+        };
+        
         res.render('partials/showOrders', {
             layout: false,
             data: {

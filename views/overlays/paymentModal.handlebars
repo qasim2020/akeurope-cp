@@ -384,7 +384,7 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
+                background: none;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -755,7 +755,7 @@
                                     loop autoplay></dotlottie-player>
                             </div>
                             <div class="footer border-0">
-                                <a class="btn btn-primary w-100 py-3 fw-bold fs-3">
+                                <a class="btn btn-primary w-100 py-3 fw-bold fs-3" id="show-dashboard">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -943,6 +943,10 @@
                     $(elem).removeClass('bg-danger').html(currentBtnHtml);
                     $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
                     $('.back-btn').attr({ index: 3 });
+                    $('#show-dashboard').attr({
+                        href: `/customer/${paymentData.customerId}`,
+                        target: '_blank'
+                    });
                 } else {
                     console.log(paymentData);
                     showCardError(elem, paymentData.responseText, currentBtnHtml);
@@ -1056,6 +1060,10 @@
                     $(elem).removeClass('bg-danger').html(currentBtnHtml);
                     $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
                     $('.back-btn').attr({ index: 3 });
+                    $('#show-dashboard').attr({
+                        href: `/customer/${subscriptionData.customerId}`,
+                        target: '_blank'
+                    });
                 } else {
                     console.log(subscriptionData);
                     alert(subscriptionData);
@@ -1183,7 +1191,7 @@
             });
 
             console.log(paymentRequest);
-            
+
             paymentRequest.canMakePayment().then((result) => {
 
                 if (!result) {
@@ -1235,13 +1243,16 @@
         // START WIDGET
 
         const startWidget = async function () {
-            let countryCode = 'NO';
-            try {
-                const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
-                const data = await response.json();
-                countryCode = data.country_code ? data.country_code : 'NO';
-            } catch (error) {
-                console.log(error);
+            let countryCode = '{{data.donor.countryCode}}';
+            if (!countryCode) {
+                try {
+                    const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
+                    const data = await response.json();
+                    countryCode = data.country_code ? data.country_code : 'NO';
+                } catch (error) {
+                    console.log(error);
+                    countryCode = 'NO';
+                }
             }
             localStorage.setItem('countryCode', countryCode);
             await createNewOrder();
@@ -1252,11 +1263,9 @@
             await refreshDropdowns();
             initializePopovers();
 
-            $('[name=email]').val('qasimali24@gmail.com');
-            $('[name=firstName]').val('Qasim');
-            $('[name=lastName]').val('Ali');
-            $('[name=tel]').val('+4792916581');
-
+            $('[name=email]').val('{{data.donor.email}}');
+            $('[name=firstName]').val('{{data.donor.firstName}}');
+            $('[name=lastName]').val('{{data.donor.lastName}}');
         };
 
         window.onload = startWidget;
@@ -1517,8 +1526,8 @@
                 return `
                     <div class="col-12 mb-1">
                         <div entry-id="${entry.entryId}" class="w-100 card card-beneficiary active shadow p-2 d-flex flex-row justify-content-between">
-                            <div class="text-small">${entry.detail.name}</div>
-                            <div class="text-small">${entry.totalCost} ${order.currency}</div>
+                            <div class="text-small w-66">${entry.detail.name}</div>
+                            <div class="text-small mt-auto">${entry.totalCost} ${order.currency}</div>
                         </div>
                     </div>
                 `;
@@ -2069,7 +2078,7 @@
                 contentType: 'application/json',
                 success: response => {
                     console.log(response);
-                    alert('order has been deleted. refresh window!');
+                    console.log('order has been deleted. refresh window!');
                 },
                 fail: error => {
                     console.log(error);

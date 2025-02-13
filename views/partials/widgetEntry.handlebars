@@ -3,11 +3,17 @@
     <div class="card border-0 flex-row p-2 h-100 rounded-3">
         <div class="position-relative">
             <img style="object-fit: cover; width: 201px;" class="rounded-3 border border-1 shadow-lg"
-                src="{{transformCloudinaryUrl entry.detail.photoOfOrphan}}" alt="">
+                src="{{transformCloudinaryUrl (or entry.detail.photo (or entry.detail.photoOfChild entry.detail.photoOfOrphan))}}"
+                alt="">
         </div>
         <div class="ps-3 pe-2 pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3">{{shortenName entry.detail.name}}</div>
+            <div class="card-title mb-1 fs-3"> {{entry.detail.name}} </div>
+            {{#if entry.detail.dateOfBirth}}
+            <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
+            {{/if}}
+            {{#if entry.detail.dob}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dob}}</div>
+            {{/if}}
             {{#each entry.costs as |cost|}}
             {{#if (gt cost.totalCost 0)}}
 
@@ -59,11 +65,17 @@
     <div class="card border-0 flex-row p-2 h-100 rounded-3">
         <div class="position-relative">
             <img style="object-fit: cover; width: 201px;" class="rounded-3 border border-1 shadow-lg"
-                src="{{transformCloudinaryUrl entry.detail.photoOfOrphan}}" alt="">
+                src="{{transformCloudinaryUrl (or entry.detail.photo (or entry.detail.photoOfChild entry.detail.photoOfOrphan))}}"
+                alt="">
         </div>
         <div class="ps-3 pe-2 pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3">{{shortenName entry.detail.name}}</div>
+            <div class="card-title mb-1 fs-3"> {{entry.detail.name}} </div>
+            {{#if entry.detail.dateOfBirth}}
+            <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
+            {{/if}}
+            {{#if entry.detail.dob}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dob}}</div>
+            {{/if}}
             {{#each entry.costs as |cost|}}
             {{#if (gt cost.totalCost 0)}}
             {{#if (eq cost.totalCost cost.totalOrderedCost)}}
@@ -101,11 +113,17 @@
     <div class="card border-0 flex-row p-2 h-100 rounded-3">
         <div class="position-relative">
             <img style="object-fit: cover; width: 201px;" class="rounded-3 border border-1 shadow-lg"
-                src="{{transformCloudinaryUrl entry.detail.photoOfOrphan}}" alt="">
+                src="{{transformCloudinaryUrl (or entry.detail.photo (or entry.detail.photoOfChild entry.detail.photoOfOrphan))}}"
+                alt="">
         </div>
         <div class="ps-3 pe-2 pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3"> {{shortenName entry.detail.name}} </div>
+            <div class="card-title mb-1 fs-3"> {{entry.detail.name}} </div>
+            {{#if entry.detail.dateOfBirth}}
+            <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
+            {{/if}}
+            {{#if entry.detail.dob}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dob}}</div>
+            {{/if}}
             {{#each entry.costs as |cost|}}
             {{#if (gt cost.totalCost 0)}}
             {{#if (eq cost.totalCost cost.totalOrderedCost)}}
@@ -113,8 +131,7 @@
                 <div subscription="{{cost.fieldName}}"
                     class="cursor-pointer position-relative d-flex align-items-start p-3 rounded-3 border shadow-none subscription paid">
                     <span data-bs-toggle="popover" data-bs-placement="top"
-                        data-bs-content="Subscription has been added to your dashboard."
-                        data-bs-html="true">
+                        data-bs-content="Subscription has been added to your dashboard." data-bs-html="true">
                         <span class="ti ti-lock-check text-green me-2" style="padding-top: 3px"></span>
                     </span>
                     <div class="text-start">
