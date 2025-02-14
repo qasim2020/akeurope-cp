@@ -19,6 +19,7 @@ const roles = {
         'viewSelf',
 
         'viewWidgets',
+        'bulkOrders'
     ],
     partner: [
         'viewDashboard',
@@ -38,6 +39,7 @@ const roles = {
         'updateFiles',
         'editSelf',
         'viewSelf',
+        'bulkOrders'
     ],
     donor: [
         'viewDashboard',
@@ -57,8 +59,7 @@ const roles = {
         'updateFiles',
         'editSelf',
         'viewSelf',
-
-        'gaza-orphans',
+        'bulkUploads'
     ],
 };
 

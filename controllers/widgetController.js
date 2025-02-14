@@ -42,6 +42,7 @@ exports.widget = async (req, res) => {
 exports.overlay = async (req, res) => {
     try {
         const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
+        if (!project) throw new Error('Project not found');
         let donor = {};
         if (req.query.email) {
             const donorCheck = await Donor.findOne({ email: req.query.email }).lean();
