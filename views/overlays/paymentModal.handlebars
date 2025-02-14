@@ -848,7 +848,7 @@
 
         const handleOneTimePayment = async function () {
             const stripe = Stripe(
-                'pk_test_51OzgG82KJohMNjOSieXVuRBiBI6TFbXkZkWOF4Qsr2H563351MojVy7tE8arnbFbr6zJEPlKA1Nl2H6AZY9cZphg00zG07zi2A',
+                '{{data.publicKey}}',
             );
 
             const orderId = $('#project-entries').attr('order-id');
@@ -944,7 +944,7 @@
                     $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
                     $('.back-btn').attr({ index: 3 });
                     $('#show-dashboard').attr({
-                        href: `/customer/${paymentData.customerId}`,
+                        href: paymentData.dashboardLink,
                         target: '_blank'
                     });
                 } else {
@@ -963,7 +963,7 @@
         const handleMonthlyPayment = async function () {
 
             const stripe = Stripe(
-                'pk_test_51OzgG82KJohMNjOSieXVuRBiBI6TFbXkZkWOF4Qsr2H563351MojVy7tE8arnbFbr6zJEPlKA1Nl2H6AZY9cZphg00zG07zi2A',
+                '{{data.publicKey}}',
             );
 
             const orderId = $('#project-entries').attr('order-id');
@@ -1061,7 +1061,7 @@
                     $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
                     $('.back-btn').attr({ index: 3 });
                     $('#show-dashboard').attr({
-                        href: `/customer/${subscriptionData.customerId}`,
+                        href: subscriptionData.dashboardLink,
                         target: '_blank'
                     });
                 } else {

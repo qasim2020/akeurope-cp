@@ -1,5 +1,5 @@
 require('dotenv').config();
-const stripe = require('stripe')(process.env.STRIPE_TEST_KEY);
+const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 
 const path = require('path');
 const fs = require('fs').promises;
@@ -42,6 +42,7 @@ exports.widget = async (req, res) => {
 exports.overlay = async (req, res) => {
     try {
         const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
+        const publicKey = process.env.STRIPE_PUBLIC_KEY;
         if (!project) throw new Error('Project not found');
         let donor = {};
         if (req.query.email) {
@@ -51,15 +52,16 @@ exports.overlay = async (req, res) => {
                     email: donorCheck.email,
                     firstName: donorCheck.firstName,
                     lastName: donorCheck.lastName,
-                    countryCode: donorCheck.countryCode
+                    countryCode: donorCheck.countryCode,
                 };
             }
-        };
+        }
         res.render('overlays/paymentModal', {
             layout: false,
             data: {
                 project,
                 donor,
+                publicKey,
             },
         });
     } catch (error) {
@@ -512,13 +514,13 @@ exports.createSubscription = async (req, res) => {
 
         let checkCustomer = await Customer.findOne({ email }).lean();
 
-        const customerId = await connectDonorInCustomer(updatedDonor, checkCustomer);
+        const { customerId, dashboardLink } = await connectDonorInCustomer(updatedDonor, checkCustomer);
 
         await cleanOrder(order._id);
 
         await Order.updateOne({ _id: order._id }, { status: 'paid' });
 
-        res.json({ success: true, subscriptionId: subscription.id, customerId });
+        res.json({ success: true, subscriptionId: subscription.id, customerId, dashboardLink });
     } catch (error) {
         console.error('Subscription Error:', error);
         res.status(400).send(error.message || error || 'Server Error');
@@ -535,6 +537,8 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
             pass: process.env.EMAIL_PASS,
         },
     });
+
+    let dashboardLink;
 
     if (!checkCustomer || !(checkCustomer && checkCustomer.password)) {
         const inviteToken = crypto.randomBytes(32).toString('hex');
@@ -576,6 +580,8 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
                 inviteLink: `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`,
             }),
         };
+
+        dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`;
 
         await transporter.sendMail(mailOptions);
 
@@ -632,6 +638,8 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
             }),
         };
 
+        dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}`;
+
         await transporter.sendMail(mailOptions);
 
         const changes = getChanges(checkCustomer, newCustomer);
@@ -650,7 +658,10 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
         checkCustomer = newCustomer;
     }
 
-    return checkCustomer._id;
+    return {
+        customerId: checkCustomer._id,
+        dashboardLink,
+    };
 };
 
 exports.createPaymentIntent = async (req, res) => {
@@ -757,11 +768,11 @@ exports.createOneTime = async (req, res) => {
 
         const checkCustomer = await Customer.findOne({ email }).lean();
 
-        const customerId = await connectDonorInCustomer(updatedDonor, checkCustomer);
+        const { customerId, dashboardLink } = await connectDonorInCustomer(updatedDonor, checkCustomer);
 
         await Order.updateOne({ _id: order._id }, { status: 'paid' });
 
-        res.json({ success: true, paymentIntentId: paymentIntent.id, customerId });
+        res.json({ success: true, paymentIntentId: paymentIntent.id, customerId, dashboardLink });
     } catch (error) {
         console.error('Payment Error:', error);
         res.status(400).send(error.message || error || 'Server Error');
