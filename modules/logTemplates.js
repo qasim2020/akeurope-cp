@@ -241,6 +241,12 @@ const logTemplates = ({ type, entity, actor, project, order, entry, color, custo
             color: 'blue',
             changes,
         },
+        orderCountryChanged: {
+            ...commons('order', entity._id),
+            action: `Country changed in <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,
+            color: 'blue',
+            changes,
+        },
         orderCurrencyChanged: {
             ...commons('order', entity._id),
             action: `Currency changed in <a href="/order/${entity._id}">Invoice-${entity.orderNo}</a>`,

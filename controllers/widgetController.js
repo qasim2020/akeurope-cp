@@ -327,7 +327,7 @@ exports.updateOrder = async (req, res) => {
             res.status(200).send('months changed');
         }
 
-        if (req.query.currency) {
+        if (req.query.currency && req.query.countryCode) {
             req.query.orderId = order._id;
             order = await runQueriesOnOrder(req, res, false);
             const calculatedOrder = await calculateOrder(order);

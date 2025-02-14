@@ -27,6 +27,34 @@ const runQueriesOnOrder = async (req, res, saveLogs = true) => {
         );
     }
 
+    if (req.query.countryCode) {
+        const countryCode = req.query.countryCode;
+        order = await Order.findOneAndUpdate(
+            { _id: orderId },
+            { $set: { countryCode } },
+            { new: true, lean: true },
+        ); 
+        if (saveLogs)  {
+            if (order.currency != existingOrder.currency) {
+                await saveLog(
+                    logTemplates({
+                        type: 'orderCountryChanged',
+                        entity: order,
+                        changes: [
+                            {
+                                key: 'countryCode',
+                                oldValue: existingOrder.countryCode,
+                                newValue: countryCode,
+                            },
+                        ],
+                        actor: req.session.user,
+                    }),
+                );
+            }
+        }
+
+    }
+
     if (req.query.currency) {
         const currency = req.query.currency;
         order = await Order.findOneAndUpdate(
@@ -35,23 +63,23 @@ const runQueriesOnOrder = async (req, res, saveLogs = true) => {
             { new: true, lean: true },
         );
 
-        if (!saveLogs) return order;
-
-        if (order.currency != existingOrder.currency) {
-            await saveLog(
-                logTemplates({
-                    type: 'orderCurrencyChanged',
-                    entity: order,
-                    changes: [
-                        {
-                            key: 'currency',
-                            oldValue: existingOrder.currency,
-                            newValue: currency,
-                        },
-                    ],
-                    actor: req.session.user,
-                }),
-            );
+        if (saveLogs) {
+            if (order.currency != existingOrder.currency) {
+                await saveLog(
+                    logTemplates({
+                        type: 'orderCurrencyChanged',
+                        entity: order,
+                        changes: [
+                            {
+                                key: 'currency',
+                                oldValue: existingOrder.currency,
+                                newValue: currency,
+                            },
+                        ],
+                        actor: req.session.user,
+                    }),
+                );
+            }
         }
     }
 

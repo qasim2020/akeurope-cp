@@ -1175,69 +1175,87 @@
                 })
             }
 
-            const amount = monthly
-                ? Math.max(1, Math.round(order.totalCostSingleMonth * 100))
-                : Math.max(1, Math.round(order.totalCost * 100));
+            const supportedCountries = [
+                "AE", "AT", "AU", "BE", "BG", "BR", "CA", "CH", "CI", "CR", "CY", "CZ", "DE", "DK", "DO", "EE", "ES", "FI",
+                "FR", "GB", "GI", "GR", "GT", "HK", "HR", "HU", "ID", "IE", "IN", "IT", "JP", "LI", "LT", "LU", "LV", "MT",
+                "MX", "MY", "NL", "NO", "NZ", "PE", "PH", "PL", "PT", "RO", "SE", "SG", "SI", "SK", "SN", "TH", "TT", "US", "UY"
+            ];
 
-            const paymentRequest = stripe.paymentRequest({
-                country: order.countryCode,
-                currency: order.currency.toLowerCase(),
-                total: {
-                    label: monthly ? `Monthly Subscription - ${order.orderNo}` : `One Time Payment - ${order.orderNo}`,
-                    amount
-                },
-                requestPayerName: true,
-                requestPayerEmail: true,
-            });
+            const isSupportedCountry = supportedCountries.includes(order.countryCode) ? order.countryCode : false;
 
-            console.log(paymentRequest);
+            if (!isSupportedCountry) {
+                $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
+                $('#expressPaySelector').remove();
+                return console.log('express pay is not supported for this country');
+            }
 
-            paymentRequest.canMakePayment().then((result) => {
+            try {
+                const amount = monthly
+                    ? Math.max(1, Math.round(order.totalCostSingleMonth * 100))
+                    : Math.max(1, Math.round(order.totalCost * 100));
 
-                if (!result) {
-                    $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
-                    $('#expressPaySelector').remove();
-                    return;
-                }
-
-                let paymentMethods = {
-                    applePay: result.applePay ? 'auto' : 'never',
-                    googlePay: result.googlePay ? 'auto' : 'never',
-                };
-
-                const expressCheckoutElement = elements.create('expressCheckout', {
-                    paymentMethodOrder: ['apple_pay', 'google_pay'],
-                    paymentMethods: paymentMethods,
-                    buttonType: {
-                        applePay: 'buy',
-                        googlePay: 'buy',
+                const paymentRequest = stripe.paymentRequest({
+                    country: order.countryCode,
+                    currency: order.currency.toLowerCase(),
+                    total: {
+                        label: monthly ? `Monthly Subscription - ${order.orderNo}` : `One Time Payment - ${order.orderNo}`,
+                        amount
                     },
-                    buttonTheme: {
-                        applePay: 'black',
-                        googlePay: 'black',
-                    },
-                    buttonHeight: 55,
+                    requestPayerName: true,
+                    requestPayerEmail: true,
                 });
 
-                expressCheckoutElement.on("confirm", async (event) => {
-                    if (monthly) {
-                        startMonthlySubscription(stripe, clientSecret, null, elements);
+                paymentRequest.canMakePayment().then((result) => {
+
+                    if (!result) {
+                        $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
+                        $('#expressPaySelector').remove();
+                        return;
+                    }
+
+                    let paymentMethods = {
+                        applePay: result.applePay ? 'auto' : 'never',
+                        googlePay: result.googlePay ? 'auto' : 'never',
+                    };
+
+                    const expressCheckoutElement = elements.create('expressCheckout', {
+                        paymentMethodOrder: ['apple_pay', 'google_pay'],
+                        paymentMethods: paymentMethods,
+                        buttonType: {
+                            applePay: 'buy',
+                            googlePay: 'buy',
+                        },
+                        buttonTheme: {
+                            applePay: 'black',
+                            googlePay: 'black',
+                        },
+                        buttonHeight: 55,
+                    });
+
+                    expressCheckoutElement.on("confirm", async (event) => {
+                        if (monthly) {
+                            startMonthlySubscription(stripe, clientSecret, null, elements);
+                        } else {
+                            chargeOneTime(stripe, clientSecret, null, elements);
+                        }
+                    });
+
+                    expressCheckoutElement.mount('#express-checkout-element');
+
+                    if (result.applePay) {
+                        $('#expressPaySelector').html('Apply Pay');
+                    } else if (result.googlePay) {
+                        $('#expressPaySelector').html('Google Pay');
                     } else {
-                        chargeOneTime(stripe, clientSecret, null, elements);
+                        $('#expressPaySelector').html('Express Pay');
                     }
                 });
 
-                expressCheckoutElement.mount('#express-checkout-element');
-
-                if (result.applePay) {
-                    $('#expressPaySelector').html('Apply Pay');
-                } else if (result.googlePay) {
-                    $('#expressPaySelector').html('Google Pay');
-                } else {
-                    $('#expressPaySelector').html('Apple / Google Pay');
-                }
-            });
-
+            } catch (error) {
+                console.log(error);
+                $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
+                $('#expressPaySelector').remove();
+            }
         }
 
         // START WIDGET
@@ -1473,7 +1491,7 @@
                     if (value === 'N/A') return alert('Currency is not supported');
                     $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
                     localStorage.setItem('countryCode', countryCode);
-                    changeOrderCurrency(value);
+                    changeOrderCurrency(value, countryCode);
                 });
             } catch (error) {
                 console.log(error);
@@ -1482,11 +1500,11 @@
 
         };
 
-        const changeOrderCurrency = async function (currency) {
+        const changeOrderCurrency = async function (currency, countryCode) {
             try {
                 const orderId = $('#project-entries').attr('order-id');
                 await $.ajax({
-                    url: `/widget-update-order/${orderId}/{{data.project.slug}}?currency=${currency}`,
+                    url: `/widget-update-order/${orderId}/{{data.project.slug}}?currency=${currency}&countryCode=${countryCode}`,
                     method: 'POST',
                     contentType: 'application/json',
                     success: response => {
