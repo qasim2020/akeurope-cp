@@ -225,6 +225,15 @@ exports.updateOrder = async (req, res) => {
             return res.status(200).send('order is checked in');
         }
 
+        if (order.status === 'draft' || order.status === 'pending payment') {
+
+            if (req.query.deleteOrder) {
+                await Order.deleteOne({ _id: order._id });
+                return res.status(200).send('order deleted successfully');
+            }
+
+        }
+
         if (order.status !== 'draft') return res.status(404).send(`Order can not be edited in ${order.status} mode`);
 
         const checkProject = await Project.findOne({ slug: req.params.slug }).lean();
@@ -352,10 +361,6 @@ exports.updateOrder = async (req, res) => {
             res.status(200).send('order is checked out');
         }
 
-        if (req.query.deleteOrder) {
-            await Order.deleteOne({ _id: order._id });
-            res.status(200).send('order deleted successfully');
-        }
     } catch (error) {
         console.log(error);
         res.status(400).send('Server error. Try refreshing your browser.');
