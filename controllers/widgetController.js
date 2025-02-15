@@ -43,6 +43,7 @@ exports.overlay = async (req, res) => {
     try {
         const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
         const publicKey = process.env.STRIPE_PUBLIC_KEY;
+        const portalUrl = process.env.CUSTOMER_PORTAL_URL;
         if (!project) throw new Error('Project not found');
         let donor = {};
         if (req.query.email) {
@@ -62,6 +63,7 @@ exports.overlay = async (req, res) => {
                 project,
                 donor,
                 publicKey,
+                portalUrl
             },
         });
     } catch (error) {
@@ -72,12 +74,23 @@ exports.overlay = async (req, res) => {
 
 exports.script = async (req, res) => {
     try {
-        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.slug}?${new Date().getTime()}`;
+        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.slug}`;
         const scriptPath = path.join(__dirname, '..', 'static', 'script.js');
 
         const file = await fs.readFile(scriptPath, 'utf8');
+        const project = await Project.findOne({slug: req.params.slug, status: 'active'}).lean();
 
-        const scriptContent = file.replace('__OVERLAY_URL__', overlayUrl);
+        if (!project) throw new Error('Project not found!');
+        if (project.slug === 'gaza-orphans') {
+            project.right = '-75px';
+        } else {
+            project.right = '-67px';
+        }
+
+        const scriptContent = file
+            .replace('__OVERLAY_URL__', overlayUrl)
+            .replace('__PROJECT_NAME__', project.name)
+            .replace('__PROJECT_RIGHT__', project.right);
 
         res.setHeader('Content-Type', 'application/javascript');
         res.send(scriptContent);

@@ -132,14 +132,17 @@
 
         .month-tab {
             position: absolute;
-            height: 20px;
-            right: 8px;
-            top: 13px;
+            height: 26px;
+            right: 6px;
+            top: 10px;
             margin: 0px 4px;
             padding: 0 6px;
-            width: 70px;
+            width: 63px;
             border-radius: 3px;
+            background: white;
             color: #192433;
+            display: flex;
+            align-items: center;
         }
 
         .currency-selector {
@@ -448,7 +451,8 @@
                     <div class="flex-grow-1 w-100 h-100">
                         {{> widgetEntries}}
                     </div>
-                    <a href="" class="d-none d-md-block mt-4 text-small">Manage your donation</a>
+                    <a href="{{data.portalUrl}}" target="_blank"
+                        class="d-none d-md-block mt-4 text-small">Manage your donation</a>
                 </div>
             </div>
 
@@ -821,7 +825,7 @@
                     </div>
                 </div>
 
-                <a id="manage-donation" href="" class="mt-1 text-small">Manage your donation</a>
+                <a id="manage-donation" href="{{data.portalUrl}}" target="_blank" class="mt-1 text-small">Manage your donation</a>
             </div>
 
         </div>
@@ -1224,11 +1228,11 @@
                         paymentMethodOrder: ['apple_pay', 'google_pay'],
                         paymentMethods: paymentMethods,
                         buttonType: {
-                            applePay: 'buy',
-                            googlePay: 'buy',
+                            applePay: 'donate',
+                            googlePay: 'donate',
                         },
                         buttonTheme: {
-                            applePay: 'black',
+                            applePay: 'white-outline',
                             googlePay: 'black',
                         },
                         buttonHeight: 55,
@@ -2084,7 +2088,7 @@
             });
         });
 
-        document.getElementById('close-overlay').addEventListener('click', async function () {
+        $(document).on('click', '#close-overlay', async function () {
             deleteOrder();
             document.getElementById('payment-overlay').remove();
             window.parent.postMessage('close-overlay', '*');
@@ -2121,10 +2125,8 @@
 
         resetTimer();
 
-        $(document).ajaxStart(function () {
-            $(document).ajaxSend(function (event, jqXHR, settings) {
-                console.log("URL:", settings.url);
-            });
+        $(document).ajaxSend(function (event, jqXHR, settings) {
+            console.log("URL:", settings.url);
         });
 
     </script>
