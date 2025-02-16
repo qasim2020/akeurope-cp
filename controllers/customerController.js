@@ -16,6 +16,7 @@ const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
 const { getSubscriptionByOrderId, getPaymentByOrderId } = require('../modules/orders');
+const { getEntriesByCustomerId } = require('../modules/ordersFetchEntries');
 
 exports.getCustomerData = async (req, res) => {
     try {
@@ -138,17 +139,15 @@ exports.customer = async (req, res) => {
             projects = [];
         } else {
             visibleDateFields = await visibleProjectDateFields(projects[0]);
-        }        
+        }
 
-        const orders = await Order.find({
-            customerId: req.session.user._id,
-        })
-            .sort({ _id: -1 })
-            .lean();
+        const orders = await Order.find({customerId: customer._id}).sort({orderNo: -1}).lean();
 
         for (const order of orders) {
             order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
         };
+
+        const activeSubscriptions = await getEntriesByCustomerId(customer._id);
 
         res.render('customer', {
             layout: 'dashboard',
@@ -166,6 +165,7 @@ exports.customer = async (req, res) => {
                 sidebarCollapsed: req.session.sidebarCollapsed,
                 customers: await Customer.find().lean(),
                 orders,
+                activeSubscriptions
             },
         });
     } catch (error) {

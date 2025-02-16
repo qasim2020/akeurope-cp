@@ -13,6 +13,7 @@
                 <div class="page-pretitle mb-2">{{project.entriesCount}} x {{project.detail.name}}</div>
             </div>
             <div class="d-flex align-items-center flex-wrap">
+                {{#if (eq order.monthlySubscription false)}}
                 <span class="strong">{{project.totalCostSingleMonth}} {{order.currency}}</span>
                 <button class="btn btn-icon btn-sm  border-0 shadow-none disabled">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -44,6 +45,9 @@
                     </svg>
                 </button>
                 <span class="strong">{{project.totalCostAllMonths}} {{order.currency}}</span>
+                {{else}}
+                <span class="strong">{{order.totalCostSingleMonth}} {{order.currency}}</span>
+                {{/if}}
             </div>
         </div>
 

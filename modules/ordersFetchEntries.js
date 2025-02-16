@@ -2,8 +2,10 @@ const { generateSearchQuery } = require('../modules/generateSearchQuery');
 const { createDynamicModel } = require('../models/createDynamicModel');
 
 const Order = require('../models/Order');
+const Project = require('../models/Project');
 const mongoose = require('mongoose');
 const { errorMonitor } = require('connect-mongo');
+const moment = require('moment');
 
 const validateQuery = async (req, res) => {
     const orderId = req.query.orderId;
@@ -425,26 +427,26 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
 
 const makeSubscriptionArrayForOrder = (project, entry) => {
     const subArray = project.fields
-    .filter((field) => {
-        const isSubscriptionValid = field.subscription && entry[field.name];
+        .filter((field) => {
+            const isSubscriptionValid = field.subscription && entry[field.name];
 
-        if (!entry.oldOrders || !isSubscriptionValid) {
-            return isSubscriptionValid;
-        }
+            if (!entry.oldOrders || !isSubscriptionValid) {
+                return isSubscriptionValid;
+            }
 
-        const isAlreadyOrdered = entry.oldOrders.some((order) => {
-            return (
-                order.selectedSubscriptions &&
-                order.selectedSubscriptions.includes(field.name) &&
-                new Date(order.expiry) > new Date()
-            );
-        });
+            const isAlreadyOrdered = entry.oldOrders.some((order) => {
+                return (
+                    order.selectedSubscriptions &&
+                    order.selectedSubscriptions.includes(field.name) &&
+                    new Date(order.expiry) > new Date()
+                );
+            });
 
-        return isSubscriptionValid && isAlreadyOrdered == false;
-    })
-    .map((field) => field.name);
+            return isSubscriptionValid && isAlreadyOrdered == false;
+        })
+        .map((field) => field.name);
     return subArray;
-}
+};
 
 const makeEntriesForWidgetOrder = (allEntries, selectEntries = 1) => {
     const entriesArray = allEntries.map((entry) => {
@@ -454,9 +456,9 @@ const makeEntriesForWidgetOrder = (allEntries, selectEntries = 1) => {
         };
         selectEntries--;
         return entryInOrder;
-    })
+    });
     return entriesArray;
-}
+};
 
 const makeProjectForWidgetOrder = (project, allEntries, months = 12, selectEntries = 1) => {
     const output = {
@@ -506,7 +508,105 @@ const makeProjectForOrder = (project, allEntries, months = 12) => {
     };
 };
 
-const orderIsValid = async (req, res) => {};
+const getEntriesByCustomerId = async (customerId) => {
+    const now = new Date();
+
+    const orders = await Order.find({
+        customerId: customerId,
+        $or: [
+            {
+                status: 'paid',
+                monthlySubscription: { $ne: true },
+                $expr: {
+                    $gt: [
+                        {
+                            $add: [
+                                { $toDate: '$createdAt' },
+                                { $multiply: [{ $max: '$projects.months' }, 30 * 24 * 60 * 60 * 1000] },
+                                30 * 24 * 60 * 60 * 1000,
+                            ],
+                        },
+                        now,
+                    ],
+                },
+            },
+            {
+                status: 'paid',
+                monthlySubscription: true,
+                createdAt: { $gt: moment().subtract(1, 'month').subtract(2, 'days').toDate() },
+            },
+        ],
+    }).lean();
+
+    const validEntriesByProject = orders.flatMap((order) =>
+        order.projects.flatMap((project) =>
+            project.entries.map((entry) => ({
+                projectSlug: project.slug,
+                entryId: entry.entryId,
+                orderNo: order.orderNo,
+                createdAt: order.createdAt,
+                orderId: order._id,
+                expiry: !order.monthlySubscription
+                    ? new Date(new Date(order.createdAt).getTime() + project.months * 30 * 24 * 60 * 60 * 1000)
+                    : null,
+                renewalDate: order.monthlySubscription
+                    ? new Date(new Date(order.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000)
+                    : null,
+            })),
+        ),
+    );
+
+    const mergedEntriesByProject = await validEntriesByProject.reduce(async (accPromise, entry) => {
+        const acc = await accPromise;
+
+        const projectIndex = acc.findIndex((p) => p.projectSlug === entry.projectSlug);
+        if (projectIndex === -1) {
+            const projectData = await Project.findOne({ slug: entry.projectSlug }).lean();
+            const model = await createDynamicModel(entry.projectSlug);
+
+            const entryData = await model.findById(entry.entryId).lean();
+
+            acc.push({
+                projectSlug: entry.projectSlug,
+                project: projectData,
+                model: model,
+                entries: [
+                    {
+                        orderNo: entry.orderNo,
+                        createdAt: entry.createdAt,
+                        entryId: entry.entryId,
+                        orderId: entry.orderId,
+                        expiry: entry.expiry,
+                        renewalDate: entry.renewalDate,
+                        entry: entryData,
+                    },
+                ],
+            });
+        } else {
+            const model = acc[projectIndex].model;
+            const entryData = await model.findById(entry.entryId).lean();
+
+            acc[projectIndex].entries.push({
+                orderNo: entry.orderNo,
+                createdAt: entry.createdAt,
+                entryId: entry.entryId,
+                orderId: entry.orderId,
+                expiry: entry.expiry,
+                renewalDate: entry.renewalDate,
+                entry: entryData,
+            });
+        }
+
+        return acc;
+    }, Promise.resolve([]));
+
+    const output = mergedEntriesByProject.map((project) => {
+        const { model, ...cleanProject } = project;
+        return cleanProject;
+    });
+
+    return output;
+};
 
 module.exports = {
     getOldestPaidEntries,
@@ -515,4 +615,5 @@ module.exports = {
     makeEntriesForWidgetOrder,
     getPreviousOrdersForEntry,
     validateQuery,
+    getEntriesByCustomerId,
 };

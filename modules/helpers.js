@@ -78,6 +78,13 @@ function transformCloudinaryUrl(url) {
     return url.replace('/upload/', `/upload/${transformation}/`);
 }
 
+function circleCloudinaryUrl(url) {
+    if (!url) return '/static/images/no-photo-placement.png';
+
+    const transformation = "ar_1:1,c_fill,e_improve,g_auto,h_250,r_max,w_250,z_1.0";
+    return url.replace('/upload/', `/upload/${transformation}/`);
+}
+
 const capitalizeFirstLetter = function (str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -317,6 +324,7 @@ module.exports = {
     browserDate,
     resizeCloudinaryUrl,
     transformCloudinaryUrl,
+    circleCloudinaryUrl,
     neq,
     capitalizeFirstLetter,
     lowerCaseFirstLetter,
