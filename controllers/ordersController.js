@@ -32,6 +32,7 @@ exports.viewOrders = async (req, res) => {
         } else {
             visibleDateFields = await visibleProjectDateFields(projects[0]);
         }
+        
         const { orders, pagination } = await getPaginatedOrders(req, res);
 
         for (const order of orders) {

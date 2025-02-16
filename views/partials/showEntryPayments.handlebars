@@ -9,7 +9,7 @@
         <th>Payment #</th>
         <th>Date</th>
         <th>Amount</th>
-        <th>Expires</th>
+        <th>Expiry/ Renewel</th>
         <th>Customer</th>
       </tr>
     </thead>
@@ -25,7 +25,11 @@
           {{/if}}
           {{/each}}
         </td>
-        <td>After {{project.months}} month(s) on {{expiresOn createdAt project.months}}</td>
+        {{#if (eq monthlySubscription false)}}
+        <td>Expires after {{project.months}} month(s) on {{expiresOn createdAt project.months}}</td>
+        {{else}}
+        <td>Renews on {{expiresOn createdAt 1}}</td>
+        {{/if}}
         <td><a href='/customer/{{customer._id}}'>{{customer.name}}</a></td>
       </tr>
       {{/each}}

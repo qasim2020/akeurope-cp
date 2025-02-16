@@ -540,7 +540,7 @@ const getEntriesByCustomerId = async (customerId) => {
 
     const validEntriesByProject = orders.flatMap((order) =>
         order.projects.flatMap((project) =>
-            project.entries.map((entry) => ({
+            project.entries.map((entry) => ( entry.totalCost > 0 ? {
                 projectSlug: project.slug,
                 entryId: entry.entryId,
                 orderNo: order.orderNo,
@@ -552,7 +552,7 @@ const getEntriesByCustomerId = async (customerId) => {
                 renewalDate: order.monthlySubscription
                     ? new Date(new Date(order.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000)
                     : null,
-            })),
+            }: null)).filter(entry => entry != null),
         ),
     );
 
