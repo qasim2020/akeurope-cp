@@ -43,6 +43,7 @@ app.use(
 );
 
 app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
     console.log(req.originalUrl);
     let oldSend = res.send;
     let oldJson = res.json;
@@ -60,7 +61,7 @@ app.use((req, res, next) => {
     };
 
     res.on("finish", () => { 
-        if (res.statusCode !== 200) {
+        if (res.statusCode > 399) {
             const errorData = {
                 message: responseBody,
                 status: res.statusCode,

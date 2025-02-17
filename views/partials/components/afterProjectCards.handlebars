@@ -1,6 +1,6 @@
 {{#if data.order.projects}}
 <div class="total-cost" total-cost="{{data.order.totalCost}}">
-    {{#if (gt data.order.totalCost 0)}}
+    {{#if (and (eq data.order.status 'draft')(gt data.order.totalCost 0))}}
     <div class="row">
         <div class="col-xl-4 mb-3">
             <div class="h-100 card">
