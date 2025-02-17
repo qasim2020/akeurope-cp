@@ -6,6 +6,7 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const hbsHelpers = require('./modules/helpers');
 const MongoStore = require('connect-mongo');
+const { sendErrorToTelegram } = require('./modules/telegramBot');
 
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -43,7 +44,33 @@ app.use(
 
 app.use((req, res, next) => {
     console.log(req.originalUrl);
-    next();
+    let oldSend = res.send;
+    let oldJson = res.json;
+
+    let responseBody;
+
+    res.send = function (data) {
+        responseBody = data;
+        return oldSend.apply(res, arguments);
+    };
+
+    res.json = function (data) {
+        responseBody = data;
+        return oldJson.apply(res, arguments);
+    };
+
+    res.on("finish", () => { 
+        if (res.statusCode !== 200) {
+            const errorData = {
+                message: responseBody,
+                status: res.statusCode,
+                url: req.originalUrl,
+            };
+
+            sendErrorToTelegram(errorData);
+        }
+    });
+    next(); 
 });
 
 app.use(flash());
@@ -72,6 +99,10 @@ app.get('/', (req, res) => {
     } else {
         res.redirect('/login');
     }
+});
+
+app.get('/error-test', (req, res) => {
+    res.status(500).send('This is an error');
 });
 
 const PORT = 3009;

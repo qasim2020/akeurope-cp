@@ -17,7 +17,7 @@ const DonorSchema = new mongoose.Schema(
         subscriptions: [
             {
                 orderId: { type: mongoose.Schema.Types.ObjectId },
-                paymentMethodType: { type: String, enum: ["card", "apple_pay", "google_pay"] },
+                paymentMethodType: { type: String },
                 subscriptionId: { type: String },
                 status: { type: String },
                 currentPeriodStart: { type: Date },
@@ -28,12 +28,13 @@ const DonorSchema = new mongoose.Schema(
                 paymentIntentId: { type: String },
                 paymentStatus: { type: String },
                 paymentMethodId: { type: String },
+                created: { type: Date, default: Date.now },
             },
         ],
         payments: [
             {
                 orderId: { type: mongoose.Schema.Types.ObjectId },
-                paymentMethodType: { type: String, enum: ["card", "apple_pay", "google_pay"] },
+                paymentMethodType: { type: String },
                 paymentIntentId: { type: String },
                 status: { type: String },
                 amount: { type: Number },

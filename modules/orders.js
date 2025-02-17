@@ -389,9 +389,11 @@ const updateOrderStatus = async (req, res) => {
     const { status } = req.body;
     const checkOrder = await Order.findById(orderId).lean();
 
-    if (checkOrder.totalCost == 0) {
+    if (checkOrder.totalCost == 0)
         throw new Error('Invoice has no selected beneficiaries.');
-    }
+    
+    if (checkOrder.status !== 'draft') 
+        throw new Error('Order is not in draft mode');
 
     const projectsWithZeroSubscriptions = checkOrder.projects.filter((project) => project.totalCostSingleMonth == 0);
 
