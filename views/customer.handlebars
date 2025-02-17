@@ -6,10 +6,29 @@
         <div class="page-pretitle"> Customer </div>
         <h2 class="page-title">{{data.customer.name}}</h2>
       </div>
+      <div class="col-auto ms-auto d-print-none">
+        <div class="dropdown">
+          <button class="btn btn-primary btn-icon ps-md-2 pe-md-3" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="ti ti-plus"></i>
+            <span class="d-none d-md-block ms-2">Select New Beneficiaries</span>
+          </button>
+          <div class="dropdown-menu">
+            <span class="dropdown-header">Bank Transfer</span>
+            <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modal-new-order">
+              Bulk Selection
+            </a>
+            <span class="dropdown-header">Credit Cards</span>
+            {{#each data.projects}}
+            <a class="dropdown-item" onclick="loadDonationOverlay('{{this.slug}}')">
+              {{this.name}}
+            </a>
+            {{/each}}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-<!-- Page body -->
 <div class="container-xl pt-4">
   <div class="row row-deck row-cards">
     <div class="d-block col-12 col-md-6 mt-sm-2">
