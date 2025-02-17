@@ -26,12 +26,14 @@ const notifyTelegram = (req, res, next) => {
     if (Object.keys(req.body).length > 0) {
         axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
-            text: req.originalUrl + JSON.stringify(req.body, 0, 2),
+            text: `\`\`\`URL-with-Body: \n ${req.originalUrl} ${JSON.stringify(req.body, 0, 2)}\`\`\``,
+            parse_mode: 'MarkdownV2',
         });
     } else {
         axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
-            text: req.originalUrl,
+            text: `\`\`\`URL: ${req.originalUrl}\`\`\``,
+            parse_mode: 'MarkdownV2',
         });
     }
 

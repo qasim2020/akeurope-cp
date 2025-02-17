@@ -471,7 +471,7 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
 
         dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`;
 
-        await transporter.sendMail(mailOptions);
+        transporter.sendMail(mailOptions);
 
         if (!checkCustomer) {
             await saveLog(
@@ -528,7 +528,7 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
 
         dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}`;
 
-        await transporter.sendMail(mailOptions);
+        transporter.sendMail(mailOptions);
 
         const changes = getChanges(checkCustomer, newCustomer);
 
