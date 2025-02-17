@@ -59,9 +59,14 @@ const updateLog = async ({ logId, updates }) => {
     return updatedLog;
 };
 
-const entryLogs = async (req, res) => {
+const entryLogs = async (req, res, customerId) => {
     try {
-        const query = { entityId: req.params.entryId };
+        const query = {
+            $or: [
+                { entityId: req.params.entryId, actorType: 'user' },
+                { entityId: req.params.entryId, actorId: customerId }
+            ]
+        };
 
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;

@@ -58,7 +58,6 @@ exports.entry = async (req, res) => {
             _id: req.params.entryId,
         }).lean();
 
-        entry = await fetchEntrySubscriptionsAndPayments(entry);
         entry.currency = project.currency;
 
         const files = await File.find({ 'links.entityId': req.params.entryId, access: 'customers' }).lean();
@@ -79,7 +78,7 @@ exports.entry = async (req, res) => {
                 files,
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
-                entryLogs: await entryLogs(req, res),
+                entryLogs: await entryLogs(req, res, req.session.user._id),
                 sidebarCollapsed: req.session.sidebarCollapsed,
                 customers: await Customer.find().lean(),
                 payments: await getOrdersByEntryId(req),
@@ -140,7 +139,7 @@ exports.getSingleEntryLogs = async (req, res) => {
         res.render('partials/showEntryLogs', {
             layout: false,
             data: {
-                entryLogs: await entryLogs(req, res),
+                entryLogs: await entryLogs(req, res, req.session.user._id),
                 project,
                 entry,
             },
