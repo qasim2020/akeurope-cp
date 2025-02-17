@@ -167,12 +167,11 @@ fetchClientSecret().then((clientSecret) => {
     });
 });
 
-
 async function fetchClientSecret() {
     const orderId = $('#project-entries').attr('order-id');
     const data = await $.ajax({
         url: `/create-payment-intent/${orderId}/{{data.project.slug}}`,
-        type: "POST"
+        type: 'POST',
     });
     return data.clientSecret;
 }
@@ -180,26 +179,24 @@ async function fetchClientSecret() {
 async function createPaymentMethod() {
     try {
         const { paymentMethod, error } = await stripe.createPaymentMethod({
-            type: "card",
+            type: 'card',
             card: {
                 number: cardNumberElement,
                 expiry: cardExpiryElement,
-                cvc: cardCvcElement
-            }
+                cvc: cardCvcElement,
+            },
         });
 
         if (error) {
-            console.error("Error creating payment method:", error);
+            console.error('Error creating payment method:', error);
         } else {
-            console.log("Payment method created:", paymentMethod);
+            console.log('Payment method created:', paymentMethod);
             return paymentMethod;
         }
     } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error('Unexpected error:', err);
     }
 }
-
-
 
 exports.createDynamicSubscription = async (req, res) => {
     try {
@@ -234,4 +231,75 @@ exports.createDynamicSubscription = async (req, res) => {
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
+};
+
+const loadDonationOverlay = function (slug) {
+    $('#iframe-loading-overlay').remove();
+
+    var $loadingOverlay = $('<div id="iframe-loading-overlay"></div>').css({
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0, 0, 0, 0.7)',
+        opacity: 0,
+        zIndex: '9998',
+    });
+
+    function showLoadingOverlay() {
+        $loadingOverlay.stop().animate({ opacity: 1 }, 300);
+    }
+
+    function hideLoadingOverlay() {
+        $loadingOverlay.stop().fadeOut(300);
+        $loadingOverlay.remove();
+    }
+
+    $('body').append($loadingOverlay);
+    showLoadingOverlay();
+
+    var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>')
+        .attr('src', `https://partner.akeurope.org/overlay/${slug}`)
+        .css({
+            display: 'block',
+            margin: '0',
+            padding: '0',
+            border: '0',
+            width: '100%',
+            height: '100%',
+            position: 'fixed',
+            opacity: 0,
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+            transform: 'translateZ(100px)',
+            'z-index': '9999',
+        })
+        .on('load', function () {
+            $(this).animate({ opacity: 1 }, 300);
+        });
+
+    $(this)
+        .animate({ opacity: 1 }, 300)
+        .promise()
+        .done(function () {
+            $('body').css({
+                overflow: 'hidden',
+                height: '100vh',
+            });
+        });
+    $('body').append($iframe);
+
+    $(window).on('message', function (event) {
+        if (event.originalEvent.data === 'close-overlay') {
+            $iframe.remove();
+            $('body').css({
+                overflow: 'scroll',
+                height: 'auto',
+            });
+            hideLoadingOverlay();
+        }
+    });
 };
