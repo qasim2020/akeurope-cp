@@ -16,7 +16,7 @@ const { getChanges } = require('../modules/getChanges');
 exports.login = async (req, res) => {
     try {
         const { email, password, rememberMe } = req.body;
-        const customer = await Customer.findOne({ email, password: { $exists: true } });
+        const customer = await Customer.findOne({ email: email.toLowerCase(), password: { $exists: true } });
 
         if (customer && (await customer.comparePassword(password))) {
             if (customer.status === 'blocked') {
@@ -63,7 +63,7 @@ exports.sendRegistrationLink = async (req, res) => {
     try {
         const { name, email } = req.body;
 
-        const customer = await Customer.findOne({ email: email, password: { $exists: true } }).lean();
+        const customer = await Customer.findOne({ email: email.toLowerCase(), password: { $exists: true } }).lean();
 
         if (customer) {
             return res
@@ -73,14 +73,14 @@ exports.sendRegistrationLink = async (req, res) => {
                 );
         }
 
-        await Customer.deleteOne({ email });
+        await Customer.deleteOne({ email: email.toLowerCase() });
 
         const inviteToken = crypto.randomBytes(32).toString('hex');
         const inviteExpires = moment().add(24, 'hours').toDate();
 
         const newCustomer = new Customer({
             name,
-            email,
+            email: email.toLowerCase(),
             emailStatus: 'Email invite sent!',
             inviteToken: inviteToken,
             inviteExpires: inviteExpires,
@@ -136,7 +136,6 @@ exports.sendRegistrationLink = async (req, res) => {
 
 exports.registerCustomer = async (req, res) => {
     try {
-
         const { name, password, organization, location } = req.body;
         const oldCustomer = await Customer.findOne({
             inviteToken: req.params.token,
@@ -201,7 +200,7 @@ exports.registerDirect = async (req, res) => {
 
         const customer = new Customer();
         customer.name = name;
-        customer.email = email;
+        customer.email = email.toLowerCase();
         customer.password = password;
         customer.role = 'partner';
         customer.emailStatus = 'Direct registration';
