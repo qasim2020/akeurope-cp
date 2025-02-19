@@ -314,7 +314,18 @@ const shortenName = function(string) {
     return `${start}...`;       
 }
 
+
+const shieldName = function(name) {
+    if (!name || typeof name !== 'string' || name.length < 2) return 'H***';
+
+    return name
+        .split('')
+        .map((char, index) => (index === 0 || char === ' ' ? char : '*'))
+        .join('');
+}
+
 module.exports = {
+    shieldName,
     eq,
     gt,
     compareIds,

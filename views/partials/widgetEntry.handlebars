@@ -1,13 +1,8 @@
 {{#if (eq order.status 'draft')}}
 <div class="col-12 pb-2 entry" entry-id="{{entry.detail._id}}" order-id="{{order._id}}">
-    <div class="card border-0 flex-row p-2 h-100 rounded-3">
-        <div class="position-relative">
-            <img style="object-fit: cover; width: 201px;" class="rounded-3 border border-1 shadow-lg"
-                src="{{transformCloudinaryUrl (or entry.detail.photo (or entry.detail.photoOfChild entry.detail.photoOfOrphan))}}"
-                alt="">
-        </div>
-        <div class="ps-3 pe-2 pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3"> {{entry.detail.name}} </div>
+    <div class="card border-0 flex-row h-100 rounded-3">
+        <div class="pt-1 w-100 h-100 d-flex flex-column">
+            <div class="card-title mb-1 fs-3"> Beneficiary # {{entry.detail.ser}} </div>
             {{#if entry.detail.dateOfBirth}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
             {{/if}}
@@ -62,14 +57,9 @@
 {{#if (or (eq order.status 'pending payment') (eq order.status 'processing'))}}
 {{#if (gt entry.totalCost 0)}}
 <div class="col-12 pb-2 entry" entry-id="{{entry.detail._id}}" order-id="{{order._id}}">
-    <div class="card border-0 flex-row p-2 h-100 rounded-3">
-        <div class="position-relative">
-            <img style="object-fit: cover; width: 201px;" class="rounded-3 border border-1 shadow-lg"
-                src="{{transformCloudinaryUrl (or entry.detail.photo (or entry.detail.photoOfChild entry.detail.photoOfOrphan))}}"
-                alt="">
-        </div>
-        <div class="ps-3 pe-2 pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3"> {{entry.detail.name}} </div>
+    <div class="card border-0 flex-row h-100 rounded-3">
+        <div class="pt-1 w-100 h-100 d-flex flex-column">
+            <div class="card-title mb-1 fs-3"> Beneficiary # {{entry.detail.ser}} </div>
             {{#if entry.detail.dateOfBirth}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
             {{/if}}
@@ -110,14 +100,9 @@
 {{#if (eq order.status 'paid')}}
 {{#if (gt entry.totalCost 0)}}
 <div class="col-12 pb-2 entry" entry-id="{{entry.detail._id}}" order-id="{{order._id}}">
-    <div class="card border-0 flex-row p-2 h-100 rounded-3">
-        <div class="position-relative">
-            <img style="object-fit: cover; width: 201px;" class="rounded-3 border border-1 shadow-lg"
-                src="{{transformCloudinaryUrl (or entry.detail.photo (or entry.detail.photoOfChild entry.detail.photoOfOrphan))}}"
-                alt="">
-        </div>
-        <div class="ps-3 pe-2 pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3"> {{entry.detail.name}} </div>
+    <div class="card border-0 flex-row h-100 rounded-3">
+        <div class="pt-1 w-100 h-100 d-flex flex-column">
+            <div class="card-title mb-1 fs-3"> Beneficiary # {{entry.detail.ser}} </div>
             {{#if entry.detail.dateOfBirth}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
             {{/if}}

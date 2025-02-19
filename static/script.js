@@ -98,7 +98,7 @@
             $('body').append($loadingOverlay);
             showLoadingOverlay();
             
-            $loadingOverlay.html('1. Opening...')
+            $loadingOverlay.html('Step 1/1. Opening...')
 
             var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>')
                 .attr('src', '__OVERLAY_URL__')
@@ -117,7 +117,10 @@
                     "bottom": "0",
                     "transform": "translateZ(100px)",
                     "z-index": "9999"
-                });
+                })
+                .on('load', function () {
+                    $loadingOverlay.html('');
+                });;
 
             $('body').append($iframe);
             $('body').css({
@@ -125,7 +128,7 @@
                 height: '100vh'
             })
 
-            $loadingOverlay.html('2. Opening...')
+            $loadingOverlay.html('<p style="max-width: 500px">Step 2/3. Opening... If it takes time, please wait for upto 15 seconds. If still there is an issue, try refreshing your browser. Or contact us on whatsapp at +47 92916580.</p>');
 
             $(window).on('message', function (event) {
                 if (event.originalEvent.data === 'close-overlay') {
