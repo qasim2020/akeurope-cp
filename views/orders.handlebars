@@ -14,11 +14,13 @@
             <span class="d-none d-md-block ms-2">Select New Beneficiaries</span>
           </button>
           <div class="dropdown-menu">
+            {{#if (findInArray data.role 'bulk-select')}}
             <span class="dropdown-header">Bank Transfer</span>
             <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modal-new-order">
               Bulk Selection
             </a>
             <span class="dropdown-header">Credit Cards</span>
+            {{/if}}
             {{#each data.projects}}
             <a class="dropdown-item" onclick="loadDonationOverlay('{{this.slug}}')">
               {{this.name}}

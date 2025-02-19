@@ -19,7 +19,7 @@ const roles = {
         'viewSelf',
 
         'viewWidgets',
-        'bulkOrders'
+        'bulk-select'
     ],
     partner: [
         'viewDashboard',
@@ -39,7 +39,7 @@ const roles = {
         'updateFiles',
         'editSelf',
         'viewSelf',
-        'bulkOrders'
+        'bulk-select',
     ],
     donor: [
         'viewDashboard',

@@ -1293,7 +1293,7 @@
             $('[name=lastName]').val('{{data.donor.lastName}}');
         };
 
-        startWidget();
+        window.onload = startWidget;
 
         function initializePopovers() {
             var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
