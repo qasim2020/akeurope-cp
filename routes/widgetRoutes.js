@@ -6,7 +6,7 @@ const { notifyTelegram } = require('../modules/telegramBot');
 
 router.get('/widgets', authenticate, authorize('viewWidgets'), widgetController.widgets);
 // router.get('/payment-widget.js', authenticate, authorize('viewWidgets'), widgetController.widget);
-router.get('/script/:slug', notifyTelegram, widgetController.script);
+router.get('/script/:slug', widgetController.script);
 router.get('/overlay/:slug', notifyTelegram, widgetController.overlay);
 router.get('/get-country-list/:code', notifyTelegram, widgetController.getCountryList);
 router.get('/store-prices', notifyTelegram, widgetController.storePrices);
