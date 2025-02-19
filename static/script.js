@@ -1,18 +1,20 @@
 (function () {
-    document.addEventListener("DOMContentLoaded", function () {
-        if (typeof jQuery === 'undefined') {
-            var script = document.createElement('script');
-            script.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
-            script.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
-            script.crossOrigin = 'anonymous';
-            script.onload = function () {
-                initOverlay();
-            };
-            document.body.appendChild(script);
-        } else {
-            initOverlay();
-        }    
-    });
+    // document.addEventListener("DOMContentLoaded", function () {
+    //     if (typeof jQuery === 'undefined') {
+    //         var script = document.createElement('script');
+    //         script.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
+    //         script.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
+    //         script.crossOrigin = 'anonymous';
+    //         script.onload = function () {
+    //             initOverlay();
+    //         };
+    //         document.body.appendChild(script);
+    //     } else {
+            
+    //     }    
+    // });
+
+    initOverlay();
 
     function initOverlay() {
         const css = `
@@ -78,6 +80,10 @@
                 background: 'rgba(0, 0, 0, 0.7)',
                 opacity: 0,
                 zIndex: '9998',
+                color: 'white',
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
             });
 
             function showLoadingOverlay() {
@@ -91,6 +97,8 @@
 
             $('body').append($loadingOverlay);
             showLoadingOverlay();
+            
+            $loadingOverlay.html('1. Opening...')
 
             var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>')
                 .attr('src', '__OVERLAY_URL__')
@@ -102,16 +110,13 @@
                     "width": "100%",
                     "height": "100%",
                     "position": "fixed",
-                    "opacity": 0,
+                    "opacity": 1,
                     "top": "0",
                     "left": "0",
                     "right": "0",
                     "bottom": "0",
                     "transform": "translateZ(100px)",
                     "z-index": "9999"
-                })
-                .on('load', function () {
-                    $(this).animate({ opacity: 1 }, 300);
                 });
 
             $('body').append($iframe);
@@ -119,6 +124,8 @@
                 overflow: 'hidden',
                 height: '100vh'
             })
+
+            $loadingOverlay.html('2. Opening...')
 
             $(window).on('message', function (event) {
                 if (event.originalEvent.data === 'close-overlay') {
