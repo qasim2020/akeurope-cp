@@ -894,7 +894,7 @@
                     }));
                     if (error) {
                         console.error("Payment Intent Error:", error);
-                        alert(error.message);
+                        alert('Payment failed. Try using a different payment method.');
                         return;
                     }
                 }
@@ -1012,7 +1012,7 @@
                     }));
                     if (error) {
                         console.error("Payment Intent Error:", error);
-                        alert(error.message);
+                        alert('Payment failed. Try using a different payment method.');
                         return;
                     }
                 }
@@ -1045,7 +1045,6 @@
                     });
                 } else {
                     console.log(subscriptionData);
-                    alert(subscriptionData);
                     showCardError(elem, subscriptionData, currentBtnHtml);
                 }
 
@@ -1136,7 +1135,7 @@
 
             const orderId = $('#project-entries').attr('order-id');
 
-            if (!orderId) return alert('order id is not given');
+            if (!orderId) return alert('Could not mount stripe elements. Please refresh your window.');
 
             const order = await getOrderData(orderId);
 
@@ -1257,7 +1256,7 @@
             localStorage.setItem('countryCode', countryCode);
             await createNewOrder();
             const orderId = $('#project-entries').attr('order-id');
-            if (!orderId) return alert('no order available');
+            if (!orderId) return alert('Session expired. Please refresh your browser.');
             const order = await getOrderData(orderId);
             await drawTotalCosts(order);
             await refreshDropdowns();
@@ -1336,7 +1335,7 @@
                 }
             } catch (error) {
                 console.log(error);
-                alert(error);
+                alert('Could not save your information. Try from start again.')
             }
 
         };
@@ -1369,7 +1368,7 @@
         const createNewOrder = async function () {
             try {
                 const countryCode = localStorage.getItem('countryCode');
-                if (!countryCode) return alert('no country code found!');
+                if (!countryCode) return alert('Could not find the country code. Refresh your browser.');
                 const response = await $.ajax({
                     url: `/widget-new-order/{{data.project.slug}}?countryCode=${countryCode}`,
                     method: 'GET',
@@ -1380,14 +1379,14 @@
                 return true;
             } catch (xhr) {
                 console.error("Error:", xhr);
-                alert(xhr.responseText || "An error occurred while creating the order.");
+                alert("Server Error. Could not create the order.");
             }
         }
 
         const loadMoreContent = function (elem) {
             const orderId = $('#project-entries').attr('order-id');
             const slug = $('#project-entries').attr('project-slug');
-            if (!orderId || !slug) return alert('orderId and slug is required to load more content!');
+            if (!orderId || !slug) return console.log('orderId and slug is required to load more content!');
             const currentBtnHtml = $(elem).html();
             $(elem).html(`<span class="spinner-border spinner-border-sm mx-2" role="status"></span> Loading ...`);
             $.ajax({
@@ -1401,7 +1400,7 @@
                 },
                 error: error => {
                     $(elem).html(currentBtnHtml);
-                    alert(error);
+                    alert("Server Error. Could not load more content.");
                 }
             })
         }
@@ -1419,7 +1418,7 @@
                 initializePopovers();
             } catch (xhr) {
                 console.error("Error:", xhr);
-                alert(xhr.responseText || "An error occurred while creating the order.");
+                alert('Could not fetch entries to render on your window. Refresh your window.');
             }
         }
 
@@ -1433,14 +1432,14 @@
                 return order;
             } catch (xhr) {
                 console.error("Error:", xhr);
-                alert(xhr.responseText || "An error occurred while creating the order.");
+                alert('Order expired! Please refresh your browser.');
             }
         }
 
         const refreshDropdowns = async function () {
             try {
                 const userCountry = localStorage.getItem('countryCode');
-                if (!userCountry) return alert('no country found!');
+                if (!userCountry) return console.log('no country found!');
 
                 const data = await $.ajax({
                     url: `/get-country-list/${userCountry}`,
@@ -1469,15 +1468,15 @@
                     const selectedOption = $(this).find(':selected');
                     const value = selectedOption.val();
                     const countryCode = selectedOption.attr('country-code');
-                    if (!value || !countryCode) return alert('value and code missing');
-                    if (value === 'N/A') return alert('Currency is not supported');
+                    if (!value || !countryCode) return console.error('value and code missing');
+                    if (value === 'N/A') return alert('This currency is not supported.');
                     $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
                     localStorage.setItem('countryCode', countryCode);
                     changeOrderCurrency(value, countryCode);
                 });
             } catch (error) {
-                console.log(error);
-                alert(error);
+                console.error(error);
+                alert('Could not draw elements due to a problem. Please refresh your browser.');
             }
 
         };
@@ -1494,7 +1493,7 @@
                     },
                     error: (xhr, status, error) => {
                         console.log(error);
-                        alert(`${xhr.responseText || error}`);
+                        alert(`Server Error. Could not change the currency.`);
                     }
                 })
                 const order = await getOrderData(orderId);
@@ -1502,7 +1501,7 @@
                 drawOrderEntries();
                 refreshDropdowns();
             } catch (error) {
-                alert(error);
+                alert(`Server Error. Could not change the currency.`);
             }
         }
 
@@ -1614,7 +1613,7 @@
                 const entryId = $(this).attr('entry-id');
                 if (!orderId || !entryId) {
                     console.log({ orderId, entryId });
-                    return alert('no order id or entry id provided');
+                    return console.error('Order Id and entry Id are required');
                 }
                 await $.ajax({
                     url: `/widget-update-order/${orderId}/{{data.project.slug}}?entryId=${entryId}&subscriptions=empty`,
@@ -1625,7 +1624,7 @@
                     },
                     error: (xhr, status, error) => {
                         console.log(error);
-                        alert(`${xhr.responseText || error}`);
+                        alert('Could not draw the total cost window. Please refresh your browser.');
                     }
                 })
                 const order = await getOrderData(orderId);
@@ -1673,7 +1672,7 @@
                     },
                     error: (xhr, status, error) => {
                         console.log(error);
-                        alert(`${xhr.responseText || error}`);
+                        alert('Could not change months. Refresh your browser.');
                     }
                 })
                 const order = await getOrderData(orderId);
@@ -1707,7 +1706,7 @@
         $('[freq]').on('click', async function (e) {
             const freq = $(this).attr('freq');
             const orderId = $('#project-entries').attr('order-id');
-            if (!orderId) return alert('no order id provided');
+            if (!orderId) return console.error('no order id provided');
             let url;
             $('.donation-amount').removeClass('active');
             if (freq === 'once') {
@@ -1728,7 +1727,7 @@
                 },
                 error: (xhr, status, error) => {
                     console.log(error);
-                    alert(`${xhr.responseText || error}`);
+                    alert('Could not change frequency. Please refresh your browser.');
                 }
             })
             drawOrderEntries();
@@ -1971,7 +1970,7 @@
                 $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
             } catch (error) {
                 console.log(error);
-                alert(error);
+                alert('Could not go back. Refresh your window.');
             }
         });
 
@@ -1988,7 +1987,7 @@
                 drawOrderEntries();
             } catch (error) {
                 console.log(error);
-                alert(error);
+                alert('Could not save the amount. Please refresh your window');
             }
 
         };
@@ -2035,7 +2034,7 @@
                 },
                 error: (xhr, status, error) => {
                     console.log(error);
-                    alert(`${xhr.responseText || error}`);
+                    alert('Could not select the beneficiary. Please refresh your window.');
                 }
             })
             const order = await getOrderData(orderId);
@@ -2071,7 +2070,7 @@
                 },
                 fail: error => {
                     console.log(error);
-                    alert(error);
+                    alert('Could not delete Order. Restart your session.');
                 }
             });
         }
@@ -2096,7 +2095,7 @@
                 },
                 fail: error => {
                     console.log(error);
-                    alert(error);
+                    alert('Could not reset the order. Refresh your window.');
                 }
             });
         }
@@ -2111,7 +2110,7 @@
                 },
                 fail: error => {
                     console.log(error);
-                    alert(error);
+                    alert('Could not render total screen. Please refresh your window.');
                 }
             });
             await $.ajax({
@@ -2123,7 +2122,7 @@
                 },
                 fail: error => {
                     console.log(error);
-                    alert(error);
+                    alert('Could not render beneficiary screen. Please refresh your window.');
                 }
             });
         }
