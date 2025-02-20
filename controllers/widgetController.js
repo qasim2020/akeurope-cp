@@ -705,7 +705,7 @@ exports.createSetupIntent = async (req, res) => {
         res.json({ clientSecret: setupIntent.client_secret });
     } catch (error) {
         console.error('Error creating SetupIntent:', error);
-        res.status(500).send(error);
+        res.status(500).send('Server error. Error creating setup intent.');
     }
 };
 
@@ -764,7 +764,7 @@ exports.createPaymentIntent = async (req, res) => {
         res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {
         console.log(error);
-        res.status(400).json({ error: error.message });
+        res.status(500).send('Server error. Error creating payment intent.');
     }
 };
 
@@ -821,6 +821,7 @@ exports.createOneTime = async (req, res) => {
     } catch (error) {
         console.error('Payment Error:', error);
         res.status(400).send(error.message || error || 'Server Error');
+        res.status(400).json('Server error. Could not create one-time!');
     }
 };
 

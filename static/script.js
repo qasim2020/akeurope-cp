@@ -66,8 +66,7 @@
         $('body').append($button);
 
         var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>').attr('src', '__OVERLAY_URL__').css({
-            display: 'block',
-            visibility: 'hidden',
+            display: 'none',
             margin: '0',
             padding: '0',
             border: '0',
@@ -106,11 +105,11 @@
 
             function showLoadingOverlay() {
                 $loadingOverlay.stop().animate({ opacity: 1 }, 300);
-                $iframe.css({ visibility: 'visible' });
+                $iframe.css({ display: 'block' });
             }
 
             function hideLoadingOverlay() {
-                $iframe.css({ visibility: 'hidden' });
+                $iframe.css({ display: 'none' });
                 $loadingOverlay.stop().fadeOut(300);
                 $loadingOverlay.remove();
             }
