@@ -451,8 +451,8 @@
                     <div class="flex-grow-1 w-100 h-100">
                         {{> widgetEntries}}
                     </div>
-                    <a href="{{data.portalUrl}}" target="_blank"
-                        class="d-none d-md-block mt-4 text-small">Manage your donation</a>
+                    <a href="{{data.portalUrl}}" target="_blank" class="d-none d-md-block mt-4 text-small">Manage your
+                        donation</a>
                 </div>
             </div>
 
@@ -517,33 +517,7 @@
                                             Monthly</a>
                                     </div>
 
-                                    <div class="tab-content my-2">
-                                        <div class="tab-pane show active" id="one-time-products">
-                                            <div class="row g-2" id="one-time-products-list">
-                                                <div class="card placeholder-glow w-100 border-0 p-1">
-                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-100 placeholder">
-                                                    </div>
-                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-66 placeholder">
-                                                    </div>
-                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-33 placeholder">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="tab-pane" id="monthly-products">
-                                            <div class="row g-2" id="monthly-products-list">
-                                                <div class="card placeholder-glow w-100 border-0 p-0">
-                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-100 placeholder">
-                                                    </div>
-                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-66 placeholder">
-                                                    </div>
-                                                    <div class="btn-secondary-outline btn py-4 mb-2 w-33 placeholder">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {{> widgetNoOrderTotal}}
                                 </div>
                             </div>
 
@@ -825,7 +799,8 @@
                     </div>
                 </div>
 
-                <a id="manage-donation" href="{{data.portalUrl}}" target="_blank" class="mt-1 text-small">Manage your donation</a>
+                <a id="manage-donation" href="{{data.portalUrl}}" target="_blank" class="mt-1 text-small">Manage your
+                    donation</a>
             </div>
 
         </div>
@@ -1293,7 +1268,7 @@
             $('[name=lastName]').val('{{data.donor.lastName}}');
         };
 
-        window.onload = startWidget;
+        startWidget();
 
         function initializePopovers() {
             var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
@@ -1400,9 +1375,9 @@
                     method: 'GET',
                     contentType: 'application/json',
                 });
-
                 $('#project-entries').replaceWith(response);
                 initializePopovers();
+                return true;
             } catch (xhr) {
                 console.error("Error:", xhr);
                 alert(xhr.responseText || "An error occurred while creating the order.");
@@ -2018,10 +1993,6 @@
 
         };
 
-        const savePaymentInfo = function (elem) {
-
-        }
-
         $(document).on('input change', 'input', function (e) {
             $(this).closest('div').find('.is-invalid').removeClass('is-invalid');
         });
@@ -2089,12 +2060,6 @@
             });
         });
 
-        $(document).on('click', '#close-overlay', async function () {
-            deleteOrder();
-            document.getElementById('payment-overlay').remove();
-            window.parent.postMessage('close-overlay', '*');
-        });
-
         const deleteOrder = async function () {
             const orderId = $('#project-entries').attr('order-id');
             await $.ajax({
@@ -2103,7 +2068,6 @@
                 contentType: 'application/json',
                 success: response => {
                     console.log(response);
-                    console.log('order has been deleted. refresh window!');
                 },
                 fail: error => {
                     console.log(error);
@@ -2112,13 +2076,88 @@
             });
         }
 
+
+        const resetOrder = async function () {
+            const orderId = $('#project-entries').attr('order-id');
+            await $.ajax({
+                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true`,
+                method: 'POST',
+                contentType: 'application/json',
+                success: response => {
+                    console.log(response);
+                    $('#project-entries').attr({ 'order-id': '' });
+                    if ($('#project-entries').length > 0) {
+                        $('#slide-container').css({ transform: `translateX(-${0 * 100}%)` });
+                        $('.back-btn').attr({ index: 0 });
+                        renderNoOrder();
+                        startWidget();
+                        resetTimer();
+                    }
+                },
+                fail: error => {
+                    console.log(error);
+                    alert(error);
+                }
+            });
+        }
+
+        const renderNoOrder = async function () {
+            await $.ajax({
+                url: `/widget-render-no-order-total`,
+                method: 'GET',
+                contentType: 'application/json',
+                success: response => {
+                    $('#no-order-total').replaceWith(response);
+                },
+                fail: error => {
+                    console.log(error);
+                    alert(error);
+                }
+            });
+            await $.ajax({
+                url: `/widget-render-no-order-entries/{{data.project.slug}}`,
+                method: 'GET',
+                contentType: 'application/json',
+                success: response => {
+                    $('#project-entries').replaceWith(response);
+                },
+                fail: error => {
+                    console.log(error);
+                    alert(error);
+                }
+            });
+        }
+
+        $(document).on('click', '#close-overlay', async function () {
+            window.parent.postMessage('close-overlay', '*');
+        });
+
         window.addEventListener('beforeunload', deleteOrder);
 
         let idleTimer;
+        let countdownInterval;
 
         function resetTimer() {
             clearTimeout(idleTimer);
-            idleTimer = setTimeout(() => deleteOrder(), 5 * 60 * 1000);
+            clearInterval(countdownInterval);
+
+            // let timeLeft = 20; // 20 seconds
+            let timeLeft = 15 * 60; // 15 minutes of inactivity
+            console.log(`Timer is reset to ${timeLeft / 60} minute(s)`);
+
+            countdownInterval = setInterval(() => {
+                timeLeft = timeLeft - 10;
+                console.log(`Inactivity: Order will reset in ${(timeLeft / 60).toFixed(2)} minute(s)`);
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval); // Stop countdown when time is up
+                }
+            }, 10 * 1000); // Log every 10 second
+
+            idleTimer = setTimeout(() => {
+                clearInterval(countdownInterval); // Ensure countdown stops after deletion
+                resetOrder();
+            }, timeLeft * 1000);
         }
 
         document.addEventListener('mousemove', resetTimer);

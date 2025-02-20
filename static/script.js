@@ -1,20 +1,18 @@
 (function () {
-    // document.addEventListener("DOMContentLoaded", function () {
-    //     if (typeof jQuery === 'undefined') {
-    //         var script = document.createElement('script');
-    //         script.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
-    //         script.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
-    //         script.crossOrigin = 'anonymous';
-    //         script.onload = function () {
-    //             initOverlay();
-    //         };
-    //         document.body.appendChild(script);
-    //     } else {
-            
-    //     }    
-    // });
-
-    initOverlay();
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof jQuery === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
+            script.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
+            script.crossOrigin = 'anonymous';
+            script.onload = function () {
+                initOverlay();
+            };
+            document.body.appendChild(script);
+        } else {
+            initOverlay();
+        }
+    });
 
     function initOverlay() {
         const css = `
@@ -67,8 +65,28 @@
         $('body').append(css);
         $('body').append($button);
 
+        var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>').attr('src', '__OVERLAY_URL__').css({
+            display: 'block',
+            visibility: 'hidden',
+            margin: '0',
+            padding: '0',
+            border: '0',
+            width: '100%',
+            height: '100%',
+            position: 'fixed',
+            opacity: 1,
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+            transform: 'translateZ(100px)',
+            'z-index': '9999',
+        });
+
+        $('body').append($iframe);
+
         $button.on('click', function () {
-            
+
             $('#iframe-loading-overlay').remove();
 
             var $loadingOverlay = $('<div id="iframe-loading-overlay"></div>').css({
@@ -88,55 +106,29 @@
 
             function showLoadingOverlay() {
                 $loadingOverlay.stop().animate({ opacity: 1 }, 300);
+                $iframe.css({ visibility: 'visible' });
             }
-            
+
             function hideLoadingOverlay() {
+                $iframe.css({ visibility: 'hidden' });
                 $loadingOverlay.stop().fadeOut(300);
                 $loadingOverlay.remove();
             }
 
             $('body').append($loadingOverlay);
             showLoadingOverlay();
-            
-            $loadingOverlay.html('Step 1/1. Opening...')
 
-            var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>')
-                .attr('src', '__OVERLAY_URL__')
-                .css({
-                    "display": "block",
-                    "margin": "0",
-                    "padding": "0",
-                    "border": "0",
-                    "width": "100%",
-                    "height": "100%",
-                    "position": "fixed",
-                    "opacity": 1,
-                    "top": "0",
-                    "left": "0",
-                    "right": "0",
-                    "bottom": "0",
-                    "transform": "translateZ(100px)",
-                    "z-index": "9999"
-                })
-                .on('load', function () {
-                    $loadingOverlay.html('');
-                });;
-
-            $('body').append($iframe);
             $('body').css({
                 overflow: 'hidden',
-                height: '100vh'
-            })
-
-            $loadingOverlay.html('<p style="max-width: 500px">Step 2/3. Opening... If it takes time, please wait for upto 15 seconds. If still there is an issue, try refreshing your browser. Or contact us on whatsapp at +47 92916580.</p>');
+                height: '100vh',
+            });
 
             $(window).on('message', function (event) {
                 if (event.originalEvent.data === 'close-overlay') {
-                    $iframe.remove();
                     $('body').css({
                         overflow: 'scroll',
-                        height: 'auto'
-                    })
+                        height: 'auto',
+                    });
                     hideLoadingOverlay();
                 }
             });

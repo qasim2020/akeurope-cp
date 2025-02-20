@@ -415,6 +415,33 @@ exports.renderOrderEntries = async (req, res) => {
     }
 };
 
+exports.renderNoOrderEntries = async (req,res) => {
+    try {
+        const project = await Project.findOne({ slug: req.params.slug }).lean();
+        res.render('partials/widgetEntries', {
+            layout: false,
+            data: {
+                project,
+            }
+        })
+    } catch(error) {
+        console.log(error);
+        res.status(400).send('Server error. Could not render entries.');
+    }
+}
+
+exports.renderNoOrderTotal = async (req,res) => {
+    try {
+        res.render('partials/widgetNoOrderTotal',{
+            layout: false,
+            data: {}
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(400).send('Server error. Could not render entries.'); 
+    }
+}
+
 const connectDonorInCustomer = async function (donor, checkCustomer) {
     let transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
