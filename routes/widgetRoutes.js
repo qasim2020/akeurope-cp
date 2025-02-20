@@ -9,8 +9,8 @@ router.get('/widgets', authenticate, authorize('viewWidgets'), widgetController.
 router.get('/script/:slug', widgetController.script);
 router.get('/overlay/:slug', widgetController.overlay);
 router.get('/get-country-list/:code', notifyTelegram, widgetController.getCountryList);
-router.get('/store-prices', notifyTelegram, widgetController.storePrices);
-router.get('/countries', notifyTelegram, widgetController.countries);
+// router.get('/store-prices', notifyTelegram, widgetController.storePrices);
+// router.get('/countries', notifyTelegram, widgetController.countries);
 router.get('/widget-new-order/:slug', notifyTelegram, widgetController.createNewOrder);
 router.post('/widget-update-order/:orderId/:slug', notifyTelegram, widgetController.updateOrder);
 router.get('/widget-order/:orderId', notifyTelegram, widgetController.getOrderData);
