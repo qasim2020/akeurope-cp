@@ -1265,7 +1265,7 @@
             $('[name=lastName]').val('{{data.donor.lastName}}');
         };
 
-        startWidget();
+        window.onload = startWidget;
 
         function initializePopovers() {
             var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
@@ -1398,7 +1398,7 @@
                 },
                 error: error => {
                     $(elem).html(currentBtnHtml);
-                    alert("Server Error. Could not load more content.");
+                    alert('Order expired. Please refresh your browser.');
                 }
             })
         }
@@ -1491,7 +1491,7 @@
                     },
                     error: (xhr, status, error) => {
                         console.log(error);
-                        alert(`Server Error. Could not change the currency.`);
+                        alert('Order expired. Please refresh your browser.');
                     }
                 })
                 const order = await getOrderData(orderId);
@@ -1622,7 +1622,7 @@
                     },
                     error: (xhr, status, error) => {
                         console.log(error);
-                        alert('Could not draw the total cost window. Please refresh your browser.');
+                        alert('Order expired. Please refresh your browser.');
                     }
                 })
                 const order = await getOrderData(orderId);
@@ -1670,7 +1670,7 @@
                     },
                     error: (xhr, status, error) => {
                         console.log(error);
-                        alert('Could not change months. Refresh your browser.');
+                        alert('Order expired. Please refresh your browser.');
                     }
                 })
                 const order = await getOrderData(orderId);
@@ -1725,7 +1725,7 @@
                 },
                 error: (xhr, status, error) => {
                     console.log(error);
-                    alert('Could not change frequency. Please refresh your browser.');
+                    alert('Order expired. Please refresh your browser.');
                 }
             })
             drawOrderEntries();
@@ -1968,7 +1968,7 @@
                 $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
             } catch (error) {
                 console.log(error);
-                alert('Could not go back. Refresh your window.');
+                alert('Order expired. Please refresh your browser.');
             }
         });
 
@@ -1985,7 +1985,7 @@
                 drawOrderEntries();
             } catch (error) {
                 console.log(error);
-                alert('Could not save the amount. Please refresh your window');
+                alert('Order expired. Please refresh your browser.');
             }
 
         };
@@ -2032,7 +2032,7 @@
                 },
                 error: (xhr, status, error) => {
                     console.log(error);
-                    alert('Could not select the beneficiary. Please refresh your window.');
+                    alert('Order expired. Please refresh your browser.');
                 }
             })
             const order = await getOrderData(orderId);
@@ -2059,8 +2059,10 @@
 
         const deleteOrder = async function () {
             const orderId = $('#project-entries').attr('order-id');
+            const countryCode = localStorage.getItem('countryCode');
+            if (!orderId) return console.error('no order is available');
             await $.ajax({
-                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true`,
+                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true&countryCode=${countryCode}`,
                 method: 'POST',
                 contentType: 'application/json',
                 success: response => {
@@ -2068,16 +2070,17 @@
                 },
                 fail: error => {
                     console.log(error);
-                    alert('Could not delete Order. Restart your session.');
+                    alert('Order expired. Please refresh your browser.');
                 }
             });
         }
 
-
         const resetOrder = async function () {
             const orderId = $('#project-entries').attr('order-id');
+            const countryCode = localStorage.getItem('countryCode');
+            if (!orderId) return console.error('no order is available');
             await $.ajax({
-                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true`,
+                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true&resetOrder=true&countryCode=${countryCode}`,
                 method: 'POST',
                 contentType: 'application/json',
                 success: response => {
@@ -2093,7 +2096,7 @@
                 },
                 fail: error => {
                     console.log(error);
-                    alert('Could not reset the order. Refresh your window.');
+                    alert('Order expired. Please refresh your browser.');
                 }
             });
         }
@@ -2129,8 +2132,6 @@
             window.parent.postMessage('close-overlay', '*');
         });
 
-        window.addEventListener('beforeunload', deleteOrder);
-
         let idleTimer;
         let countdownInterval;
 
@@ -2147,12 +2148,12 @@
                 console.log(`Inactivity: Order will reset in ${(timeLeft / 60).toFixed(2)} minute(s)`);
 
                 if (timeLeft <= 0) {
-                    clearInterval(countdownInterval); // Stop countdown when time is up
+                    clearInterval(countdownInterval); 
                 }
-            }, 10 * 1000); // Log every 10 second
+            }, 10 * 1000); 
 
             idleTimer = setTimeout(() => {
-                clearInterval(countdownInterval); // Ensure countdown stops after deletion
+                clearInterval(countdownInterval); 
                 resetOrder();
             }, timeLeft * 1000);
         }
