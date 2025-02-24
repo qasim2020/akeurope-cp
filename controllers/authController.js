@@ -192,7 +192,7 @@ exports.registerDirect = async (req, res) => {
     try {
         const { name, password, email } = req.body;
 
-        const checkCustomer = await Customer.findOne({ email: email }).lean();
+        const checkCustomer = await Customer.findOne({ email: email.toLowerCase() }).lean();
 
         if (checkCustomer) {
             return res.status(400).send('Customer with this email already exists!');
