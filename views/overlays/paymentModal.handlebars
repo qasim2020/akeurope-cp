@@ -1466,8 +1466,6 @@
                 populateCurrencyDropdown(data.countries);
                 populateTelephoneDropdown(data.countries);
 
-                $('.donation-amount').first().addClass('active');
-
                 $('.currency-dropdown').val(data.country.currency.code);
 
                 $('#tel-toggle').html(`
@@ -1678,6 +1676,7 @@
             const changeOrderMonths = async function () {
                 const orderId = $('#project-entries').attr('order-id');
                 const months = $('input.month-input').val() > 48 ? 48 : $('input.month-input').val();
+                $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
                 await $.ajax({
                     url: `/widget-update-order/${orderId}/{{data.project.slug}}?months=${months}`,
                     method: 'POST',
