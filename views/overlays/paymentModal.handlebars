@@ -2184,6 +2184,24 @@
             console.log("URL:", settings.url);
         });
 
+        // gtm events
+        $(document).ajaxComplete(function (event, xhr, settings) {
+            let url = settings.url;
+            if (!url.startsWith('http')) {
+                url = new URL(url, window.location.origin).href;
+            }
+
+            const urlObject = new URL(url);
+            const queryParams = Object.fromEntries(urlObject.searchParams.entries());
+
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                event: 'ajax',
+                ajaxUrl: url, 
+                queryParams: queryParams 
+            });
+        });
+
     </script>
 
 </body>
