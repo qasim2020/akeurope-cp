@@ -20,6 +20,38 @@ const runQueriesOnOrder = async (req, res) => {
 
     const existingCustomer = await Customer.findById(existingOrder.customerId).lean();
 
+    if (req.query.monthlySubscription) {
+        const updatedSubscription = req.query.monthlySubscription;
+        order = await Order.findOneAndUpdate(
+            { _id: orderId },
+            { $set: { monthlySubscription: updatedSubscription } },
+            { new: true, lean: true },
+        );
+    }
+
+    if (req.query.countryCode) {
+        const countryCode = req.query.countryCode;
+        order = await Order.findOneAndUpdate({ _id: orderId }, { $set: { countryCode } }, { new: true, lean: true });
+        if (saveLogs) {
+            if (order.currency != existingOrder.currency) {
+                await saveLog(
+                    logTemplates({
+                        type: 'orderCountryChanged',
+                        entity: order,
+                        changes: [
+                            {
+                                key: 'countryCode',
+                                oldValue: existingOrder.countryCode,
+                                newValue: countryCode,
+                            },
+                        ],
+                        actor: req.session.user,
+                    }),
+                );
+            }
+        }
+    }
+
     if (req.query.customerId) {
         const customerId = req.query.customerId;
 
@@ -28,21 +60,6 @@ const runQueriesOnOrder = async (req, res) => {
         const newCustomer = await Customer.findById(order.customerId).lean();
 
         if (existingCustomer.email != newCustomer.email) {
-            await saveLog(
-                logTemplates({
-                    type: 'orderCustomerChanged',
-                    entity: order,
-                    changes: [
-                        {
-                            key: 'customer',
-                            oldValue: `<a href="/customer/${existingCustomer._id}">${existingCustomer.name}</a>`,
-                            newValue: `<a href="/customer/${newCustomer._id}">${newCustomer.name}</a>`,
-                        },
-                    ],
-                    actor: req.session.user,
-                }),
-            );
-
             await saveLog(
                 logTemplates({
                     type: 'customerRemovedFromOrder',
@@ -68,23 +85,6 @@ const runQueriesOnOrder = async (req, res) => {
     if (req.query.currency) {
         const currency = req.query.currency;
         order = await Order.findOneAndUpdate({ _id: orderId }, { $set: { currency: currency } }, { new: true, lean: true });
-
-        if (order.currency != existingOrder.currency) {
-            await saveLog(
-                logTemplates({
-                    type: 'orderCurrencyChanged',
-                    entity: order,
-                    changes: [
-                        {
-                            key: 'currency',
-                            oldValue: existingOrder.currency,
-                            newValue: currency,
-                        },
-                    ],
-                    actor: req.session.user,
-                }),
-            );
-        }
     }
 
     if (req.query.months > 0) {
@@ -156,7 +156,6 @@ const runQueriesOnOrder = async (req, res) => {
                 order = tempOrder;
             }
         }
-
     }
 
     if (req.query.entryId && req.query.subscriptions) {
@@ -192,7 +191,6 @@ const runQueriesOnOrder = async (req, res) => {
                 },
             );
         }
-
     }
 
     if (req.query.addProject) {
@@ -217,7 +215,6 @@ const runQueriesOnOrder = async (req, res) => {
                 lean: true,
             },
         );
-
     }
 
     if (req.query.replaceProject) {

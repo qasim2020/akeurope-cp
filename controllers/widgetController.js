@@ -363,7 +363,6 @@ exports.updateOrder = async (req, res) => {
         if (req.query.checkout) {
             if (order.totalCost === 0 || order.totalCostSingleMonth === 0)
                 throw new Error('order can not be checked out with 0 cost');
-            // await cleanOrder(order._id);
             order = await Order.findOneAndUpdate(
                 { _id: order._id },
                 { $set: { status: 'pending payment' } },
