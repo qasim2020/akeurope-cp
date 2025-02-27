@@ -1,55 +1,38 @@
 const mongoose = require('mongoose');
 
-const subscriptionSchema = new mongoose.Schema(
+const Counter = require('./Counter');
+
+const SubscriptionRecordSchema = new mongoose.Schema(
     {
-        customerId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        projectId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        entryId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-        },
-        stripeSubscriptionId: {
-            type: String, // To store the subscription ID from Stripe
-            required: true,
-        },
-        stripePaymentMethodId: {
-            type: String, // To store the payment method ID from Stripe
-        },
-        status: {
-            type: String,
-            enum: ['active', 'canceled', 'pending', 'incomplete', 'incomplete_expired', 'trialing'],
-            default: 'pending',
-        },
-        startDate: {
-            type: Date,
-            default: Date.now,
-        },
-        endDate: {
-            type: Date, // Can be null for active subscriptions
-        },
-        trialEnd: {
-            type: Date, // If a trial period is provided
-        },
-        createdAt: {
-            type: Date,
-            default: Date.now,
-        },
-        updatedAt: {
-            type: Date,
-            default: Date.now,
-        },
+        orderNo: { type: String },
+        customerId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Customer' },
+        currency: { type: String, required: true },
+        total: { type: Number, required: true },
+        monthlySubscription: { type: Boolean, default: false },
+        countryCode: { type: String, required: true },
+        projectSlug: { type: String, required: true },
+        status: { type: String, enum: ['draft', 'pending payment', 'processing', 'paid'], default: 'draft' },
     },
     {
-        timestamps: true, // Automatically adds createdAt and updatedAt fields
-    }
+        timestamps: true,
+        versionKey: false,
+    },
 );
 
-const Subscription = mongoose.model('Subscription', subscriptionSchema);
+SubscriptionRecordSchema.pre('save', async function (next) {
+    const doc = this;
+
+    if (doc.counterId) return next();
+
+    try {
+        const counter = await Counter.findOneAndUpdate({ _id: 'Order' }, { $inc: { seq: 1 } }, { new: true, upsert: true });
+        doc.orderNo = counter.seq;
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+const Subscription = mongoose.model('SubscriptionRecord', SubscriptionRecordSchema);
 
 module.exports = Subscription;

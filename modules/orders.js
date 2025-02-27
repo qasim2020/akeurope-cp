@@ -603,7 +603,10 @@ const formatOrderWidget = async (order) => {
     for (const project of order.projects) {
         const entryModel = await createDynamicModel(project.slug);
         for (const entry of project.entries) {
-            entry.detail = await entryModel.findOne({ _id: entry.entryId }).lean();
+            entry.detail = await entryModel.findOne(
+                { _id: entry.entryId },
+                { name: 1, _id: 1, dateOfBirth: 1, ser: 1 } 
+            ).lean();
             entry.lastPaid = await getPreviousOrdersForEntry(entry.entryId, order._id);
             if (entry.lastPaid) {
                 for (const order of entry.lastPaid) {

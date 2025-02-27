@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Overlay</title>
+    <link rel="stylesheet" href="{{tablerCss}}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0/dist/css/tabler-flags.min.css">
+    <style>
+        #payment-overlay {
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        body {
+            background: none;
+            height: auto;
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        .btn {
+            box-shadow: none;
+        }
+
+        .slide .btn:not(.btn-primary):hover,
+        .slide .btn:not(.btn-primary):focus,
+        .slide .btn:not(.btn-primary):focus-visible,
+        .slide .btn:not(.btn-primary):active {
+            background-color: rgb(240, 240, 240);
+        }
+
+        .slide .btn:not(.btn-primary).active {
+            background-color: #e3f2fd;
+            color: rgb(25 109 187);
+            border: 1px solid #066fd1;
+            font-weight: bold;
+        }
+
+        #close-overlay {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background: rgb(179 179 179);
+            transition: background-color 0.3s ease;
+        }
+
+        #close-overlay:hover {
+            background: white;
+        }
+
+        .currency-input-container {
+            position: relative;
+            border: 1px solid #dce1e7;
+            border-radius: 4px;
+            box-shadow: none;
+        }
+
+        .currency-dropdown {
+            position: absolute;
+            height: 37px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: white;
+            right: 1px;
+            top: 4px;
+            margin: 0px 4px;
+            padding: 0 6px;
+            width: 59px;
+            border-radius: 3px;
+            opacity: 0;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .currency-selector {
+            position: absolute;
+            height: 37px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: white;
+            right: 1px;
+            top: 4px;
+            margin: 0px 4px;
+            padding: 0 6px;
+            width: 59px;
+            border-radius: 3px;
+            color: #192433;
+        }
+
+        .currency-dropdown:hover {
+            background: black;
+            opacity: 0.039;
+            cursor: pointer;
+            padding: 4px 31px;
+        }
+
+        input.amount {
+            width: 100%;
+            color: #066fd1 !important;
+            font-weight: bold;
+            border: 0px;
+            box-shadow: none;
+        }
+
+        #slide-wrapper {
+            background: white;
+            max-width: 320px;
+            margin: auto;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            #payment-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding-top: 20px;
+            }
+
+            #slide-parent {
+                padding: 0px;
+                margin: 0px;
+                max-width: 320px;
+            }
+
+            #slide-wrapper {
+                height: 100%;
+                max-width: 100%;
+            }
+
+            .rounded-md-4 {
+                border-radius: 1rem;
+            }
+        }
+
+        #slide-container {
+            transition: transform 0.2s ease-in-out;
+            height: 100%;
+            display: flex;
+            width: 100%;
+        }
+
+        .slide {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        #slide-select-amount {
+            padding: 8px 28px 28px 28px;
+        }
+
+        #slide-select-amount>.footer {
+            padding: 0px;
+        }
+
+        #slide-payment-info>.header {
+            margin: 0 27px;
+        }
+
+        #slide-user-info>.footer,
+        #slide-payment-info>.footer,
+        #slide-thank-you>.footer {
+            padding: 28px;
+        }
+
+        #slide-user-info>.body,
+        #slide-payment-info>.body {
+            margin: 8px 28px;
+            margin-top: 1rem;
+        }
+
+        .slide .back-btn {
+            position: absolute;
+            left: 10px;
+            top: 17px;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            50% {
+                transform: translateX(5px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        input.is-invalid,
+        .form-check-input.is-invalid,
+        .card-input.is-invalid,
+        .text-error {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+
+        .form-floating>.form-control:not(:placeholder-shown)~label::after {
+            background-color: transparent;
+        }
+
+        .form-floating:focus-within {
+            z-index: 3;
+        }
+
+        #tel-toggle {
+            position: absolute;
+            z-index: 10;
+            width: 54px;
+            height: 38px;
+            overflow: hidden;
+            padding: 8px;
+            top: 9px;
+            left: 8px;
+            border: 0px;
+        }
+
+        #tel-toggle .flag {
+            height: 1rem;
+            margin-right: 5px;
+        }
+
+        #tel-toggle svg {
+            height: 15px;
+            padding: 0px;
+            margin-right: -7px !important;
+            margin-left: -2px;
+        }
+
+        #tel-wrapper .dropdown-menu.show {
+            transform: translate3d(0px, 4px, 0px) !important;
+            width: 100%;
+            height: 259px;
+            overflow: scroll;
+        }
+
+        #tel-codes>a.dropdown-item.bg-hover {
+            background: #f0f0f0;
+        }
+
+        #tel-wrapper .dropdown-menu.show::-webkit-scrollbar {
+            display: none;
+        }
+
+        #tel-wrapper .dropdown-menu .flag {
+            height: 1rem;
+            margin-left: auto;
+        }
+
+        #tel-wrapper input {
+            padding-left: 69px;
+        }
+
+        #tel-wrapper label {
+            margin-left: 57px;
+        }
+
+        .form-floating>.form-control.card-input~label {
+            color: inherit;
+            transform: none;
+        }
+
+        .form-floating>.form-control {
+            position: relative;
+        }
+
+        .form-floating>.form-control.card-input.typing {
+            color: var(--tblr-body-color);
+            background-color: var(--tblr-bg-forms);
+            border-color: #83b7e8;
+            outline: 0;
+            box-shadow: var(--tblr-box-shadow-input), 0 0 0 .25rem rgba(var(--tblr-primary-rgb), .25);
+            z-index: 2;
+        }
+
+        .form-floating>.form-control.card-input.active~label {
+            color: rgba(var(--tblr-body-color-rgb), .65);
+            transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+        }
+
+        .faq-answer {
+            padding-left: 21px;
+            padding-right: 21px;
+        }
+
+        #manage-donation {
+            padding-left: 21px;
+        }
+
+        .transition {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .rotated {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="payment-overlay">
+        <div class="row justify-content-center">
+
+            <div
+                class="col-12 col-md-6 col-lg-4 card shadow-lg border-0 ms-md-2 me-md-3 p-0 rounded-md-4 overflow-hidden">
+                <div class="img-responsive img-responsive-21x9 card-img-top"
+                    style="height: 300px; background-image: url(https://images.unsplash.com/photo-1591522810850-58128c5fb089?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)">
+                </div>
+                <div class="card-body p-4">
+                    <img class="mb-3"
+                        src="https://res.cloudinary.com/miscellaneous/image/upload/v1737903106/akeurope/Group_427320398.png"
+                        style="height: 40px">
+                    <h2 class="fw-medium mb-2">Save Families in Palestine</h2>
+                    <p class="fs-3">The Messenger of Allah, peace and blessings be upon him, said, “Whoever relieves the
+                        hardship of a believer in this world, Allah will relieve his hardship on the Day of
+                        Resurrection. Whoever helps ease one in difficulty, Allah will make it easy for him in this
+                        world and in the Hereafter. (Sahih Muslim). Donate generously to help our brothers and sisters
+                        in Palestine today.</p>
+                    <a href="" class="d-none d-md-block mt-4 text-small">Manage your donation</a>
+                </div>
+            </div>
+
+            <div id="slide-parent" class="col-12 col-md-5 col-lg-3 card shadow-lg me-md-2 rounded-md-4 overflow-hidden">
+                <div id="slide-wrapper">
+                    <div id="slide-container">
+                        <div class="slide" id="slide-select-amount">
+                            <div class="header">
+                                <div class="d-flex align-content-center justify-content-center my-3">
+                                    <svg fill="none" height="28" viewBox="0 0 28 28" width="28" style="color: #1bc31b"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="icon-fill shrink-0 font-size-28 text-green-80 me-2" aria-hidden="true">
+                                        <g fill="currentColor">
+                                            <path clip-rule="evenodd"
+                                                d="m15.0393 2.44995c-.6707-.24772-1.4079-.24772-2.0786 0l-8.30715 3.06797c-.39274.14504-.65355.51939-.65355.93807v7.54411c0 3.6861 1.95965 6.6874 4.28911 8.8073 1.16017 1.0557 2.38789 1.8689 3.45309 2.4137 1.1081.5668 1.9145.779 2.2578.779s1.1497-.2122 2.2578-.779c1.0652-.5448 2.2929-1.358 3.4531-2.4137 2.3294-2.1199 4.2891-5.1212 4.2891-8.8073v-7.54411c0-.41868-.2608-.79303-.6536-.93807zm-2.7715-1.876139c1.1179-.412868 2.3465-.412868 3.4644 0l8.3071 3.067969c1.1783.43514 1.9607 1.55819 1.9607 2.81421v7.54411c0 4.4389-2.3618 7.9375-4.943 10.2865-1.2952 1.1786-2.6702 2.092-3.8885 2.7151-1.1754.6012-2.3332.9984-3.1685.9984s-1.9931-.3972-3.1685-.9984c-1.21831-.6231-2.59328-1.5365-3.88847-2.7151-2.58125-2.349-4.94303-5.8476-4.94303-10.2865v-7.54411c0-1.25602.78243-2.37907 1.96066-2.81421z"
+                                                fill-rule="evenodd"></path>
+                                            <path
+                                                d="m18.2906 11.75h-.2535v-1.1855c0-2.19278-1.7415-4.02451-3.9182-4.06361-.0595-.00107-.1783-.00107-.2378 0-2.1767.0391-3.91819 1.87083-3.91819 4.06361v1.1855h-.25354c-.39069 0-.70937.4028-.70937.9003v5.9463c0 .4969.31868.9035.7094.9035h8.5812c.3907 0 .7094-.4066.7094-.9035v-5.9463c0-.4974-.3187-.9003-.7094-.9003zm-3.4867 3.8674v1.7967c0 .2058-.1723.3799-.3784.3799h-.8509c-.2061 0-.3785-.1741-.3785-.3799v-1.7967c-.1999-.1966-.3162-.4684-.3162-.7691 0-.5698.4408-1.0594 1.0013-1.082.0594-.0024.1783-.0024.2377 0 .5605.0226 1.0013.5122 1.0013 1.082 0 .3007-.1164.5725-.3163.7691zm1.5623-3.8674h-4.7323v-1.1855c0-1.30621 1.0623-2.38623 2.3661-2.38623s2.3662 1.08002 2.3662 2.38623z">
+                                            </path>
+                                        </g>
+                                    </svg>
+                                    <h2 class="fw-normal">Secure donation</h2>
+                                </div>
+                            </div>
+
+                            <div class="body">
+
+                                <div class="tabs">
+                                    <div class="nav btn-group w-100 mb-2" role="group">
+                                        <a class="btn py-2 fs-3 active" freq="once" id="one-time-tab"
+                                            data-bs-toggle="tab" href="#one-time-products">Give once</a>
+                                        <a class="btn py-2 fs-3" freq="monthly" id="monthly-tab" data-bs-toggle="tab"
+                                            href="#monthly-products">
+                                            <svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"
+                                                xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+                                                class="iconify iconify--noto" preserveAspectRatio="xMidYMid meet"
+                                                fill="#000000" style="width: 17px; margin-right: 8px;">
+                                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                </g>
+                                                <g id="SVGRepo_iconCarrier">
+                                                    <path
+                                                        d="M93.99 8.97c-21.91 0-29.96 22.39-29.96 22.39s-7.94-22.39-30-22.39c-16.58 0-35.48 13.14-28.5 43.01c6.98 29.87 58.56 67.08 58.56 67.08s51.39-37.21 58.38-67.08c6.98-29.87-10.56-43.01-28.48-43.01z"
+                                                        fill="#f44336"> </path>
+                                                    <g fill="#c33">
+                                                        <path
+                                                            d="M30.65 11.2c17.2 0 25.74 18.49 28.5 25.98c.39 1.07 1.88 1.1 2.33.06L64 31.35C60.45 20.01 50.69 8.97 34.03 8.97c-6.9 0-14.19 2.28-19.86 7.09c5.01-3.29 10.88-4.86 16.48-4.86z">
+                                                        </path>
+                                                        <path
+                                                            d="M93.99 8.97c-5.29 0-10.11 1.15-13.87 3.47c2.64-1.02 5.91-1.24 9.15-1.24c16.21 0 30.72 12.29 24.17 40.7c-5.62 24.39-38.46 53.98-48.49 65.27c-.64.72-.86 1.88-.86 1.88s51.39-37.21 58.38-67.08c6.98-29.86-10.53-43-28.48-43z">
+                                                        </path>
+                                                    </g>
+                                                    <path
+                                                        d="M17.04 24.82c3.75-4.68 10.45-8.55 16.13-4.09c3.07 2.41 1.73 7.35-1.02 9.43c-4 3.04-7.48 4.87-9.92 9.63c-1.46 2.86-2.34 5.99-2.79 9.18c-.18 1.26-1.83 1.57-2.45.46c-4.22-7.48-5.42-17.78.05-24.61z"
+                                                        fill="#ff8a80"> </path>
+                                                    <path
+                                                        d="M77.16 34.66c-1.76 0-3-1.7-2.36-3.34c1.19-3.02 2.73-5.94 4.58-8.54c2.74-3.84 7.95-6.08 11.25-3.75c3.38 2.38 2.94 7.14.57 9.44c-5.09 4.93-11.51 6.19-14.04 6.19z"
+                                                        fill="#ff8a80"> </path>
+                                                </g>
+                                            </svg>
+                                            Monthly</a>
+                                    </div>
+
+                                    <div class="tab-content mt-2">
+                                        <div class="tab-pane show active" id="one-time-products">
+                                            <div class="row g-2" id="one-time-products-list">
+                                                <div
+                                                    class="p-0 col-12 row g-2 placeholder-glow d-flex align-items-center mt-1 m-auto">
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-12"><a href="#" tabindex="-1"
+                                                            class="btn w-100 disabled placeholder col-12 fs-3"
+                                                            style="height:43px" aria-hidden="true"></a> </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="tab-pane" id="monthly-products">
+                                            <div class="row g-2" id="monthly-products-list">
+                                                <div
+                                                    class="p-0 col-12 row g-2 placeholder-glow d-flex align-items-center mt-1 m-auto">
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-4"><a href="#" tabindex="-1"
+                                                            class="btn w-100 btn-green disabled placeholder py-2 fs-3 m-0"
+                                                            style="height:41px" aria-hidden="true"></a></div>
+                                                    <div class="col-12"><a href="#" tabindex="-1"
+                                                            class="btn w-100 disabled placeholder col-12 fs-3"
+                                                            style="height:43px" aria-hidden="true"></a> </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="footer border-0">
+                                <button id="donate-btn" class="btn btn-primary w-100 py-3 fw-bold fs-3"
+                                    onclick="saveDonationAmount(this)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="icon icon-tabler icons-tabler-outline icon-tabler-credit-card-pay">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
+                                        <path d="M3 10h18" />
+                                        <path d="M16 19h6" />
+                                        <path d="M19 16l3 3l-3 3" />
+                                        <path d="M7.005 15h.005" />
+                                        <path d="M11 15h2" />
+                                    </svg>
+                                    <span>Donate Once</span>
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <div class="slide" id="slide-user-info">
+
+                            <div
+                                class="header border-bottom d-flex align-items-center justify-content-center position-relative pt-4 pb-2">
+                                <button class="back-btn btn btn-icon btn-light">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M15 6l-6 6l6 6" />
+                                    </svg>
+                                </button>
+                                <h3 class="fw-bold">Enter your details</h3>
+                            </div>
+
+                            <div class="body">
+                                <div class="mb-3 position-relative" id="donor-info-form">
+                                    <div class="form-floating">
+                                        <input type="text" class="user-info form-control rounded-top-3 rounded-bottom-0"
+                                            id="first-name" placeholder="Your name">
+                                        <label for="first-name">First name</label>
+                                    </div>
+                                    <div class="form-floating">
+                                        <input type="text" class="user-info form-control rounded-0" id="last-name"
+                                            placeholder="Last name">
+                                        <label for="last-name">Last name</label>
+                                    </div>
+                                    <div class="form-floating">
+                                        <input type="email" class="user-info form-control rounded-0" id="email"
+                                            placeholder="your@email.com">
+                                        <label for="floatingPassword">Email address</label>
+                                    </div>
+                                    <div id="tel-wrapper">
+                                        <div class="dropdown dropup">
+                                            <a href="#" class="btn bg-transparent" id="tel-toggle"
+                                                data-bs-toggle="dropdown"></a>
+                                            <div class="dropdown-menu" id="tel-codes"> </div>
+                                        </div>
+                                        <div class="form-floating">
+                                            <input type="tel"
+                                                class="user-info form-control rounded-bottom-3 rounded-top-0"
+                                                id="contact-number" placeholder="9292929" inputmode="tel">
+                                            <label for="contact-number">Phone number</label>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div id="donor-concents">
+
+                                    <div class="d-flex">
+                                        <div class="form-check">
+                                            <input class="user-info form-check-input" type="checkbox"
+                                                id="organizationCheckbox">
+                                            <label class="form-check-label" for="organizationCheckbox">
+                                                Donate as an organization
+                                            </label>
+                                        </div>
+                                        <span class="ms-2 form-help" data-bs-toggle="popover" data-bs-placement="top"
+                                            data-bs-content="Select if you're donating on behalf of an organization. The donation receipt will be issued to that organization.">?</span>
+                                    </div>
+
+                                    <div id="organizationInputContainer" class="d-none mb-3"></div>
+
+                                    <div class="d-flex">
+                                        <div class="form-check">
+                                            <input class="user-info form-check-input" type="checkbox"
+                                                id="anonymousCheckbox">
+                                            <label class="form-check-label" for="anonymousCheckbox">
+                                                Donate anonymously
+                                            </label>
+                                        </div>
+                                        <span class="ms-2 form-help" data-bs-toggle="popover" data-bs-placement="top"
+                                            data-bs-content="We won't display your information in any public feeds.">?</span>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                            <div class="footer border-0">
+                                <button id="save-user-btn" class="btn btn-primary w-100 py-3 fw-bold fs-3"
+                                    onclick="saveUserInfo(this)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="icon icon-tabler icons-tabler-outline icon-tabler-credit-card-pay">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
+                                        <path d="M3 10h18" />
+                                        <path d="M16 19h6" />
+                                        <path d="M19 16l3 3l-3 3" />
+                                        <path d="M7.005 15h.005" />
+                                        <path d="M11 15h2" />
+                                    </svg>
+                                    <span>Continue</span>
+                                </button>
+                            </div>
+
+
+                        </div>
+
+                        <div class="slide" id="slide-payment-info">
+                            <div
+                                class="header border-bottom d-flex align-items-center justify-content-center position-relative pt-4 pb-2">
+                                <button class="back-btn btn btn-icon btn-light">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-left">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M15 6l-6 6l6 6" />
+                                    </svg>
+                                </button>
+                                <h3 class="fw-bold">You donate</h3>
+                            </div>
+
+                            <div class="body">
+                                <div class="mb-4">
+                                    <h3 class="fw-normal">Choose a payment method</h3>
+                                    <div class="btn-group-vertical w-100" role="group">
+                                        <input type="radio" class="btn-check" name="btn-radio-vertical"
+                                            id="btn-radio-vertical-1" autocomplete="off" checked="">
+                                        <label for="btn-radio-vertical-1" type="button"
+                                            class="rounded-top-3 btn py-2 fs-3 active" data-value="creditCard"
+                                            onclick="selectPaymentBtn(this)">Credit
+                                            Card</label>
+                                        <input type="radio" class="btn-check" name="btn-radio-vertical"
+                                            id="btn-radio-vertical-2" autocomplete="off">
+                                        <label for="btn-radio-vertical-2" type="button" id="expressPaySelector"
+                                            data-value="expressPay" class="rounded-bottom-3 btn py-2 fs-3"
+                                            onclick="selectPaymentBtn(this)">Apple or Google
+                                            Pay</label>
+                                    </div>
+                                </div>
+                                <div id="payment-form" class="position-relative">
+                                    <div class="form-floating">
+                                        <div id="card-number-element"
+                                            class="card-input form-control rounded-top-3 rounded-bottom-0"></div>
+                                        <label for="contact-number">Card Number</label>
+                                    </div>
+                                    <div class="row g-0">
+                                        <div class="form-floating col-6">
+                                            <div id="card-expiry-element" class="card-input form-control rounded-0"
+                                                style="border-bottom-left-radius: var(--tblr-border-radius-lg)!important">
+                                            </div>
+                                            <label for="contact-number">Expiration</label>
+                                        </div>
+                                        <div class="form-floating col-6">
+                                            <div id="card-cvc-element" class="card-input form-control rounded-0"
+                                                style="border-bottom-right-radius: var(--tblr-border-radius-lg)!important">
+                                            </div>
+                                            <label for="contact-number">CVC</label>
+                                        </div>
+                                    </div>
+                                    <div id="payment-error"
+                                        class="text-error text-red fw-bold p-3 rounded-3 mt-3 border border-red d-none">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="footer border-0">
+                                <div class="d-flex justify-content-between flex-wrap py-3">
+                                    <hr class="w-100 mb-3">
+                                    <div class="text-dark fw-strong">Total</div>
+                                    <div class="text-dark fw-strong">300 NOK / month</div>
+                                </div>
+                                <div class="w-100 d-none" id="express-checkout-element">
+
+                                </div>
+                                <button id="cardSubmit" class="btn btn-primary w-100 py-3 fw-bold fs-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="icon icon-tabler icons-tabler-outline icon-tabler-credit-card-pay">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
+                                        <path d="M3 10h18" />
+                                        <path d="M16 19h6" />
+                                        <path d="M19 16l3 3l-3 3" />
+                                        <path d="M7.005 15h.005" />
+                                        <path d="M11 15h2" />
+                                    </svg>
+                                    <span>Pay Now</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="slide" id="slide-thank-you">
+                            <div
+                                class="header d-flex align-items-center justify-content-center position-relative pt-4 pb-2">
+                                <h3 class="fw-bold">Thank you for your payment!</h3>
+                            </div>
+                            <div class="d-flex h-100 justify-content-center align-items-center">
+                                <dotlottie-player
+                                    src="https://lottie.host/9606ee9c-1a99-4dd7-ae0e-669c1092ad3e/9JpFanQfov.lottie"
+                                    background="transparent" speed="1" style="width: 300px; height: 300px" direction="1"
+                                    loop autoplay></dotlottie-player>
+                            </div>
+                            <div class="footer border-0">
+                                <a class="btn btn-primary w-100 py-3 fw-bold fs-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        class="icon icon-tabler icons-tabler-outline icon-tabler-home-hand">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M18 9l-6 -6l-9 9h2v7a2 2 0 0 0 2 2h3.5" />
+                                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2" />
+                                        <path
+                                            d="M16 17.5l-.585 -.578a1.516 1.516 0 0 0 -2 0c-.477 .433 -.551 1.112 -.177 1.622l1.762 2.456c.37 .506 1.331 1 2 1h3c1.009 0 1.497 -.683 1.622 -1.593c.252 -.938 .378 -1.74 .378 -2.407c0 -1 -.939 -1.843 -2 -2h-1v-2.636c0 -.754 -.672 -1.364 -1.5 -1.364s-1.5 .61 -1.5 1.364v4.136z" />
+                                    </svg>
+                                    <span>Go to your dashboard</span>
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="d-none d-md-block col-12 text-center mt-3 fs-5">
+                <a class="cursor-pointer text-white m-auto" data-bs-html="true" data-bs-toggle="popover"
+                    data-bs-placement="top" data-bs-content="
+                    <h4 class='mb-1'>Is my donation secure?</h4>
+                    Yes, we use industry-standard SSL technology to keep your information secure. We partner with Stripe, the industry's established payment processor trusted by some of the world's largest companies.
+                    Your sensitive financial information never touches our servers. We send all data directly to Stripe's PCI-compliant servers through SSL.
+                    ">
+                    Is my donation secure?
+                </a>
+                <span class="mx-2 text-white">·</span>
+                <a class="cursor-pointer text-white m-auto" data-bs-html="true" data-bs-toggle="popover"
+                    data-bs-placement="top" data-bs-content="
+                    <h4 class='mb-1'>Can I cancel my recurring donation?</h4> 
+                    Of course. You always remain in full control of your recurring donation, and you’re free to change or cancel it at any time.
+                    ">
+                    Can I cancel my recurring donation?
+                </a>
+            </div>
+
+            <div class="d-md-none col-12 p-3 fs-4 card border-0">
+                <div class="faq-item">
+                    <h4 class="mb-1 fw-normal toggle-faq" style="cursor: pointer;">
+                        <i class="ti ti-chevron-right me-1 transition"></i>
+                        Is my donation secure?
+                    </h4>
+                    <div class="faq-answer d-none mb-3">
+                        Yes, we use industry-standard SSL technology to keep your information secure. We partner with
+                        Stripe, the industry's established payment processor trusted by some of the world's largest
+                        companies.
+                        Your sensitive financial information never touches our servers. We send all data directly to
+                        Stripe's PCI-compliant servers through SSL.
+                    </div>
+                </div>
+
+                <div class="faq-item mt-1">
+                    <h4 class="mb-1 fw-normal toggle-faq" style="cursor: pointer;">
+                        <i class="ti ti-chevron-right me-1 transition"></i>
+                        Can I cancel my recurring donation?
+                    </h4>
+                    <div class="faq-answer d-none mb-3">
+                        Of course. You always remain in full control of your recurring donation, and you’re free to
+                        change or cancel it at any time.
+                    </div>
+                </div>
+
+                <a id="manage-donation" href="" class="mt-1 text-small">Manage your donation</a>
+            </div>
+
+        </div>
+        <button id="close-overlay" class="btn rounded-circle btn-icon text-dark p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="icon icon-tabler icons-tabler-outline icon-tabler-x">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M18 6l-12 12" />
+                <path d="M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta24/dist/js/tabler.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/static/maskList.js"></script>
+    <script>
+
+        $('.toggle-faq').on('click', function () {
+            let answer = $(this).next('.faq-answer');
+            let icon = $(this).find('i');
+            $(this).toggleClass('fw-normal fw-bold');
+            answer.toggleClass('d-none');
+            icon.toggleClass('ti-chevron-right ti-chevron-down');
+        });
+
+
+        document.addEventListener('click', function (event) {
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            popoverTriggerList.forEach(function (popoverTriggerEl) {
+                const popover = bootstrap.Popover.getInstance(popoverTriggerEl);
+                if (popover && popover._isShown && !popoverTriggerEl.contains(event.target)) {
+                    popover.hide();
+                }
+            });
+        });
+
+        document.getElementById('close-overlay').addEventListener('click', function () {
+            document.getElementById('payment-overlay').remove();
+            window.parent.postMessage('close-overlay', '*');
+        });
+
+        function formatNumberToShortenedVersion(number) {
+            if (number >= 1000) {
+                const suffixes = ['k', 'M', 'B', 'T'];
+                const orderOfMagnitude = Math.floor(Math.log10(number) / 3);
+                const shortNumber = (number / Math.pow(1000, orderOfMagnitude)).toFixed(0);
+
+                return `${shortNumber}${suffixes[orderOfMagnitude - 1]}`;
+            }
+
+            return number.toString();
+        }
+
+        $('[freq]').on('click', function (e) {
+            const freq = $(this).attr('freq');
+            $('.donation-amount').removeClass('active');
+            if (freq === 'once') {
+                $('#donate-btn').find('span').html('Donate Once');
+                $('.donation-amount').first().addClass('active');
+            } else {
+                $('#donate-btn').find('span').html('Donate Monthly');
+                $('.donation-amount').last().addClass('active');
+            }
+        });
+
+        $('.back-btn').on('click', function (e) {
+            console.log('clicked back');
+            const index = $(this).attr('index');
+            $('.back-btn').attr({ index: index - 1 });
+            $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
+        });
+
+        async function fetchClientSecret() {
+            const response = await fetch('/create-payment-intent', { method: 'POST' });
+            const data = await response.json();
+            console.log(data);
+            return data.clientSecret;
+        }
+
+        fetchClientSecret().then((clientSecret) => {
+            const stripe = Stripe(
+                'pk_test_51OzgG82KJohMNjOSieXVuRBiBI6TFbXkZkWOF4Qsr2H563351MojVy7tE8arnbFbr6zJEPlKA1Nl2H6AZY9cZphg00zG07zi2A',
+            );
+
+            const elementStyles = {
+                base: {
+                    fontFamily: 'Roboto',
+                    fontSize: '15px',
+                    fontWeight: 'normal',
+                    '::placeholder': { color: 'transparent' },
+                },
+                invalid: { color: '#e3342f' },
+            };
+
+            const elementClasses = {
+                base: 'form-control stripe-input',
+                focus: 'form-control-focus',
+                invalid: 'is-invalid',
+            };
+
+            const elements = stripe.elements({ clientSecret });
+            const cardNumber = elements.create('cardNumber', {
+                style: elementStyles,
+                classes: elementClasses,
+                placeholder: '1234 1234 1234 1234',
+            });
+            const cardExpiry = elements.create('cardExpiry', { style: elementStyles, classes: elementClasses, placeholder: '12 / 34' });
+            const cardCvc = elements.create('cardCvc', { style: elementStyles, classes: elementClasses, placeholder: '123' });
+
+            const paymentRequest = stripe.paymentRequest({
+                country: 'US',
+                currency: 'usd',
+                total: {
+                    label: 'Test Payment',
+                    amount: 1000,
+                },
+                requestPayerName: true,
+                requestPayerEmail: true,
+            });
+
+            paymentRequest.canMakePayment().then((result) => {
+
+                let paymentMethods = {
+                    applePay: result.applePay ? 'auto' : 'never',
+                    googlePay: result.googlePay ? 'auto' : 'never',
+                };
+
+                const expressCheckoutElement = elements.create('expressCheckout', {
+                    paymentMethodOrder: ['apple_pay', 'google_pay'],
+                    paymentMethods: paymentMethods,
+                    buttonType: {
+                        applePay: 'buy',
+                        googlePay: 'buy',
+                    },
+                    buttonTheme: {
+                        applePay: 'black',
+                        googlePay: 'black',
+                    },
+                    buttonHeight: 55,
+                });
+
+                expressCheckoutElement.mount('#express-checkout-element');
+
+                if (result.applePay) {
+                    $('#expressPaySelector').html('Apply Pay')
+                } else if (result.googlePay) {
+                    $('#expressPaySelector').html('Google Pay')
+                } else {
+                    $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
+                    $('#expressPaySelector').remove();
+                }
+            });
+
+            cardNumber.mount('#card-number-element');
+            cardExpiry.mount('#card-expiry-element');
+            cardCvc.mount('#card-cvc-element');
+
+            function showPlaceholder(element) {
+                element.update({ style: { base: { '::placeholder': { color: 'lightgrey' } } } });
+            }
+
+            function hidePlaceholder(element) {
+                element.update({ style: { base: { '::placeholder': { color: 'transparent' } } } });
+            }
+
+            function handleFloatingLabel(element, parentSelector) {
+                let isFilled = false;
+                element.on('focus', function () {
+                    $(parentSelector).addClass('active');
+                    $(parentSelector).addClass('typing');
+                    showPlaceholder(element);
+                });
+
+                element.on('blur', function () {
+                    $(parentSelector).removeClass('typing');
+                    if (isFilled) {
+                        return;
+                    }
+                    hidePlaceholder(element);
+                    $(parentSelector).removeClass('active');
+                });
+
+                element.on('change', function (event) {
+                    if (event.empty) {
+                        isFilled = false;
+                    } else {
+                        isFilled = true;
+                        $(parentSelector).addClass('active');
+                        showPlaceholder(element);
+                    }
+                });
+            }
+
+            handleFloatingLabel(cardNumber, '#card-number-element');
+            handleFloatingLabel(cardExpiry, '#card-expiry-element');
+            handleFloatingLabel(cardCvc, '#card-cvc-element');
+
+            $('#cardSubmit').on('click', async function (event) {
+                event.preventDefault();
+                const elem = $(this);
+                const currentBtnHtml = $(this).html();
+                $(this).html(`
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Processing
+                `);
+                $('#payment-error').addClass('d-none');
+
+                const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardNumber,
+                    },
+                });
+
+                if (error) {
+                    console.log(error);
+                    $(elem).addClass('bg-danger').html(`<i class="ti ti-credit-card-off me-1"></i> Error!`);
+                    $('#cardSubmit').popover('dispose');
+                    $('#cardSubmit').popover({
+                        content: `<div class="text-red fw-bold m-0" 
+                                    style="border-radius: 4px; padding: 10px;">
+                                    ${error.message}
+                                  </div>`,
+                        placement: 'top',
+                        trigger: 'manual',
+                        html: true,
+                        template: `<div class="popover bg-danger-lt border-0 shadow-md" role="tooltip">
+                                    <div class="popover-arrow d-none"></div>
+                                    <div class="popover-body p-2"></div>
+                                  </div>`
+                    }).popover('show');
+
+                    setTimeout(function () {
+                        $('#cardSubmit').popover('hide');
+                        $(elem).removeClass('bg-danger').html(currentBtnHtml);
+                    }, 6000);
+
+                } else {
+                    savePaymentInfo();
+                }
+            });
+        });
+
+        $('#tel-toggle').on('show.bs.dropdown', function () {
+            $('#tel-toggle').find('svg').replaceWith(`
+        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 15l6 -6l6 6" /></svg>
+    `);
+        });
+
+        $('#tel-toggle').on('shown.bs.dropdown', function () {
+            const selectedCountryCode = $('#tel-toggle').data('value');
+            const selectedCountryItem = $(`.dropdown-item[data-value="${selectedCountryCode}"]`);
+            $('#tel-codes').find('.bg-hover').removeClass('bg-hover');
+            if (selectedCountryItem.length > 0) {
+                $('#tel-codes').scrollTop(selectedCountryItem[0].offsetTop - $('#tel-codes')[0].offsetTop - 150);
+                $('#tel-codes').find('.bg-hover').removeClass('bg-hover');
+                $(selectedCountryItem).addClass('bg-hover');
+            }
+        });
+
+        $('#tel-toggle').on('hidden.bs.dropdown', function () {
+            $('#tel-toggle').find('svg').replaceWith(`
+        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+    `);
+        });
+
+        function findCommonPrefix(callingCodes) {
+            if (!callingCodes.length) return '';
+
+            let prefix = callingCodes[0]; // Start with the first code
+
+            for (let i = 1; i < callingCodes.length; i++) {
+                while (!callingCodes[i].startsWith(prefix)) {
+                    prefix = prefix.slice(0, -1); // Shorten prefix character by character
+                    if (prefix.length === 0) return ''; // No common prefix
+                }
+            }
+
+            return prefix;
+        }
+
+        const populateTelephoneDropdown = function (countries) {
+            const dropdown = $('#tel-codes');
+            const shortenCountryName = (str) => {
+                return str.length > 15 ? str.slice(0, 15) + '...' : str;
+            };
+            countries = countries.filter((country) => country.callingCodes.length > 0 && country.callingCodes[0] !== '');
+
+            countries.forEach((country) => {
+                const countryItem = $('<a>', {
+                    class: 'dropdown-item',
+                    'data-value': country.code.toLowerCase(),
+                    href: '#',
+                });
+
+                country.telCode = findCommonPrefix(country.callingCodes);
+
+                countryItem.html(`
+                ${shortenCountryName(country.name)} (${country.telCode})
+                <span class="flag flag-country-${country.code.toLowerCase()}"></span>
+            `);
+
+                dropdown.append(countryItem);
+
+                countryItem.on('click', function () {
+                    $('#tel-toggle').data({ value: country.code.toLowerCase() });
+                    $('#tel-toggle').html(`<span class="flag flag-country-${country.code.toLowerCase()}"></span>
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                `);
+                    let currentValue = $('#contact-number').val();
+                    if (currentValue.length > 0) {
+                        currentValue = currentValue.replace(' ', '');
+                        let oldMask = maskList.find((mask) => currentValue.startsWith(mask.code.split(' ')[0]));
+                        let oldCode = oldMask ? oldMask.code.split(' ')[0] : '';
+                        let remainingNumber = currentValue.replace(oldCode, '').trim();
+                        $('#contact-number').val(country.telCode + remainingNumber);
+                        $('#contact-number').trigger('input');
+                    } else {
+                        $('#contact-number').val(country.telCode);
+                    }
+                });
+
+                countryItem.on('mouseover', function () {
+                    $(this).siblings().removeClass('bg-hover');
+                    $(this).addClass('bg-hover');
+                });
+            });
+
+            $('#contact-number').on('input', function () {
+                let inputVal = $(this).val().trim();
+
+                if (inputVal.startsWith('00')) {
+                    inputVal = '+' + inputVal.slice(2);
+                }
+
+                let matchedCountry = countries
+                    .filter((country) => country.callingCodes.some((code) => inputVal.startsWith(code)))
+                    .sort((a, b) => {
+                        let maxCodeA = Math.max(...a.callingCodes.map((code) => code.length));
+                        let maxCodeB = Math.max(...b.callingCodes.map((code) => code.length));
+                        return maxCodeB - maxCodeA;
+                    })[0];
+
+                if (matchedCountry) {
+                    $('#tel-toggle').data({ value: matchedCountry.code.toLowerCase() });
+                    $('#tel-toggle').html(`<span class="flag flag-country-${matchedCountry.code.toLowerCase()}"></span>
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                `);
+
+                    let phoneMask = maskList.find((mask) => inputVal.startsWith(mask.code.split(' ')[0]));
+
+                    if (phoneMask) {
+                        let formattedNumber = formatPhoneNumber(inputVal, phoneMask.code);
+                        $(this).val(formattedNumber);
+                    }
+                } else {
+                    console.log('match not found');
+                }
+            });
+        };
+
+        function formatPhoneNumber(number, mask) {
+            let digits = number.replace(/\D/g, ''); // Remove non-numeric characters
+            let maskParts = mask.split(' ');
+            let dialingCode = maskParts[0]; // Extract country dialing code (e.g., "+47")
+
+            // Extract only the dialing code part from the input
+            let dialingCodeInInput = dialingCode;
+            let remainingDigits = digits.slice(dialingCodeInInput.length - 1); // Remove the dialing code from input
+
+            let formattedNumber = dialingCodeInInput; // Start with the dialing code
+
+            // Apply the rest of the mask formatting
+            let remainingMask = ' ' + maskParts.slice(1).join(' '); // Everything after the dialing code
+            let digitIndex = 0;
+
+            let remainingMaskWithOutSpaces = maskParts.slice(1).join('');
+
+            if (remainingDigits.length > remainingMaskWithOutSpaces.length) {
+                formattedNumber = `${dialingCode} ${remainingDigits}`;
+                return formattedNumber.trim();
+            }
+
+            for (let i = 0; i < remainingMask.length; i++) {
+                if (remainingMask[i] === '#') {
+                    if (digitIndex < remainingDigits.length) {
+                        formattedNumber += remainingDigits[digitIndex];
+                        digitIndex++;
+                    } else {
+                        return formattedNumber.trim();
+                    }
+                } else {
+                    formattedNumber += remainingMask[i];
+                }
+            }
+
+            return formattedNumber.trim();
+        }
+
+        const priorityCurrencies = [
+            {
+                currency: 'NOK',
+                country: 'Norway',
+                countryCode: 'NO',
+            },
+            {
+                currency: 'USD',
+                country: 'United States',
+                countryCode: 'US',
+            },
+            {
+                currency: 'EUR',
+                country: 'Europian Union',
+                countryCode: 'DE',
+            },
+            {
+                currency: 'GBP',
+                country: 'United Kingdom',
+                countryCode: 'GB',
+            },
+        ];
+
+        const populateCurrencyDropdown = function (currencies) {
+            const priorityGroup = document.createElement('optgroup');
+
+            priorityCurrencies.forEach((country) => {
+                const option = document.createElement('option');
+                option.value = country.countryCode;
+                option.textContent = `${country.currency} · ${country.country}`;
+                priorityGroup.appendChild(option);
+            });
+
+            $('.currency-dropdown').append(priorityGroup);
+
+            const otherGroup = document.createElement('optgroup');
+
+            currencies.forEach((country) => {
+                const option = document.createElement('option');
+                option.value = country.code;
+                option.textContent = `${country.currency.code} · ${country.name}`;
+                otherGroup.appendChild(option);
+            });
+
+            $('.currency-dropdown').append(otherGroup);
+        };
+
+        const getPrices = async function (userCountry) {
+            fetch(`/get-prices/${userCountry}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    $('#monthly-products-list, #one-time-products-list').html('');
+
+                    const createPriceButton = (product) => {
+                        return `
+                        <div class="col-4">
+                            <button class="btn py-2 w-100 fs-3 amount" value="${product.amount}">
+                                ${data.country.currency.symbol} ${formatNumberToShortenedVersion(product.amount)}
+                            </button>
+                        </div>
+                    `;
+                    };
+
+                    const inputGroup = `
+                        <div class="col-12">
+                            <div class="currency-input-container border-1 rounded-2">
+                                <input type="number" class="donation-amount amount form-control py-2 fs-2" min="0">
+                                <div class="currency-selector">
+                                    ${data.country.currency.code}
+                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="ms-1 icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+                                </div>
+                                <select class="currency-dropdown">
+                                </select>
+                            </div>
+                        </div>
+                    `;
+
+                    const sortedMonthly = data.monthly.sort((a, b) => a.price - b.price);
+
+                    let monthlyHTML = '';
+                    sortedMonthly.forEach((product) => {
+                        monthlyHTML += createPriceButton(product);
+                    });
+                    monthlyHTML += inputGroup;
+                    $('#monthly-products-list').prepend(monthlyHTML);
+
+                    const sortedOneTime = data.oneTime.sort((a, b) => a.price - b.price);
+
+                    let oneTimeHTML = '';
+                    sortedOneTime.forEach((product) => {
+                        oneTimeHTML += createPriceButton(product);
+                    });
+                    oneTimeHTML += inputGroup;
+                    $('#one-time-products-list').prepend(monthlyHTML);
+
+                    populateCurrencyDropdown(data.countries);
+                    populateTelephoneDropdown(data.countries);
+
+                    $('.donation-amount').first().addClass('active');
+
+                    $('.currency-dropdown').val(data.country.code);
+
+                    $('#tel-toggle').html(`
+                <span class="flag flag-country-${data.country.code.toLowerCase()} me-1"></span>
+                <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
+            `);
+
+                    $('#tel-toggle').data({ value: data.country.code.toLowerCase() });
+
+                    $('#contact-number').val(data.country.callingCodes[0].toString());
+
+                    $('.btn.amount').on('click', function (e) {
+                        $(this).closest('.row').find('input.active, btn.active').removeClass('active');
+                        $(this).addClass('active');
+                        const value = $(this).attr('value');
+                        const input = $(this).closest('.row').find('input');
+                        input.val(value);
+                        input.removeClass('is-invalid');
+                        input.addClass('active');
+                    });
+
+                    $('input.amount').on('keyup', function (e) {
+                        $('.donation-amount').removeClass('active');
+                        $(this).addClass('active');
+                        const value = $(this).val();
+                        const btns = $(this).closest('.row').find('.btn.amount');
+                        for (const btn of btns) {
+                            $(btn).removeClass('active');
+                            if ($(btn).attr('value') === value) {
+                                $(btn).addClass('active');
+                            }
+                        }
+                    });
+
+                    $('.currency-dropdown').on('change', function (e) {
+                        const value = $(this).val();
+                        getPrices(value);
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error fetching pricing data:', error);
+                });
+        };
+
+        const getCurrencyByLocation = async function () {
+            try {
+                const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
+                const data = await response.json();
+                if (!data.country_code) {
+                    getPrices('NO');
+                } else {
+                    getPrices(data.country_code);
+                }
+            } catch (error) {
+                console.error('Error fetching location:', error);
+            }
+        };
+
+        window.onload = getCurrencyByLocation;
+
+        $('#organizationCheckbox').on('change', function () {
+            const inputContainer = $('#organizationInputContainer');
+            if ($(this).prop('checked')) {
+                inputContainer.removeClass('d-none');
+                inputContainer.html(`
+        <div class="form-floating">
+            <input type="text" class="user-info form-control" id="organizationName" placeholder="Organization Name">
+            <label for="organizationName">Organization Name</label>
+        </div>
+    `);
+            } else {
+                inputContainer.addClass('d-none');
+                inputContainer.html('');
+            }
+        });
+
+        const saveDonationAmount = function (elem) {
+            let isValid = true;
+
+            $('.shake').removeClass('shake');
+
+            const value = $('.donation-amount.active').val();
+            $('.donation-amount.active').removeClass('is-invalid');
+
+            if (!value) {
+                isValid = false;
+                $('.donation-amount.active').addClass('is-invalid');
+                $('.donation-amount.active').closest('.body').addClass('shake');
+            }
+
+            $('.shake').one('animationend', function () {
+                $(this).removeClass('shake');
+            });
+
+            if (isValid) {
+                $('#slide-container').css({ transform: `translateX(-${1 * 100}%)` });
+                $('.back-btn').attr({ index: 1 });
+            }
+        };
+
+        const saveUserInfo = function (elem) {
+            let isValid = true;
+
+            $('.shake').removeClass('shake');
+
+            $('.user-info').each(function () {
+                let isValidInput = true;
+                $(this).removeClass('is-invalid');
+                const type = $(this).attr('type');
+                const value = $(this).val();
+                if (type === 'email') {
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailPattern.test(value)) {
+                        isValidInput = false;
+                    }
+                }
+
+                if (type === 'tel') {
+                    const phoneDigits = value.replace(/\D/g, '');
+                    if (phoneDigits.length < 5) {
+                        isValidInput = false;
+                    }
+                }
+
+                if (type === 'text') {
+                    if (value.length < 3) {
+                        isValidInput = false;
+                    }
+                }
+
+                if (!isValidInput) {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                    $(this).closest('.body').addClass('shake');
+                }
+            });
+
+            $('.shake').one('animationend', function () {
+                $(this).removeClass('shake');
+            });
+
+            if (isValid) {
+                $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
+                $('.back-btn').attr({ index: 2 });
+                $('#payment-button').popover({
+                    content: 'hello',
+                    placement: 'top',
+                    trigger: 'manual'
+                }).popover('show');
+            }
+        };
+
+        $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
+        $('.back-btn').attr({ index: 2 });
+
+        const savePaymentInfo = function (elem) {
+            $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
+            $('.back-btn').attr({ index: 3 });
+        }
+
+        $(document).on('input change', 'input', function (e) {
+            $(this).closest('div').find('.is-invalid').removeClass('is-invalid');
+        });
+
+        const selectPaymentBtn = function (elem) {
+            $(elem).siblings('.btn').removeClass('active');
+            $(elem).addClass('active');
+
+            const value = $(elem).data('value');
+
+            if (value === 'creditCard') {
+                $('#express-checkout-element').addClass('d-none');
+                $('#credit-checkout').addClass('d-none');
+                $('#payment-form').removeClass('d-none');
+                $('#cardSubmit').removeClass('d-none');
+            } else if (value === 'expressPay') {
+                $('#express-checkout-element').removeClass('d-none');
+                $('#credit-checkout').removeClass('d-none');
+                $('#cardSubmit').addClass('d-none');
+                $('#payment-form').addClass('d-none');
+            }
+        }
+
+    </script>
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+</body>
+
+</html>

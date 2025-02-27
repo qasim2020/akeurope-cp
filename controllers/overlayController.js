@@ -1,8 +1,8 @@
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 
-const path = require('path');
 const fs = require('fs').promises;
+const path = require('path');
 const crypto = require('crypto');
 const handlebars = require('handlebars');
 const moment = require('moment');
@@ -10,7 +10,7 @@ const nodemailer = require('nodemailer');
 
 const Country = require('../models/Country');
 const Project = require('../models/Project');
-const Order = require('../models/Order');
+const Subscription = require('../models/Subscription');
 const Customer = require('../models/Customer');
 const Donor = require('../models/Donor');
 
@@ -22,184 +22,69 @@ const { isValidEmail } = require('../modules/checkValidForm');
 const { saveLog } = require('../modules/logAction');
 const { getChanges } = require('../modules/getChanges');
 const { logTemplates } = require('../modules/logTemplates');
+const { getCurrencyRates } = require('../modules/getCurrencyRates');
 
-exports.widgets = async (req, res) => {
+exports.wScript = async (req, res) => {
     try {
-        res.render('widgets', {
-            layout: 'dashboard',
-        });
-    } catch (err) {
-        console.log(err);
-        res.render('error', { heading: 'Server Error', error: 'Failed to fetch widgets' });
-    }
-};
-
-exports.widget = async (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.sendFile(path.join(__dirname, 'public', 'payment-widget.js'));
-};
-
-exports.overlay = async (req, res) => {
-    try {
-        const publicKey = process.env.STRIPE_PUBLIC_KEY;
-        const portalUrl = process.env.CUSTOMER_PORTAL_URL;
-        if (req.query.webflow) {
-            res.render('overlays/webflowModal', {
-                layout: false,
-                data: {
-                    project: {
-                        name: req.query.name,
-                        heading: req.query.heading,
-                        cover: req.query.cover,
-                        desc: req.query.description,
-                        slug: req.params.slug,
-                        countryCode: req.query.countryCode
-                    },
-                    publicKey,
-                    portalUrl,
-                },
-            });
-            return;
-        };
-        const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
-        if (!project) throw new Error('Project not found');
-        let donor = {};
-        if (req.query.email) {
-            const donorCheck = await Donor.findOne({ email: req.query.email }).lean();
-            if (donorCheck) {
-                donor = {
-                    email: donorCheck.email,
-                    firstName: donorCheck.firstName,
-                    lastName: donorCheck.lastName,
-                    countryCode: donorCheck.countryCode,
-                };
-            }
-        }
-        res.render('overlays/paymentModal', {
-            layout: false,
-            data: {
-                project,
-                donor,
-                publicKey,
-                portalUrl,
-            },
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(400).send(error);
-    }
-};
-
-exports.script = async (req, res) => {
-    try {
-        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.slug}`;
-        const scriptPath = path.join(__dirname, '..', 'static', 'script.js');
-
+        const scriptPath = path.join(__dirname, '..', 'static', 'webflow.js');
         const file = await fs.readFile(scriptPath, 'utf8');
-        const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
-
-        if (!project) throw new Error('Project not found!');
-        if (project.slug === 'gaza-orphans') {
-            project.right = '-75px';
-        } else {
-            project.right = '-67px';
-        }
-
-        const scriptContent = file
-            .replace('__OVERLAY_URL__', overlayUrl)
-            .replace('__PROJECT_NAME__', project.name)
-            .replace('__PROJECT_SLUG__', project.slug)
-            .replace('__PROJECT_RIGHT__', project.right);
-
         res.setHeader('Content-Type', 'application/javascript');
-        res.send(scriptContent);
+        res.send(file);
     } catch (error) {
         console.error('Unexpected error:', error);
         res.status(500).send('Internal Server Error');
     }
 };
 
-const dynamicRound = (value) => {
-    let magnitude;
+function roundToNearest(amount) {
+    if (amount < 50) return 50;
+    if (amount < 100) return 100;
+    if (amount < 500) return 500;
+    if (amount < 1000) return 1000;
+    if (amount < 5000) return 5000;
+    if (amount < 10000) return 10000;
+    return Math.ceil(amount / 10000) * 10000;
+}
 
-    if (value < 10) {
-        magnitude = 1;
-    } else if (value < 100) {
-        magnitude = 10;
-    } else if (value < 1000) {
-        magnitude = 100;
-    } else {
-        magnitude = 1000;
-    }
+async function getProductList(code) {
+    const filePath = path.join(__dirname, '../products.json');
+    const fileContent = await fs.readFile(filePath, 'utf8');
+    const data = JSON.parse(fileContent);
 
-    return Math.ceil(value / magnitude) * magnitude;
-};
+    const randomSet = data[Math.floor(Math.random() * data.length)];
 
-exports.getCountryList = async (req, res) => {
+    const oneTime = randomSet.oneTime;
+    const monthly = randomSet.monthly;
+
+    const currencyRates = await getCurrencyRates(code);
+    const currencyRate = parseFloat(currencyRates.rates['NOK'].toFixed(2));
+
+    const productList = {
+        oneTime: oneTime.map((amount) => roundToNearest(amount / currencyRate)),
+        monthly: monthly.map((amount) => roundToNearest(amount / currencyRate)),
+    };
+
+    return productList;
+}
+
+exports.overlayProducts = async (req, res) => {
     try {
-        const { code } = req.params;
-        const country = await Country.findOne({ code: code }).lean();
-        const countries = await Country.find().lean().sort({ name: 1 });
-        const sortedCountries = countries.sort((a, b) => a.currency.code.localeCompare(b.name, 'en'));
-        res.json({
+        if (!req.params.code) throw new Error('Country Code is required');
+        const country = await Country.findOne({ code: req.params.code }).lean();
+        if (!country) throw new Error('Currency is not supported');
+        const products = await getProductList(country.currency.code);
+        res.status(200).json({
+            products,
             country,
-            countries: sortedCountries,
         });
     } catch (error) {
-        console.error('Error processing product prices:', error);
-        res.status(500).send('Failed to fetch products.');
-    }
-};
-
-exports.storePrices = async (req, res) => {
-    try {
-        const products = await stripe.products.list({
-            limit: 50,
-        });
-
-        const productPriceMapping = {};
-
-        for (const product of products.data) {
-            const prices = await stripe.prices.list({
-                product: product.id,
-                limit: 10,
-            });
-
-            productPriceMapping[product.id] = {
-                name: product.name,
-                prices: prices.data.map((price) => ({
-                    id: price.id,
-                    price: price.unit_amount / 100,
-                    currency: price.currency,
-                    interval: price.recurring ? price.recurring.interval : 'one-time',
-                })),
-            };
-        }
-
-        await fs.writeFile('products.json', JSON.stringify(productPriceMapping, null, 2));
-        res.json(productPriceMapping);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-exports.countries = async (req, res) => {
-    try {
-        const countries = await Country.find().lean().sort({ name: 1 });
-        res.json(countries);
-    } catch (err) {
-        res.status(500).json({ error: 'Unable to fetch countries' });
+        console.log(error);
+        res.status(400).send(error.message);
     }
 };
 
 exports.createNewOrder = async (req, res) => {
     try {
-        const checkProject = await Project.findOne({
-            slug: req.params.slug,
-        }).lean();
-        if (!checkProject) throw new Error(`Project "${req.params.slug}" not found`);
-
         if (!req.query.countryCode) throw new Error(`Currency is required!`);
 
         const country = await Country.findOne({ code: req.query.countryCode }).lean();
@@ -210,39 +95,47 @@ exports.createNewOrder = async (req, res) => {
 
         if (!customer) throw new Error('Temporary customer not found!');
 
-        req.query.currency = country.currency.code;
-        req.query.select = 3;
+        const { total, countryCode, monthly } = req.query;
+        const { slug } = req.params;
 
-        const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
+        if (!total || !countryCode || !monthly || !slug) throw new Error('Incomplete parameters to create order');
 
-        const updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 1);
+        const currencyRates = await getCurrencyRates(country.currency.code);
+        const currencyRate = parseFloat(currencyRates.rates['NOK'].toFixed(2));
+        const amount = total * currencyRate;
 
-        let order = new Order({
+        console.log({ amount, currencyRate });
+        if (amount < 100) throw new Error('Total can not be lower than 100 NOK');
+
+        let order = new Subscription({
             customerId: customer._id,
             currency: country.currency.code,
-            projects: [updatedProject],
-            monthlySubscription: true,
+            total,
+            monthlySubscription: monthly,
             countryCode: country.code,
+            projectSlug: req.params.slug,
+            status: 'pending payment',
         });
 
         await order.save();
-        order = order.toObject();
-        const calculatedOrder = await calculateOrder(order);
-        await addPaymentsToOrder(calculatedOrder);
 
-        const freshOrder = await Order.findById(order._id).lean();
-        const formattedOrder = await formatOrderWidget(freshOrder);
-
-        res.render('partials/widgetEntries', {
-            layout: false,
-            data: {
-                order: formattedOrder,
-                project: checkProject,
-            },
-        });
+        res.status(200).send(order);
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Could not create new order!');
+        res.status(400).send(error.message);
+    }
+};
+
+exports.deleteOrder = async (req, res) => {
+    try {
+        let order = await Subscription.findById({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        if (!order) throw new Error('Order not found!');
+        if (['processing', 'paid'].includes(order.status)) throw new Error('Order can not be edited');
+        await Subscription.deleteOne({ _id: req.params.orderId });
+        res.status(200).send('Order deleted');
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message);
     }
 };
 
@@ -397,63 +290,14 @@ exports.updateOrder = async (req, res) => {
 
 exports.getOrderData = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.orderId).lean();
+        const order = await Subscription.findById(req.params.orderId).lean();
         if (!order) throw new Error('Order not found!');
         const customerId = order.customerId;
         if (customerId.toString() !== process.env.TEMP_CUSTOMER_ID) throw new Error('Unauthorized request!');
-        const formattedOrder = await formatOrderWidget(order);
-        res.send(formattedOrder);
+        res.status(200).send(order);
     } catch (error) {
         console.log(error);
         res.status(400).send('Server error. Could not get order data!');
-    }
-};
-
-exports.renderOrderEntries = async (req, res) => {
-    try {
-        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
-        const project = await Project.findOne({ slug: req.params.slug }).lean();
-        if (!order || !project) throw new Error('Order or project not found!');
-
-        const formattedOrder = await formatOrderWidget(order);
-
-        res.render('partials/widgetEntries', {
-            layout: false,
-            data: {
-                order: formattedOrder,
-                project,
-            },
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(400).send('Server error. Could not fetch entries!');
-    }
-};
-
-exports.renderNoOrderEntries = async (req, res) => {
-    try {
-        const project = await Project.findOne({ slug: req.params.slug }).lean();
-        res.render('partials/widgetEntries', {
-            layout: false,
-            data: {
-                project,
-            },
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(400).send('Server error. Could not render entries.');
-    }
-};
-
-exports.renderNoOrderTotal = async (req, res) => {
-    try {
-        res.render('partials/widgetNoOrderTotal', {
-            layout: false,
-            data: {},
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(400).send('Server error. Could not render entries.');
     }
 };
 
@@ -596,12 +440,13 @@ const connectDonorInCustomer = async function (donor, checkCustomer) {
 
 exports.createSubscription = async (req, res) => {
     try {
-        const { paymentMethodId, email } = req.body;
+        const { paymentMethodId, email: providedEmail } = req.body;
+        const email = providedEmail.toLowerCase();
 
         const donor = await Donor.findOne({ email }).lean();
         if (!donor) throw new Error('Donor not found.');
 
-        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
         if (!order) throw new Error('Order not found!');
 
         let customers = await stripe.customers.list({ email: donor.email });
@@ -633,14 +478,14 @@ exports.createSubscription = async (req, res) => {
             }
         }
 
-        const amount = Math.max(100, Math.round(order.totalCostSingleMonth * 100));
+        const amount = Math.max(100, Math.round(order.total * 100));
 
         const price = await stripe.prices.create({
             unit_amount: amount,
             currency: order.currency,
             recurring: { interval: 'month' },
             product_data: {
-                name: `Order - ${order.orderNo}`,
+                name: `Order - ${order.projectSlug} - ${order.orderNo}`,
             },
         });
 
@@ -681,16 +526,14 @@ exports.createSubscription = async (req, res) => {
 
         const { customerId, dashboardLink } = await connectDonorInCustomer(updatedDonor, checkCustomer);
 
-        await cleanOrder(order._id);
-
-        await Order.updateOne({ _id: order._id }, { status: 'paid' });
+        await Subscription.updateOne({ _id: order._id }, { status: 'paid' });
 
         res.json({
             success: true,
             subscriptionId: subscription.id,
             customerId,
             dashboardLink,
-            amount: `${order.totalCostSingleMonth} ${order.currency}`,
+            amount: `${order.total} ${order.currency}`,
             monthly: true,
         });
     } catch (error) {
@@ -701,25 +544,29 @@ exports.createSubscription = async (req, res) => {
 
 exports.createSetupIntent = async (req, res) => {
     try {
-        const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        const { email: emailProvided, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        const email = emailProvided.toLowerCase();
+
         if (!isValidEmail(email)) throw new Error('Email provided is invalid');
-        const donor = await Donor.findOneAndUpdate(
-            { email },
-            {
-                $set: {
-                    firstName,
-                    lastName,
-                    tel,
-                    organization,
-                    anonymous,
-                    countryCode,
-                    status: 'active',
-                    role: 'donor',
-                },
-                $setOnInsert: { email },
-            },
-            { upsert: true, new: true },
-        ).lean();
+        const checkDonor = await Donor.findOne({ email }).lean();
+
+        let donor;
+
+        if (checkDonor) {
+            donor = checkDonor;
+        } else {
+            donor = new Donor({
+                firstName,
+                lastName,
+                tel,
+                organization,
+                anonymous,
+                countryCode,
+                status: 'active',
+                role: 'donor',
+            });
+            await donor.save();
+        }
         const setupIntent = await stripe.setupIntents.create({
             payment_method_types: ['card'],
             metadata: { email: donor.email },
@@ -727,7 +574,7 @@ exports.createSetupIntent = async (req, res) => {
         res.json({ clientSecret: setupIntent.client_secret });
     } catch (error) {
         console.error('Error creating SetupIntent:', error);
-        res.status(500).send('Server error. Error creating setup intent.');
+        res.status(500).send(error.message || 'Server Error. Could not create setup intent.');
     }
 };
 
@@ -736,10 +583,10 @@ exports.createPaymentIntent = async (req, res) => {
         const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
         if (!isValidEmail(email)) throw new Error('Email provided is invalid');
 
-        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
         if (!order) throw new Error('Order not found');
 
-        const amount = Math.max(100, Math.round(order.totalCost * 100));
+        const amount = Math.max(1, Math.round(order.total * 100));
 
         let customers = await stripe.customers.list({ email: email });
         let customer = customers.data.find((c) => c.metadata.currency === order.currency);
@@ -757,24 +604,26 @@ exports.createPaymentIntent = async (req, res) => {
             });
         }
 
-        await Donor.findOneAndUpdate(
-            { email },
-            {
-                $set: {
-                    stripeCustomerId: customer.id,
-                    firstName,
-                    lastName,
-                    tel,
-                    organization,
-                    anonymous,
-                    countryCode,
-                    status: 'active',
-                    role: 'donor',
-                },
-                $setOnInsert: { email },
-            },
-            { upsert: true, new: true },
-        ).lean();
+        const checkDonor = await Donor.findOne({ email }).lean();
+
+        let donor;
+
+        if (checkDonor) {
+            donor = checkDonor;
+        } else {
+            donor = new Donor({
+                stripeCustomerId: customer.id,
+                firstName,
+                lastName,
+                tel,
+                organization,
+                anonymous,
+                countryCode,
+                status: 'active',
+                role: 'donor',
+            });
+            await donor.save();
+        }
 
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
@@ -792,12 +641,13 @@ exports.createPaymentIntent = async (req, res) => {
 
 exports.createOneTime = async (req, res) => {
     try {
-        const { paymentMethodId, paymentIntentId, email } = req.body;
+        const { paymentMethodId, paymentIntentId, email: emailProvided } = req.body;
+        const email = emailProvided.toLowerCase();
 
         const donor = await Donor.findOne({ email }).lean();
         if (!donor) throw new Error('Donor not found.');
 
-        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
         if (!order) throw new Error('Order not found!');
 
         if (!email) throw new Error('Email is required');
@@ -837,7 +687,7 @@ exports.createOneTime = async (req, res) => {
 
         const { customerId, dashboardLink } = await connectDonorInCustomer(updatedDonor, checkCustomer);
 
-        await Order.updateOne({ _id: order._id }, { status: 'paid' });
+        await Subscription.updateOne({ _id: order._id }, { status: 'paid' });
 
         res.json({
             success: true,
@@ -845,7 +695,7 @@ exports.createOneTime = async (req, res) => {
             customerId,
             dashboardLink,
             monthly: false,
-            amount: `${order.totalCost} ${order.currency}`,
+            amount: `${order.total} ${order.currency}`,
         });
     } catch (error) {
         console.error('Payment Error:', error);
@@ -856,11 +706,11 @@ exports.createOneTime = async (req, res) => {
 
 exports.linkOrderToCustomer = async (req, res) => {
     try {
-        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
         if (!order) throw new Error('Order not found');
         const customer = await Customer.findById(req.params.customerId).lean();
         if (!customer) throw new Error('Customer not found');
-        await Order.updateOne({ _id: order._id }, { customerId: customer._id });
+        await Subscription.updateOne({ _id: order._id }, { customerId: customer._id });
         await saveLog(
             logTemplates({
                 type: 'customerAddedToOrder',

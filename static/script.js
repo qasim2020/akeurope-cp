@@ -65,7 +65,7 @@
         $('body').append(css);
         $('body').append($button);
 
-        var $iframe = $('<iframe id="iframe-loaded" allow="payment"></iframe>').attr('src', '__OVERLAY_URL__').css({
+        var $iframe = $('<iframe id="iframe-__PROJECT_SLUG__" allow="payment"></iframe>').attr('src', '__OVERLAY_URL__').css({
             display: 'none',
             margin: '0',
             padding: '0',
@@ -133,6 +133,6 @@
             });
         });
 
-        // $button.click();
+        // $button.click(); // use this only in test
     }
 })();
