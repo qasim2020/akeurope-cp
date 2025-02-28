@@ -19,14 +19,88 @@ async function initOverlay() {
     try {
         const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
         const data = await response.json();
-        countryCode = data.country_code ? data.country_code : 'NO';
+        countryCode = data.country_code ? data.country_code : 'US';
     } catch (error) {
         console.log(error);
-        countryCode = 'NO';
+        countryCode = 'US';
     }
-    $('.project-selector').each((index, element) => {
-        attachIframe(element, countryCode);
-    });
+
+    if (countryCode === 'NO') {
+        $('.donate').on('click', function (e) {
+            $('#donation-overlay-no').css({ display: 'flex' });
+        });
+
+        let updateNextButtonURL = function () {
+            $('.button-selector').text('...');
+            let currencySelected = 'NOK';
+            let freqSelected = $('.selected.freq-selector').text();
+            let connectedURL = '';
+            if (freqSelected == 'one time') {
+                connectedURL = $('.selected.project-selector-no').attr(currencySelected);
+            } else {
+                connectedURL = $('.selected.project-selector-no').attr(`${currencySelected}MONTHLY`);
+            }
+            $('.button-selector').attr({ myURL: connectedURL });
+            $('.button-selector').text('Next');
+        };
+
+        let currentProj = $('body').attr('projectSlug');
+
+        if (currentProj) {
+            $(`[projectSlug=${currentProj}]`).addClass('selected');
+        } else {
+            $('.project-selector-no:first').addClass('selected');
+        }
+
+        $('.button-selector').text('...');
+
+        updateNextButtonURL();
+
+        $('.currency-selector').on('click', function (e) {
+            $('.currency-selector').removeClass('selected');
+            $(e.target).addClass('selected');
+            updateNextButtonURL();
+        });
+
+        $('.freq-selector').on('click', function (e) {
+            $('.freq-selector').removeClass('selected');
+            $(e.target).addClass('selected');
+            updateNextButtonURL();
+        });
+
+        $('.button-selector').on('click', function (e) {
+            let state = $('#button-selector').text();
+            if (state == '...') {
+                return console.log('let it upload');
+            }
+            let url = $(e.target).attr('myURL');
+            window.open(url, '_blank');
+        });
+
+        $('.project-selector-no').on('click', function (e) {
+            $('.project-selector-no').removeClass('selected');
+            $(this).addClass('selected');
+            updateNextButtonURL();
+        });
+    } else {
+        $('.donate').on('click', function (e) {
+            $('.donation-overlay').css({ display: 'flex' });
+        });
+
+        const processedSlugs = new Set();
+
+        $('.project-selector').each((index, element) => {
+            const projectSlug = $(element).attr('projectSlug');
+            if (projectSlug && !processedSlugs.has(projectSlug)) {
+                processedSlugs.add(projectSlug);
+                attachIframe(element, countryCode);
+            }
+        });
+
+        $('.project-selector').on('click', function (e) {
+            showOverlay($(this));
+        });
+    }
 }
 
 function attachIframe(elem, code) {
@@ -40,7 +114,7 @@ function attachIframe(elem, code) {
     const cover = encodeURIComponent($(elem).siblings('img').attr('src'));
     const desc = encodeURIComponent($(elem).siblings('.project-desc').html());
 
-    const url = `http://localhost:3009/overlay/${slug}?name=${name}&heading=${hdg}&cover=${cover}&description=${desc}&countryCode=${code}&webflow=true`;
+    const url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?name=${name}&heading=${hdg}&cover=${cover}&description=${desc}&countryCode=${code}&webflow=true`;
 
     var $iframe = $(`<iframe id="iframe-${slug}" allow="payment"></iframe>`).attr('src', url).css({
         display: 'none',
@@ -63,7 +137,6 @@ function attachIframe(elem, code) {
 }
 
 function showOverlay(elem) {
-
     const partnerPortal = $(elem).attr('partnerSlug');
 
     if (partnerPortal) return loadDonationOverlay(partnerPortal);

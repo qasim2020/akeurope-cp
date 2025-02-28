@@ -28,8 +28,10 @@ exports.wScript = async (req, res) => {
     try {
         const scriptPath = path.join(__dirname, '..', 'static', 'webflow.js');
         const file = await fs.readFile(scriptPath, 'utf8');
+        const scriptContent = file
+            .replace('__CUSTOMER_PORTAL_URL__', process.env.CUSTOMER_PORTAL_URL);
         res.setHeader('Content-Type', 'application/javascript');
-        res.send(file);
+        res.send(scriptContent);
     } catch (error) {
         console.error('Unexpected error:', error);
         res.status(500).send('Internal Server Error');

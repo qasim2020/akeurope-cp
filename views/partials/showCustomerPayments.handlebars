@@ -1,51 +1,79 @@
-<div class="card" id="payments-container">
-  <div class="card-header">
-    <h3 class="card-title">Payments</h3>
-  </div>
-  {{#if data.orders}}
-  <div class="p-md-3">
-    <table class="table table-striped mb-0">
-      <thead>
-        <tr>
-          <th>Payment #</th>
-          <th>Date</th>
-          <th>Amount</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each data.orders}}
-        <tr>
-          <td>
-            <a href="/order/{{this._id}}">{{this.orderNo}}</a>
-            {{#if this.monthlySubscription}} <i class="ti ti-refresh ms-1"></i> {{/if}}
-          </td>
-          <td>{{formatDate this.createdAt}}</td>
-          <td>
-            {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
-            {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
-            {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
-            {{#unless this.stripeInfo}} <i class="ti ti-home"></i> {{/unless}}
-            <span>
-              {{#if this.monthlySubscription}}
-              {{this.totalCostSingleMonth}} {{this.currency}}
-              {{else}}
-              {{this.totalCost}} {{this.currency}}
-              {{/if}}
-            </span>
-          </td>
-          <td>
-            <span>{{{getOrderIcon this.status}}} </span>
-            <span class="ms-1">{{capitalizeFirstLetter this.status}}</span>
-          </td>
-        </tr>
+<div class="col-12 col-md-6">
+  <div class="card">
+
+    <div class="card-header flex-column align-items-start">
+      <h3 class="card-title">Specific Payments</h3>
+      <div class="text-secondary">Payments that are linked to specific beneficiaries in our projects.</div>
+    </div>
+    {{#if data.orders}}
+    <div class="p-md-3">
+      <table class="table table-striped mb-0">
+        <thead>
+          <tr>
+            <th>Payment #</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each data.orders}}
+          <tr>
+            <td>
+              <a href="/order/{{this._id}}">{{this.orderNo}}</a>
+              {{#if this.monthlySubscription}} <i class="ti ti-refresh ms-1"></i> {{/if}}
+            </td>
+            <td>{{formatDate this.createdAt}}</td>
+            <td>
+              {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+              {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+              {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
+              {{#unless this.stripeInfo}} <i class="ti ti-home"></i> {{/unless}}
+              <span>
+                {{#if this.monthlySubscription}}
+                {{this.total}} {{this.currency}}
+                {{else}}
+                {{this.totalCost}} {{this.currency}}
+                {{/if}}
+              </span>
+            </td>
+            <td>
+              <span>{{{getOrderIcon this.status}}} </span>
+              <span class="ms-1">{{capitalizeFirstLetter this.status}}</span>
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+    {{#if data.activeSubscriptions}}
+    <div class="p-3">
+      {{#each data.activeSubscriptions}}
+      <div class="fs-5 text-uppercase mb-3 badge">{{this.project.name}}</div>
+      <div class="row">
+        {{#each this.entries as |ben|}}
+        <a data-bs-toggle="popover" data-bs-placement="top" data-bs-trigger="hover focus" title="{{ben.entry.name}}"
+          {{#if ben.expiry}} data-bs-html="true"
+          data-bs-content="Subscribed One-time in Payment-{{ben.orderNo}} on {{formatDate ben.createdAt}}. <br> Subscription expires on <span class='text-red'>{{formatDate ben.expiry}}</span>."
+          {{else}} data-bs-html="true"
+          data-bs-content="Monthly subscribed in Payment-{{ben.orderNo}} on {{formatDate ben.createdAt}}. <br> Subscription renews on <span class='text-red'>{{formatDate ben.renewalDate}}</span>."
+          {{/if}} class="cursor-pointer col-md-3 col-6 mb-3 text-center position-relative"
+          href="/entry/{{ben.entry._id}}/project/{{../this.project.slug}}">
+          <span class="position-absolute top-0 left-0 ti ti-check" style="padding-top: 3px"></span>
+          <img class="img-fluid rounded-circle border border-1" alt="{{ben.entry.name}}"
+            src="{{circleCloudinaryUrl (or ben.entry.photo (or ben.entry.photoOfChild ben.entry.photoOfOrphan))}}">
+        </a>
         {{/each}}
-      </tbody>
-    </table>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    {{else}}
+    <div class="card-body">
+      <div class="text-center py-4">No payments found</div>
+    </div>
+    {{/if}}
   </div>
-  {{else}}
-  <div class="card-body">
-    <div class="text-center py-4">No payments found</div>
-  </div>
-  {{/if}}
 </div>

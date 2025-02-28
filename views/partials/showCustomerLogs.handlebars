@@ -1,53 +1,56 @@
-<div class="card mt-3" id="logs-container">
-  <div class="card-header">
-    <h3 class="card-title">Updates</h3>
-  </div>
-  {{#with data.customerLogs as |log|}}
-  <div class="card-header d-flex align-items-center">
-    <p class="m-0 text-secondary">Page <span>{{log.currentPage}}</span> of <span>{{log.totalPages}}</span></p>
-    <ul class="pagination m-0 ms-auto">
-      <li class="page-item {{#if (eq log.hasPrevPage false)}}disabled{{/if}}">
-        <a class="page-link" tabindex="-1" aria-disabled="true"
-          my-href="/getCustomerLogs/{{../data.customer._id}}?page={{dec log.currentPage}}"
-          onclick="getCustomerLogs(this)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-            <path d="M15 6l-6 6l6 6"></path>
-          </svg>
-        </a>
-      </li>
-      {{#each log.pagesArray}}
-      <li class="page-item {{#if (eq log.currentPage this)}}active{{/if}}">
-        <a class="page-link" my-href="/getCustomerLogs/{{../../data.customer._id}}?page={{this}}"
-          onclick="getCustomerLogs(this)">{{this}}</a>
-      </li>
-      {{/each}}
-      <li class="page-item {{#if (eq log.hasNextPage false)}}disabled{{/if}}">
-        <a class="page-link" tabindex="-1" aria-disabled="true"
-          my-href="/getCustomerLogs/{{../data.customer._id}}?page={{inc log.currentPage}}"
-          onclick="getCustomerLogs(this)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-            <path d="M9 6l6 6l-6 6"></path>
-          </svg>
-        </a>
-      </li>
-    </ul>
-  </div>
-  {{/with}}
-  <div class="card-body">
-    {{#if data.customerLogs}}
-    <ul class="steps steps-vertical">
-      {{#each data.customerLogs.logs as |log|}}
-      {{> components/showLogSteps log=log showActor=true showEntity=false}}
-      {{/each}}
-    </ul>
-    {{else}}
-    <div class="text-center">
-      <p>No logs stored for this entity!</p>
+<div class="col-12 col-md-6" id="logs-container">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Updates</h3>
     </div>
-    {{/if}}
+    {{#with data.customerLogs as |log|}}
+    <div class="card-header d-flex align-items-center">
+      <p class="m-0 text-secondary">Page <span>{{log.currentPage}}</span> of <span>{{log.totalPages}}</span></p>
+      <ul class="pagination m-0 ms-auto">
+        <li class="page-item {{#if (eq log.hasPrevPage false)}}disabled{{/if}}">
+          <a class="page-link" tabindex="-1" aria-disabled="true"
+            my-href="/getCustomerLogs/{{../data.customer._id}}?page={{dec log.currentPage}}"
+            onclick="getCustomerLogs(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M15 6l-6 6l6 6"></path>
+            </svg>
+          </a>
+        </li>
+        {{#each log.pagesArray}}
+        <li class="page-item {{#if (eq log.currentPage this)}}active{{/if}}">
+          <a class="page-link" my-href="/getCustomerLogs/{{../../data.customer._id}}?page={{this}}"
+            onclick="getCustomerLogs(this)">{{this}}</a>
+        </li>
+        {{/each}}
+        <li class="page-item {{#if (eq log.hasNextPage false)}}disabled{{/if}}">
+          <a class="page-link" tabindex="-1" aria-disabled="true"
+            my-href="/getCustomerLogs/{{../data.customer._id}}?page={{inc log.currentPage}}"
+            onclick="getCustomerLogs(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M9 6l6 6l-6 6"></path>
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+    {{/with}}
+    <div class="card-body">
+      {{#if data.customerLogs}}
+      <ul class="steps steps-vertical">
+        {{#each data.customerLogs.logs as |log|}}
+        {{> components/showLogSteps log=log showActor=true showEntity=false}}
+        {{/each}}
+      </ul>
+      {{else}}
+      <div class="text-center">
+        <p>No logs stored for this entity!</p>
+      </div>
+      {{/if}}
+    </div>
   </div>
+
 </div>

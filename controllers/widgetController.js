@@ -53,8 +53,8 @@ exports.overlay = async (req, res) => {
                         cover: req.query.cover,
                         desc: req.query.description,
                         slug: req.params.slug,
-                        countryCode: req.query.countryCode
                     },
+                    countryCode: req.query.countryCode,
                     publicKey,
                     portalUrl,
                 },

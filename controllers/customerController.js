@@ -8,9 +8,11 @@ const moment = require('moment');
 const nodemailer = require('nodemailer');
 
 const Order = require('../models/Order');
+const Subscription = require('../models/Subscription');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const checkValidForm = require('../modules/checkValidForm');
+
 const { saveLog, customerLogs, visibleLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
@@ -149,6 +151,12 @@ exports.customer = async (req, res) => {
 
         const activeSubscriptions = await getEntriesByCustomerId(customer._id);
 
+        const subscriptions = await Subscription.find({customerId: customer._id}).sort({orderNo: -1}).lean();
+
+        for (const subscription of subscriptions) {
+            subscription.stripeInfo = await getPaymentByOrderId(subscription._id) || await getSubscriptionByOrderId(subscription._id);
+        };
+
         res.render('customer', {
             layout: 'dashboard',
             data: {
@@ -165,7 +173,8 @@ exports.customer = async (req, res) => {
                 sidebarCollapsed: req.session.sidebarCollapsed,
                 customers: await Customer.find().lean(),
                 orders,
-                activeSubscriptions
+                activeSubscriptions,
+                subscriptions,
             },
         });
     } catch (error) {

@@ -1,0 +1,51 @@
+<div class="col-12 col-md-6">
+  <div class="card mb-3" id="stripe-payments-container">
+    <div class="card-header flex-column align-items-start">
+      <h3 class="card-title">General Payments</h3>
+      <div class="text-secondary">Payments made through website that are not linked to any beneficiary.</div>
+    </div>
+    {{#if data.subscriptions}}
+    <div class="p-md-3">
+      <table class="table table-striped mb-0">
+        <thead>
+          <tr>
+            <th>Payment #</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each data.subscriptions}}
+          <tr>
+            <td>
+              <a
+                href="/manage-subscription?subscriptionId={{this.stripeInfo.subscriptionId}}&paymentIntentId={{this.stripeInfo.paymentIntentId}}">{{this.orderNo}}</a>
+              {{#if this.monthlySubscription}} <i class="ti ti-refresh ms-1"></i> {{/if}}
+            </td>
+            <td>{{formatDate this.createdAt}}</td>
+            <td>
+              {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+              {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+              {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
+              {{#unless this.stripeInfo}} <i class="ti ti-home"></i> {{/unless}}
+              <span>
+                {{this.total}} {{this.currency}}
+              </span>
+            </td>
+            <td>
+              <span>{{{getOrderIcon this.status}}} </span>
+              <span class="ms-1">{{capitalizeFirstLetter this.status}}</span>
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+    {{else}}
+    <div class="card-body">
+      <div class="text-center py-4">No payments found</div>
+    </div>
+    {{/if}}
+  </div>
+</div>

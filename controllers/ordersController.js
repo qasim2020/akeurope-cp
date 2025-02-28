@@ -81,6 +81,8 @@ exports.viewOrder = async (req, res) => {
 
         const order = await getSingleOrder(req, res);
 
+        order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
+
         const files = await File.find({
             'links.entityId': req.params.orderId,
             access: {
