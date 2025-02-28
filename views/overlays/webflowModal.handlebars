@@ -2005,6 +2005,7 @@
         });
 
         function triggerEvent(eventName, data = {}) {
+            console.log({eventName, data});
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({
                 event: eventName,
