@@ -444,3 +444,13 @@ const loadDonationOverlay = function (slug) {
         // $button.click(); // use this only in test
     }
 })();
+
+{/* 
+    <script src="https://partner.akeurope.org/script-red-btn/gaza-orphans"></script>
+    <script src="https://partner.akeurope.org/script-webflow"></script> 
+// */}
+
+{/* 
+    <script src="http://localhost:3009/script-red-btn/gaza-orphans"></script>
+    <script src="http://localhost:3009/script-webflow"></script> 
+// */}

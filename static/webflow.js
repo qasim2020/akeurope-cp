@@ -106,7 +106,7 @@ async function initOverlay() {
 function attachIframe(elem, code) {
     const partnerPortal = $(elem).attr('partnerSlug');
 
-    if (partnerPortal) return console.log('partner portal');
+    if (partnerPortal) return console.log('partner portal should attach the iframe directly');
 
     const slug = encodeURIComponent($(elem).attr('projectSlug'));
     const name = encodeURIComponent($(elem).attr('projectName'));
@@ -116,7 +116,9 @@ function attachIframe(elem, code) {
 
     const url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?name=${name}&heading=${hdg}&cover=${cover}&description=${desc}&countryCode=${code}&webflow=true`;
 
-    var $iframe = $(`<iframe id="iframe-${slug}" allow="payment"></iframe>`).attr('src', url).css({
+    var $iframe = $(`<iframe id="iframe-${slug}" allow="payment"></iframe>`)
+    .attr('src', url)
+    .css({
         display: 'none',
         margin: '0',
         padding: '0',
@@ -137,11 +139,8 @@ function attachIframe(elem, code) {
 }
 
 function showOverlay(elem) {
-    const partnerPortal = $(elem).attr('partnerSlug');
 
-    if (partnerPortal) return loadDonationOverlay(partnerPortal);
-
-    const slug = $(elem).attr('projectSlug');
+    const slug = $(elem).attr('partnerSlug') || $(elem).attr('projectSlug');
     const $iframe = $(`#iframe-${slug}`);
 
     $('#iframe-loading-overlay').remove();
@@ -190,53 +189,3 @@ function showOverlay(elem) {
         }
     });
 }
-
-const loadDonationOverlay = function (slug) {
-    const $iframe = $(`#iframe-${slug}`);
-
-    $('#iframe-loading-overlay').remove();
-
-    var $loadingOverlay = $('<div id="iframe-loading-overlay"></div>').css({
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        background: 'rgba(0, 0, 0, 0.7)',
-        opacity: 0,
-        zIndex: '9998',
-        color: 'white',
-        display: 'flex',
-        'align-items': 'center',
-        'justify-content': 'center',
-    });
-
-    function showLoadingOverlay() {
-        $loadingOverlay.stop().animate({ opacity: 1 }, 300);
-        $iframe.css({ display: 'block' });
-    }
-
-    function hideLoadingOverlay() {
-        $iframe.css({ display: 'none' });
-        $loadingOverlay.stop().fadeOut(300);
-        $loadingOverlay.remove();
-    }
-
-    $('body').append($loadingOverlay);
-    showLoadingOverlay();
-
-    $('body').css({
-        overflow: 'hidden',
-        height: '100vh',
-    });
-
-    $(window).on('message', function (event) {
-        if (event.originalEvent.data === 'close-overlay') {
-            $('body').css({
-                overflow: 'scroll',
-                height: 'auto',
-            });
-            hideLoadingOverlay();
-        }
-    });
-};
