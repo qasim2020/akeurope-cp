@@ -7,6 +7,7 @@ const { notifyTelegram } = require('../modules/telegramBot');
 
 router.get('/widgets', authenticate, authorize('viewWidgets'), widgetController.widgets);
 
+router.get('/script/:slug', widgetController.script);
 router.get('/script-red-btn/:slug', widgetController.script);
 router.get('/overlay/:slug', widgetController.overlay);
 router.get('/get-country-list/:code', widgetController.getCountryList);
