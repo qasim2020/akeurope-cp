@@ -46,6 +46,7 @@ exports.customerPortal = async (req, res) => {
         
         res.redirect(portalUrl);
     } catch (error) {
-        res.status(500).send('Error creating portal session');
+        console.log(error);
+        res.status(500).send(error.message);
     }
 };
