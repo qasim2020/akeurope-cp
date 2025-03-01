@@ -41,47 +41,39 @@ async function initOverlay() {
                 connectedURL = $('.selected.project-selector-no').attr(`${currencySelected}MONTHLY`);
             }
             $('.button-selector').attr({ myURL: connectedURL });
-            $('.button-selector').text('Next');
         };
 
         let currentProj = $('body').attr('projectSlug');
 
         if (currentProj) {
-            $(`[projectSlug=${currentProj}]`).addClass('selected');
-        } else {
-            $('.project-selector-no:first').addClass('selected');
-        }
+            const projectSelector = $(`.project-selector-no[projectSlug=${currentProj}]`);
+            projectSelector.addClass('selected');
+            const projectName = projectSelector.attr('projectName');
+            $('.project-label').html(projectName);
+            updateNextButtonURL();
+        } 
 
-        $('.button-selector').text('...');
-
-        updateNextButtonURL();
-
-        $('.currency-selector').on('click', function (e) {
-            $('.currency-selector').removeClass('selected');
-            $(e.target).addClass('selected');
+        $('.project-selector-no').on('click', function (e) {
+            $('.project-selector-no').removeClass('selected');
+            $(this).addClass('selected');
+            const projectName = $(this).attr('projectName');
+            $('.project-label').html(projectName);
             updateNextButtonURL();
         });
 
         $('.freq-selector').on('click', function (e) {
             $('.freq-selector').removeClass('selected');
-            $(e.target).addClass('selected');
+            $(this).addClass('selected');
             updateNextButtonURL();
+            $('.button-selector').click();
+            $(this).removeClass('selected');
         });
 
         $('.button-selector').on('click', function (e) {
-            let state = $('#button-selector').text();
-            if (state == '...') {
-                return console.log('let it upload');
-            }
-            let url = $(e.target).attr('myURL');
+            let url = $(this).attr('myURL');
             window.open(url, '_blank');
         });
 
-        $('.project-selector-no').on('click', function (e) {
-            $('.project-selector-no').removeClass('selected');
-            $(this).addClass('selected');
-            updateNextButtonURL();
-        });
     } else {
         $('.donate').on('click', function (e) {
             $('.donation-overlay').css({ display: 'flex' });
@@ -106,7 +98,7 @@ async function initOverlay() {
 function attachIframe(elem, code) {
     const partnerPortal = $(elem).attr('partnerSlug');
 
-    if (partnerPortal) return console.log('partner portal should attach the iframe directly');
+    if (partnerPortal) return console.log('partner portal script should attach the iframe directly');
 
     const slug = encodeURIComponent($(elem).attr('projectSlug'));
     const name = encodeURIComponent($(elem).attr('projectName'));
