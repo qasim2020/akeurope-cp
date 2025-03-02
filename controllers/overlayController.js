@@ -606,26 +606,24 @@ exports.createPaymentIntent = async (req, res) => {
             });
         }
 
-        const checkDonor = await Donor.findOne({ email }).lean();
-
-        let donor;
-
-        if (checkDonor) {
-            donor = checkDonor;
-        } else {
-            donor = new Donor({
-                stripeCustomerId: customer.id,
-                firstName,
-                lastName,
-                tel,
-                organization,
-                anonymous,
-                countryCode,
-                status: 'active',
-                role: 'donor',
-            });
-            await donor.save();
-        }
+        await Donor.findOneAndUpdate(
+            { email },
+            {
+                $set: {
+                    stripeCustomerId: customer.id,
+                    firstName,
+                    lastName,
+                    tel,
+                    organization,
+                    anonymous,
+                    countryCode,
+                    status: 'active',
+                    role: 'donor',
+                },
+                $setOnInsert: { email },
+            },
+            { upsert: true, new: true },
+        ).lean();
 
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
@@ -637,7 +635,7 @@ exports.createPaymentIntent = async (req, res) => {
         res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {
         console.log(error);
-        res.status(500).send('Server error. Error creating payment intent.');
+        res.status(500).send(error.message || 'Error creating payment intent');
     }
 };
 
