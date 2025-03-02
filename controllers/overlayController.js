@@ -550,25 +550,24 @@ exports.createSetupIntent = async (req, res) => {
         const email = emailProvided.toLowerCase();
 
         if (!isValidEmail(email)) throw new Error('Email provided is invalid');
-        const checkDonor = await Donor.findOne({ email }).lean();
-
-        let donor;
-
-        if (checkDonor) {
-            donor = checkDonor;
-        } else {
-            donor = new Donor({
-                firstName,
-                lastName,
-                tel,
-                organization,
-                anonymous,
-                countryCode,
-                status: 'active',
-                role: 'donor',
-            });
-            await donor.save();
-        }
+        const donor = await Donor.findOneAndUpdate(
+            { email },
+            {
+                $set: {
+                    firstName,
+                    lastName,
+                    tel,
+                    organization,
+                    anonymous,
+                    countryCode,
+                    status: 'active',
+                    role: 'donor',
+                },
+                $setOnInsert: { email },
+            },
+            { upsert: true, new: true },
+        ).lean();
+        
         const setupIntent = await stripe.setupIntents.create({
             payment_method_types: ['card'],
             metadata: { email: donor.email },
