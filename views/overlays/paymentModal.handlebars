@@ -2149,37 +2149,6 @@
             window.parent.postMessage('close-overlay', '*');
         });
 
-        let idleTimer;
-        let countdownInterval;
-
-        function resetTimer() {
-            clearTimeout(idleTimer);
-            clearInterval(countdownInterval);
-
-            // let timeLeft = 20; // 20 seconds
-            let timeLeft = 15 * 60; // 15 minutes of inactivity
-            console.log(`Timer is reset to ${timeLeft / 60} minute(s)`);
-
-            countdownInterval = setInterval(() => {
-                timeLeft = timeLeft - 10;
-                console.log(`Inactivity: Order will reset in ${(timeLeft / 60).toFixed(2)} minute(s)`);
-
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                }
-            }, 10 * 1000);
-
-            idleTimer = setTimeout(() => {
-                clearInterval(countdownInterval);
-                resetOrder();
-            }, timeLeft * 1000);
-        }
-
-        document.addEventListener('mousemove', resetTimer);
-        document.addEventListener('keydown', resetTimer);
-
-        resetTimer();
-
         $(document).ajaxSend(function (event, jqXHR, settings) {
             console.log("URL:", settings.url);
         });
