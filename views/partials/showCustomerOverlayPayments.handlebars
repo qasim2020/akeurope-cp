@@ -19,9 +19,13 @@
           {{#each data.subscriptions}}
           <tr>
             <td>
+              {{#if this.stripeInfo}}
               <a
                 href="/manage-subscription?subscriptionId={{this.stripeInfo.subscriptionId}}&paymentIntentId={{this.stripeInfo.paymentIntentId}}">{{this.orderNo}}</a>
               {{#if this.monthlySubscription}} <i class="ti ti-refresh ms-1"></i> {{/if}}
+              {{else}}
+              {{this.orderNo}}
+              {{/if}}
             </td>
             <td>{{formatDate this.createdAt}}</td>
             <td>
