@@ -1,6 +1,7 @@
 const { createDynamicModel } = require('../models/createDynamicModel');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
+const Subscription = require('../models/Subscription');
 const Customer = require('../models/Customer');
 const Log = require('../models/Log');
 const User = require('../models/User');
@@ -146,13 +147,18 @@ const userLogs = async (req, res) => {
 const customerLogs = async (req, res) => {
     try {
         const orders = await Order.find({
-            customerId: req.session.user._id
+            customerId: req.session.user._id,
+        }).lean();
+
+        const subscriptions = await Subscription.find({
+            customerId: req.session.user._id,
         }).lean();
 
         const query = {
             $or: [
-                { entityId: req.params.customerId },
-                { entityId: { $in: orders.map((order) => order._id) } },
+                { entityId: req.session.user._id }, 
+                { entityId: { $in: orders.map(order => order._id) } },
+                { entityId: { $in: subscriptions.map(order => order._id) } },
             ],
         };
 
@@ -238,11 +244,16 @@ const visibleLogs = async (req, res) => {
             customerId: req.session.user._id,
         }).lean();
 
+        const subscriptions = await Subscription.find({
+            customerId: req.session.user._id,
+        }).lean();
+
         const query = {
             isNotification: true, 
             $or: [
                 { entityId: req.session.user._id }, 
                 { entityId: { $in: orders.map(order => order._id) } },
+                { entityId: { $in: subscriptions.map(order => order._id) } },
             ],
             isReadByCustomer: false,
         };

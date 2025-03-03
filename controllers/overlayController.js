@@ -712,7 +712,7 @@ exports.linkOrderToCustomer = async (req, res) => {
         await Subscription.updateOne({ _id: order._id }, { customerId: customer._id });
         await saveLog(
             logTemplates({
-                type: 'customerAddedToOrder',
+                type: 'customerAddedToSubscription',
                 entity: order,
                 actor: customer,
                 order,

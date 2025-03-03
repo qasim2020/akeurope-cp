@@ -162,9 +162,16 @@ const logTemplates = ({ type, entity, actor, project, order, entry, color, custo
                 ? {
                       ...commons('order', entity._id),
                       action: `<a href="/customer/${customer._id}">${customer.name}</a> added to <a href="/order/${order._id}">Invoice-${order.orderNo}</a>`,
-                      color: 'blue',
+                      color: 'green',
                   }
                 : null,
+        customerAddedToSubscription: order && customer ? {
+            ...commons('order', entity._id),
+            action: order.monthlySubscription ? 
+            `<a href="/customer/${customer._id}">${customer.name}</a> subscribed <strong class="text-green"> ${order.total} ${order.currency} / Month </strong> in ${order.projectSlug} in order-${order.orderNo}` :
+            `<a href="/customer/${customer._id}">${customer.name}</a> paid <strong class="text-green">${order.total} ${order.currency} One Time </strong> in ${order.projectSlug} in order-${order.orderNo}`,
+            color: 'green', 
+        } : null,
         entryAddedToOrder:
             order && project
                 ? {
