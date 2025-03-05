@@ -16,11 +16,11 @@ const Donor = require('../models/Donor');
 
 const { calculateOrder, addPaymentsToOrder, formatOrderWidget, cleanOrder } = require('../modules/orders');
 const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder } = require('../modules/ordersFetchEntries');
-const { runQueriesOnOrder } = require('../modules/orderUpdates');
+const { runQueriesOnOrder, connectDonorInCustomer } = require('../modules/orderUpdates');
 const { default: mongoose } = require('mongoose');
 const { isValidEmail } = require('../modules/checkValidForm');
 const { saveLog } = require('../modules/logAction');
-const { getChanges } = require('../modules/getChanges');
+
 const { logTemplates } = require('../modules/logTemplates');
 const { getCurrencyRates } = require('../modules/getCurrencyRates');
 
@@ -301,143 +301,6 @@ exports.getOrderData = async (req, res) => {
         console.log(error);
         res.status(400).send('Server error. Could not get order data!');
     }
-};
-
-const connectDonorInCustomer = async function (donor, checkCustomer) {
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
-
-    let dashboardLink;
-
-    if (!checkCustomer || !(checkCustomer && checkCustomer.password)) {
-        const inviteToken = crypto.randomBytes(32).toString('hex');
-        const inviteExpires = moment().add(24, 'hours').toDate();
-        const location = (await Country.findOne({ code: donor.countryCode }).lean()).name;
-
-        const newCustomer = await Customer.findOneAndUpdate(
-            {
-                email: donor.email,
-            },
-            {
-                $set: {
-                    name: `${donor.firstName} ${donor.lastName}`,
-                    role: 'donor',
-                    location,
-                    organization: donor.organization,
-                    tel: donor.tel,
-                    anonymous: donor.anonymous,
-                    countryCode: donor.countryCode,
-                    emailStatus: 'Email invite sent!',
-                    inviteToken: inviteToken,
-                    inviteExpires: inviteExpires,
-                },
-                $setOnInsert: { email: donor.email },
-            },
-            { new: true, lean: true, upsert: true },
-        );
-
-        const templatePath = path.join(__dirname, '../views/emails/donorInvite.handlebars');
-        const templateSource = await fs.readFile(templatePath, 'utf8');
-        const compiledTemplate = handlebars.compile(templateSource);
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: newCustomer.email,
-            subject: 'Registration Link for Akeurope Partner Portal',
-            html: compiledTemplate({
-                name: newCustomer.name,
-                inviteLink: `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`,
-            }),
-        };
-
-        dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`;
-
-        transporter.sendMail(mailOptions);
-
-        if (!checkCustomer) {
-            await saveLog(
-                logTemplates({
-                    type: 'newCustomerStartedSubscription',
-                    entity: newCustomer,
-                    actor: newCustomer,
-                }),
-            );
-        }
-
-        if (!(checkCustomer && checkCustomer.password)) {
-            await saveLog(
-                logTemplates({
-                    type: 'sentEmailCustomerInvite',
-                    entity: newCustomer,
-                    actor: newCustomer,
-                }),
-            );
-        }
-
-        checkCustomer = newCustomer;
-    } else {
-        const newCustomer = await Customer.findOneAndUpdate(
-            { email: donor.email },
-            {
-                name: `${donor.firstName} ${donor.lastName}`,
-                role: 'donor',
-                organization: donor.organization,
-                tel: donor.tel,
-                anonymous: donor.anonymous,
-                countryCode: donor.countryCode,
-            },
-            {
-                upsert: true,
-                new: true,
-                lean: true,
-            },
-        );
-
-        const templatePath = path.join(__dirname, '../views/emails/donorSubscribed.handlebars');
-        const templateSource = await fs.readFile(templatePath, 'utf8');
-        const compiledTemplate = handlebars.compile(templateSource);
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: newCustomer.email,
-            subject: 'Login Link to Akeurope Partner Portal',
-            html: compiledTemplate({
-                name: newCustomer.name,
-                inviteLink: `${process.env.CUSTOMER_PORTAL_URL}/login`,
-            }),
-        };
-
-        dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}`;
-
-        transporter.sendMail(mailOptions);
-
-        const changes = getChanges(checkCustomer, newCustomer);
-
-        if (changes.length > 0) {
-            await saveLog(
-                logTemplates({
-                    type: 'customerUpdated',
-                    entity: newCustomer,
-                    changes,
-                    actor: newCustomer,
-                }),
-            );
-        }
-
-        checkCustomer = newCustomer;
-    }
-
-    return {
-        customerId: checkCustomer._id,
-        dashboardLink,
-    };
 };
 
 exports.createSubscription = async (req, res) => {

@@ -6,7 +6,7 @@ const CustomerSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     role: { type: String, default: 'donor' },
     organization: { type: String },
-    location: { type: String },
+    address: { type: String },
     password: { type: String },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
     emailStatus: { type: String },

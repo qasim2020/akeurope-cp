@@ -8,13 +8,24 @@
       <div class="modal-body">
 
         <div class="mb-3">
-          <label class="form-label">Owner Name</label>
+          <label class="form-label">Your Name</label>
           <input type="text" class="name form-control" name="name" placeholder="Name of owner" value="{{data.customer.name}}"/>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Owner Email</label>
+          <label class="form-label">Email</label>
           <input type="email" class="email form-control" name="email" value="{{data.customer.email}}" disabled>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Phone</label>
+          <input type="text" class="tel form-control" name="tel" value="{{data.customer.tel}}">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Address</label>
+          <div class="form-info text-muted mb-2">This address is listed on invoices/ orders.</div>
+          <input type="text" class="address form-control" name="address" placeholder="Village Dhoria, City Kharian, PO 1765, Pakistan etc" value="{{data.customer.address}}"/>
         </div>
 
         <div class="mb-3">
@@ -22,10 +33,6 @@
           <input type="text" class="org-name form-control" name="organization" placeholder="Name of organization" value="{{data.customer.organization}}"/>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Address</label>
-          <input type="text" class="location form-control" name="location" placeholder="Village Dhoria, City Kharian, PO 1765, Pakistan etc" value="{{data.customer.location}}"/>
-        </div>
 
       </div>
 

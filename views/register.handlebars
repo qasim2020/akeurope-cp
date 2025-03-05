@@ -7,20 +7,33 @@
     </div>
     <form class="card card-md" action="" method="" autocomplete="off" novalidate>
       <div class="card-body">
-        <h2 class="card-title text-center mb-4">Registration Form</h2>
+
+        <h2 class="text-center">Registration Form</h2>
+
+        <div class="d-flex align-items-center">
+          <nav class="mb-3 nav nav-segmented nav-2 mx-auto" role="tablist">
+            <button type="button" class="shadow-none btn border nav-link active me-2" role="tab" data-bs-toggle="tab"
+              aria-selected="true" aria-current="page" data-bs-target="#individual-donor">Individual Donor</button>
+            <button type="button" class="shadow-none btn border nav-link" role="tab" data-bs-toggle="tab"
+              aria-selected="false" tabindex="-1" data-bs-target="#organization">Organization</button>
+          </nav>
+        </div>
+
         <div class="mb-3">
           <label class="form-label">Your Name</label>
-          <input id="name" type="text" class="form-control" placeholder="Enter name" value="{{name}}">
+          <input required id="name" type="text" class="form-control" placeholder="Enter name" value="{{name}}">
         </div>
         <div class="mb-3">
           <label class="form-label">Your Email address</label>
-          <input id="email" type="email" class="form-control" placeholder="Enter email" value="{{email}}" disabled>
+          <input required id="email" type="email" class="form-control" placeholder="Enter email" value="{{email}}"
+            disabled>
         </div>
 
         <div class="mb-3">
           <label class="form-label">Your Password</label>
           <div class="input-group input-group-flat">
-            <input id="password" type="password" class="form-control" placeholder="Password" autocomplete="off">
+            <input required id="password" type="password" class="form-control" placeholder="Password"
+              autocomplete="off">
             <span class="input-group-text">
               <a href="#" class="link-secondary" title="Show password" data-bs-toggle="tooltip" id="togglePassword">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
@@ -34,26 +47,39 @@
           </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label">Organization Name</label>
-          <input id="organization" type="text" class="form-control" placeholder="Enter organization name" value="">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Organization Address</label>
-          <input id="location" type="text" class="form-control" placeholder="Enter organization address" value="">
-          <div class="mt-1 text-small text-muted">This address is listed on your invoices and orders.</div>
+        <div class="tab-content">
+          <div class="tab-pane show active" id="individual-donor" role="tabpanel">
+            <div class="mb-3">
+              <label class="form-label">Your Address</label>
+              <div class="form-hint">This address is listed on your invoices and orders.</div>
+              <input id="address" type="text" class="form-control" placeholder="Home No 341, 1074, Oslo, Norway"
+                value="">
+            </div>
+          </div>
+          <div class="tab-pane " id="organization" role="tabpanel">
+            <div class="mb-3">
+              <label class="form-label">Organization Name</label>
+              <input id="organization-name" type="text" class="form-control" placeholder="Alkhidmat Europe" value="">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Organization Address</label>
+              <div class="form-hint">This address is listed on your invoices and orders.</div>
+              <input id="organization-address" type="text" class="form-control"
+                placeholder="Home No 341, 1074, Oslo, Norway" value="">
+            </div>
+          </div>
         </div>
 
         <div class="mb-3">
           <label class="form-check">
             <input type="checkbox" class="form-check-input" id="terms" />
-            <span class="form-check-label">Agree the <a href="https://www.akeurope.org/terms-of-service" tabindex="-1">terms and
+            <span class="form-check-label">Agree the <a href="https://www.akeurope.org/terms-of-service"
+                tabindex="-1">terms and
                 policy</a>.</span>
           </label>
         </div>
         <div class="form-footer">
-          <button id="submit" type="submit" class="btn btn-primary w-100">Register & sign in</button>
+          <button type="button" class="btn btn-primary w-100" onclick="registerNow(this)">Register & sign in</button>
         </div>
       </div>
     </form>
@@ -64,19 +90,43 @@
 </div>
 
 <script>
-  $(document).on("submit", "form", function (e) {
-    e.preventDefault();
+  const registerNow = function (elem) {
+
     let isValid = [];
 
-    const elem = $('#submit');
+    const form = $(elem).closest('.card-body');
 
-    $(this).find("input").removeClass("is-invalid");
-    $(this).find(".invalid-feedback").remove();
-    $(this).find("span").removeClass("border-red");
-    $(this).find("span").removeClass("rounded-end");
-    $(this).find(".alert").remove();
+    $(form).find("input").removeClass("is-invalid");
+    $(form).find(".invalid-feedback").remove();
+    $(form).find("span").removeClass("border-red");
+    $(form).find("span").removeClass("rounded-end");
+    $(form).find(".alert").remove();
 
-    $(this).find("input").each((key, val) => {
+    const donorType = $('.nav-link.active').text().trim();
+
+    let organizationName = "";
+    let organizationAddress = "";
+
+    if (donorType == "Organization") {
+      organizationName = $('#organization-name').val();
+      organizationAddress = $('#organization-address').val();
+
+      if (organizationName == "") {
+        $('#organization-name').addClass("is-invalid");
+      }
+      if (organizationAddress == "") {
+        $('#organization-address').addClass("is-invalid");
+      }
+
+    } else if (donorType == 'Individual Donor') {
+      const address = $('#address').val();
+      if (address == "") {
+        $('#address').addClass("is-invalid");
+      }
+    }
+
+
+    $(form).find("input:required").each((key, val) => {
       if ($(val).val() == "") {
         $(val).addClass("is-invalid")
         if ($(val).siblings("span").length > 0) {
@@ -101,17 +151,19 @@
 
     const name = $('#name').val();
     const password = $('#password').val();
-    const organization = $('#organization').val();
-    const location = $('#location').val();
+    const organization = $('#organization-name').val();
+    const address = donorType == 'Organization' ? $('#organization-address').val() : $('#address').val();
 
     let currentBtnHTML = $(elem).html();
-    $(elem).html(`<span class="spinner-border spinner-border-sm me-2" role="status"></span> Sending Email`);
+    $(elem).html(`<span class="spinner-border spinner-border-sm me-2" role="status"></span> Registering`);
+
+    console.log({ name, password, organization, address });
 
     $.ajax({
       url: '/register/{{token}}',
       type: 'POST',
       contentType: 'application/json',
-      data: JSON.stringify({ name, password, organization, location }),
+      data: JSON.stringify({ name, password, organization, address }),
       success: function (response) {
         $(".form-footer").after(`
             <div class="alert alert-success mt-4" role="alert">
@@ -129,7 +181,7 @@
               </div>`);
       }
     });
-  })
+  }
 
   const login = function (elem) {
     const email = $('#email').val();

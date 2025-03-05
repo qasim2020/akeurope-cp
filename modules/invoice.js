@@ -105,7 +105,7 @@ const generateInvoice = async (order) => {
 
             doc.fontSize(12)
                 .font('Helvetica')
-                .text(`${order.customer.location || ''}`, 350, 230);
+                .text(`${order.customer.address || ''}`, 350, 230);
 
             const startY = 320;
             const endY = drawTable(doc, order.projects, startY, order);

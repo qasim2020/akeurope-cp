@@ -7,7 +7,7 @@ const DonorSchema = new mongoose.Schema(
         lastName: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         organization: { type: String },
-        location: { type: String },
+        address: { type: String },
         emailStatus: { type: String },
         tel: { type: String },
         anonymous: { type: Boolean, default: false },

@@ -19,6 +19,7 @@ const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
 const { getSubscriptionByOrderId, getPaymentByOrderId } = require('../modules/orders');
 const { getEntriesByCustomerId } = require('../modules/ordersFetchEntries');
+const Donor = require('../models/Donor');
 
 exports.getCustomerData = async (req, res) => {
     try {
@@ -65,7 +66,9 @@ exports.editModal = async (req, res) => {
 
 exports.updateCustomer = async (req, res) => {
     try {
-        const { name, organization, location } = req.body;
+        const { name, organization, address, tel } = req.body;
+
+        console.log({tel});
 
         let check = [];
 
@@ -84,12 +87,15 @@ exports.updateCustomer = async (req, res) => {
         const updatedFields = {
             name,
             organization,
-            location,
+            address,
+            tel
         };
 
         const customer = await Customer.findById(req.session.user._id).lean();
 
         const changes = getChanges(customer, updatedFields);
+
+        console.log({changes});
 
         if (changes.length > 0) {
             await saveLog(
@@ -132,6 +138,9 @@ exports.customer = async (req, res) => {
         }
 
         const customer = await Customer.findById(req.session.user._id).lean();
+
+        const donor = await Donor.findOne({ email: customer.email }).lean();
+        customer.tel = customer.tel || donor?.tel;
 
         const projects = await Project.find({ status: 'active' }).lean();
         

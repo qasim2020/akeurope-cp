@@ -40,6 +40,12 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
     try {
+
+        // return res.render('register', {
+        //     name: 'Qasim Ali',
+        //     email: 'qasimali24@gmail.com'
+        // });
+
         const customer = await Customer.findOne({
             inviteToken: req.params.token,
             inviteExpires: { $gt: new Date() },
@@ -136,7 +142,7 @@ exports.sendRegistrationLink = async (req, res) => {
 
 exports.registerCustomer = async (req, res) => {
     try {
-        const { name, password, organization, location } = req.body;
+        const { name, password, organization, address } = req.body;
         const oldCustomer = await Customer.findOne({
             inviteToken: req.params.token,
             inviteExpires: { $gt: new Date() },
@@ -153,7 +159,7 @@ exports.registerCustomer = async (req, res) => {
                     name,
                     password,
                     organization,
-                    location,
+                    address,
                     status: 'active',
                     emailStatus: 'Self-invite Accepted',
                     inviteToken: null,
@@ -182,33 +188,6 @@ exports.registerCustomer = async (req, res) => {
         );
 
         res.status(200).send('Customer updated successfully');
-    } catch (err) {
-        console.log(err);
-        res.status(500).send('Error completing registration');
-    }
-};
-
-exports.registerDirect = async (req, res) => {
-    try {
-        const { name, password, email } = req.body;
-
-        const checkCustomer = await Customer.findOne({ email: email.toLowerCase() }).lean();
-
-        if (checkCustomer) {
-            return res.status(400).send('Customer with this email already exists!');
-        }
-
-        const customer = new Customer();
-        customer.name = name;
-        customer.email = email.toLowerCase();
-        customer.password = password;
-        customer.role = 'partner';
-        customer.emailStatus = 'Direct registration';
-        customer.inviteToken = undefined;
-        customer.inviteExpires = undefined;
-
-        await customer.save();
-        res.status(200).send('Customer registered successfully!');
     } catch (err) {
         console.log(err);
         res.status(500).send('Error completing registration');
