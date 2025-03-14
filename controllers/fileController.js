@@ -1,9 +1,12 @@
 const File = require('../models/File');
+const Order = require('../models/Order');
 const fs = require('fs').promises;
 const path = require('path');
 const { createDynamicModel } = require('../models/createDynamicModel');
 const User = require('../models/User');
 const Customer = require('../models/Customer');
+const { getLatestSubscriptionByOrderId, getPaymentByOrderId } = require('../modules/orders');
+const { downloadStripeInvoiceAndReceipt, saveExistingInvoiceInFileCollection } = require('../modules/invoice');
 
 exports.upload = async (req, res) => {
     try {
@@ -97,14 +100,45 @@ exports.filesByEntity = async (req, res) => {
 
 exports.renderEntityFiles = async (req, res) => {
     try {
-        
-        const files = await File.find({ 'links.entityId': req.params.entityId, access: 'customers' })
-                .sort({ uploadDate: -1 })
-                .lean();
-        
+        let files = await File.find({
+            'links.entityId': req.params.entityId,
+            access: {
+                $in: ['customer', 'customers'],
+            },
+        }).lean();
+
+        if (files.length === 0) {
+            const order = await Order.findById(req.params.entityId).lean();
+
+            if (order) {
+                order.stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+
+                if (order.stripeInfo) {
+                    await downloadStripeInvoiceAndReceipt(order, {
+                        actorType: 'customer',
+                        actorId: process.env.TEMP_CUSTOMER_ID,
+                        actorUrl: '/customer/' + process.env.TEMP_CUSTOMER_ID,
+                    });
+                } else {
+                    await saveExistingInvoiceInFileCollection(order, {
+                        actorType: 'customer',
+                        actorId: process.env.TEMP_CUSTOMER_ID,
+                        actorUrl: '/customer/' + process.env.TEMP_CUSTOMER_ID,
+                    });
+                }
+
+                files = await File.find({
+                    'links.entityId': req.params.entityId,
+                    access: {
+                        $in: ['customer', 'customers'],
+                    },
+                }).lean();
+            }
+        }
+
         for (const file of files) {
             if (file.uploadedBy?.actorType === 'user') {
-                file.actorName = (await User.findById(file.uploadedBy?.actorId).lean()).name;
+                file.actorName = 'Akeurope Team';
             }
             if (file.uploadedBy?.actorType === 'customer') {
                 file.actorName = (await Customer.findById(file.uploadedBy?.actorId).lean()).name;
@@ -120,6 +154,42 @@ exports.renderEntityFiles = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).send(error.toString());
+    }
+};
+
+exports.fileDownloadPublic = async (req, res) => {
+    try {
+        const { secretToken } = req.params;
+        let file = await File.findOne({ secretToken, public: true });
+        if (!file)
+            return res
+                .status(403)
+                .render('error', {
+                    heading: 'Link expired',
+                    error: 'File is not publicly accessible. Please log in to your portal to access this file.',
+                });
+
+        const dir = path.join(__dirname, '../../');
+        const filePath = path.join(dir, file.path);
+
+        try {
+            await fs.access(filePath);
+        } catch (err) {
+            return res.status(404).send('Valid link, but file not found');
+        }
+
+        res.download(filePath, path.basename(filePath), (err) => {
+            if (err) {
+                console.error('Error sending file:', err);
+                if (err.code === 'ECONNABORTED') {
+                    console.log('Download aborted by client');
+                }
+                res.status(500).send({ error: 'Failed to send valid file' });
+            }
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err.message || 'Error downloading file');
     }
 };
 

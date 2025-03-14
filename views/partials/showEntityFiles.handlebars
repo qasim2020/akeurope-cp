@@ -20,12 +20,12 @@
         <tbody>
             {{#each data.files}}
             <tr file-id="{{this._id}}" onclick="getFileModal(this)" style="cursor: pointer;">
-                <td class="text-blue">{{shortenFileName this.name}}</td>
+                <td class="text-blue">{{this.name}}</td>
                 <td>
                     <span class="badge">{{camelCaseToNormalString this.category}}</span>
                 </td>
                 <td>{{this.size}} Kb</td>
-                <td>{{formatDate this.uploadDate}}</td>
+                <td>{{formatTime this.createdAt}}</td>
                 <td>
                     {{#if (eq this.uploadedBy.actorType 'user')}}
                     <span class="badge bg-green-lt">

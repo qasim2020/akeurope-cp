@@ -11,13 +11,13 @@ const gt = function (a, b) {
     return a > b;
 };
 
-const or = function (a,b) {
+const or = function (a, b) {
     return a || b;
-}
+};
 
-const and = function (a,b) {
+const and = function (a, b) {
     return a && b;
-}
+};
 
 const compareIds = function (a, b) {
     if (!a || !b) return false;
@@ -37,8 +37,12 @@ const dec = function (a) {
 };
 
 const formatDate = function (date) {
-    return moment(date).format('DD-MM-YYYY');
+    return moment(date).format('D MMM YYYY');
 };
+
+const getMonth = function(date) {
+    return moment(date).format('MMM-YY'); 
+}
 
 const getMonthYear = function (date) {
     return moment(date).format('MM-YYYY');
@@ -78,20 +82,25 @@ const resizeCloudinaryUrl = function (url, template) {
 
 function transformCloudinaryUrl(url) {
     if (!url) return '/static/images/no-photo-placement.png';
-    const transformation = "ar_1:1,c_fill,g_auto:face,h_550,w_550";
+    const transformation = 'ar_1:1,c_fill,g_auto:face,h_550,w_550';
     return url.replace('/upload/', `/upload/${transformation}/`);
 }
 
 function circleCloudinaryUrl(url) {
     if (!url) return '/static/images/no-photo-placement.png';
 
-    const transformation = "ar_1:1,c_fill,e_improve,g_auto,h_250,r_max,w_250,z_1.0";
+    const transformation = 'ar_1:1,c_fill,e_improve,g_auto,h_250,r_max,w_250,z_1.0';
     return url.replace('/upload/', `/upload/${transformation}/`);
 }
 
 const capitalizeFirstLetter = function (str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+const capitalizeAll = function (str) {
+    if (!str) return '';
+    return str.toUpperCase();
 };
 
 const lowerCaseFirstLetter = function (str) {
@@ -120,9 +129,7 @@ const findInArray = function (array, item) {
 const getFirstTwoLetters = function (name) {
     if (!name) return '';
     const words = name.trim().split(' ');
-    const firstLetters = words
-        .slice(0, 2)
-        .map((word) => word.charAt(0).toUpperCase());
+    const firstLetters = words.slice(0, 2).map((word) => word.charAt(0).toUpperCase());
     return firstLetters.join('');
 };
 
@@ -143,9 +150,7 @@ const getValue = function (obj) {
 };
 
 const transformArrayOfObjects = function (arrayOfObjects) {
-    return arrayOfObjects.flatMap((obj) =>
-        Object.entries(obj).map(([key, value]) => ({ key, value })),
-    );
+    return arrayOfObjects.flatMap((obj) => Object.entries(obj).map(([key, value]) => ({ key, value })));
 };
 
 const getValueOfFieldInArray = function (array, fieldName) {
@@ -186,9 +191,7 @@ const timeAgo = function (timestamp) {
 
 const camelCaseToNormalString = function (string) {
     string = string ? string : '';
-    return string
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/^./, (str) => str.toUpperCase());
+    return string.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (str) => str.toUpperCase());
 };
 
 const camelCaseWithCommaToNormalString = function (string) {
@@ -296,35 +299,47 @@ function removeLinks(htmlString) {
     }
 }
 
-
-const shortenFileName = function(string) {
+const shortenFileName = function (string) {
     if (string.length <= 10) {
         return string;
     }
-    const start = string.slice(0, 5); 
-    const end = string.slice(-4);    
-    return `${start}...${end}`;       
-}
+    const start = string.slice(0, 5);
+    const end = string.slice(-4);
+    return `${start}...${end}`;
+};
 
-const shortenName = function(string) {
+const shortenName = function (string) {
     if (string.length <= 40) {
         return string;
     }
-    const start = string.slice(0, 37); 
-    return `${start}...`;       
-}
+    const start = string.slice(0, 37);
+    return `${start}...`;
+};
 
-
-const shieldName = function(name) {
+const shieldName = function (name) {
     if (!name || typeof name !== 'string' || name.length < 2) return 'H***';
 
     return name
         .split('')
         .map((char, index) => (index === 0 || char === ' ' ? char : '*'))
         .join('');
-}
+};
+
+const slugToString = function (slug) {
+    if (!slug) return "";
+    return slug
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
+const divide = function(a, b) {
+    return a / b;
+};
 
 module.exports = {
+    divide,
+    slugToString,
     shieldName,
     eq,
     gt,
@@ -335,6 +350,7 @@ module.exports = {
     dec,
     formatDate,
     formatTime,
+    getMonth,
     getMonthYear,
     getAgeInYearsAndMonths,
     browserDate,
@@ -342,6 +358,7 @@ module.exports = {
     transformCloudinaryUrl,
     circleCloudinaryUrl,
     neq,
+    capitalizeAll,
     capitalizeFirstLetter,
     lowerCaseFirstLetter,
     checkInputType,

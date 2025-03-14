@@ -1,24 +1,18 @@
 require('dotenv').config();
 
-const crypto = require('crypto');
-const path = require('path');
-const fs = require('fs').promises;
-const handlebars = require('handlebars');
-const moment = require('moment');
-const nodemailer = require('nodemailer');
-
-const Project = require('../models/Project');
 const Customer = require('../models/Customer');
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
+const { sendCustomerInvite } = require('../modules/emails');
 
 exports.login = async (req, res) => {
     try {
         const { email, password, rememberMe } = req.body;
-        const customer = await Customer.findOne({ email: email.toLowerCase(), password: { $exists: true } });
-
+        const customer = await Customer.findOne({ email: email.toLowerCase() });
+        console.log(customer);
         if (customer && (await customer.comparePassword(password))) {
+        // if (customer) {
             if (customer.status === 'blocked') {
                 return res.status(400).send('Customer is blocked. Please contact akeurope team to resolve the issue.');
             }
@@ -69,9 +63,9 @@ exports.sendRegistrationLink = async (req, res) => {
     try {
         const { name, email } = req.body;
 
-        const customer = await Customer.findOne({ email: email.toLowerCase(), password: { $exists: true } }).lean();
+        const checkCustomer = await Customer.findOne({ email: email.toLowerCase(), password: { $exists: true } }).lean();
 
-        if (customer) {
+        if (checkCustomer) {
             return res
                 .status(400)
                 .send(
@@ -79,61 +73,30 @@ exports.sendRegistrationLink = async (req, res) => {
                 );
         }
 
-        await Customer.deleteOne({ email: email.toLowerCase() });
-
-        const inviteToken = crypto.randomBytes(32).toString('hex');
-        const inviteExpires = moment().add(24, 'hours').toDate();
-
-        const newCustomer = new Customer({
-            name,
-            email: email.toLowerCase(),
-            emailStatus: 'Email invite sent!',
-            inviteToken: inviteToken,
-            inviteExpires: inviteExpires,
-        });
-
-        let transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: process.env.EMAIL_PORT,
-            secure: true,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
+        const customer = await Customer.findOneAndUpdate(
+            {
+                email: email.toLowerCase(),
             },
-        });
-
-        const templatePath = path.join(__dirname, '../views/emails/customerInvite.handlebars');
-        const templateSource = await fs.readFile(templatePath, 'utf8');
-        const compiledTemplate = handlebars.compile(templateSource);
-
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: newCustomer.email,
-            subject: 'Registration Link for Akeurope Partner Portal',
-            html: compiledTemplate({
-                name: newCustomer.name,
-                inviteLink: `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`,
-            }),
-        };
-
-        transporter.sendMail(mailOptions, async (err) => {
-            if (err) {
-                return res.status(400).send(err);
+            {
+                $set: {
+                    name,
+                },
+                $setOnInsert: {
+                    email: email.toLowerCase(),
+                },
+            },
+            {
+                new: true,
+                upsert: true,
             }
-            await newCustomer.save();
+        );
 
-            await saveLog(
-                logTemplates({
-                    type: 'newCustomerDirectRegistrationStarted',
-                    entity: newCustomer,
-                    actor: newCustomer,
-                }),
-            );
+        await sendCustomerInvite(customer);
 
-            res.status(200).send(
-                `Registration email has been sent to ${newCustomer.email}. Check Spam folders if not found in Inbox.`,
-            );
-        });
+        res.status(200).send(
+            `Registration email has been sent to ${customer.email}. Check Spam folders if not found in Inbox.`,
+        );
+
     } catch (err) {
         console.log(err);
         res.status(500).send(err);

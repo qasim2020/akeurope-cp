@@ -1,3 +1,5 @@
+const { slugToString } = require('../modules/helpers');
+
 const logTemplates = ({ type, entity, actor, project, order, entry, color, customer, changes }) => {
     if (!type || !entity || !actor) {
         throw new Error('Missing required parameters: type, entity, and actor are mandatory.');
@@ -165,13 +167,6 @@ const logTemplates = ({ type, entity, actor, project, order, entry, color, custo
                       color: 'green',
                   }
                 : null,
-        customerAddedToSubscription: order && customer ? {
-            ...commons('order', entity._id),
-            action: order.monthlySubscription ? 
-            `<a href="/customer/${customer._id}">${customer.name}</a> subscribed <strong class="text-green"> ${order.total} ${order.currency} / Month </strong> in ${order.projectSlug} in order-${order.orderNo}` :
-            `<a href="/customer/${customer._id}">${customer.name}</a> paid <strong class="text-green">${order.total} ${order.currency} One Time </strong> in ${order.projectSlug} in order-${order.orderNo}`,
-            color: 'green', 
-        } : null,
         entryAddedToOrder:
             order && project
                 ? {
@@ -327,6 +322,57 @@ const logTemplates = ({ type, entity, actor, project, order, entry, color, custo
             isNotification: true,
             isReadByCustomer: true,
         },
+
+        customerAddedToSubscription: order && customer ? {
+            ...commons('order', entity._id),
+            action: order.monthlySubscription ? 
+            `<a href="/customer/${customer._id}">${customer.name}</a> subscribed <strong class="text-green"> ${order.total} ${order.currency} / Month </strong> in ${slugToString(order.projectSlug)} in Order-${order.orderNo}` :
+            `<a href="/customer/${customer._id}">${customer.name}</a> paid <strong class="text-green">${order.total} ${order.currency} One Time </strong> in ${slugToString(order.projectSlug)} in Order-${order.orderNo}`,
+            color: 'green', 
+        } : null,
+        successfulOneTimePaymentOverlay: {
+            ...commons('order', entity._id),
+            action: `Paid <strong class="text-green">${entity.total} ${entity.currency} One Time</strong> in ${slugToString(entity.projectSlug)} in Order-${entity.orderNo}`,
+            color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
+        },
+        successfulSubscriptionPaymentOverlay: {
+            ...commons('order', entity._id),
+            action: `Paid <strong class="text-green">${entity.total} ${entity.currency} Monthly Subscription</strong> in ${slugToString(entity.projectSlug)} in Order-${entity.orderNo}`,
+            color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
+        },
+        subscriptionOverlayRenewed: {
+            ...commons('order', entity._id),
+            action: `Subscription of <strong class="text-green">${entity.total} ${entity.currency} / Month</strong> renewed successfully in ${slugToString(entity.projectSlug)} in Order-${entity.orderNo}`,
+            color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
+        },
+        
+        successfulOneTimePayment: {
+            ...commons('order', entity._id),
+            action: `One time payment of <strong class="text-green">${entity.totalCost || entity.total} ${entity.currency}</strong> successful for <a href="/order/${entity._id}">Order-${entity.orderNo}</a>`,
+            color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
+        },
+        successfulSubscriptionPayment: {
+            ...commons('order', entity._id),
+            action: `Subscription payment of <strong class="text-green">${entity.totalCostSingleMonth || entity.total} ${entity.currency} / Month</strong> successful for <a href="/order/${entity._id}">Order-${entity.orderNo}</a>`,
+            color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
+        },
+        subscriptionRenewed: {
+            ...commons('order', entity._id),
+            action: `Subscription of <strong class="text-green">${entity.totalCostSingleMonth || entity.total} ${entity.currency} / Month</strong> renewed successfully for <a href="/order/${entity._id}">Order-${entity.orderNo}</a>`,
+            color: 'green',
+            isNotification: true,
+            isReadByCustomer: true,
+        }
     };
 
     if (templates[type] == null) {

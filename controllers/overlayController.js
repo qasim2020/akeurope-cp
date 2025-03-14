@@ -16,20 +16,26 @@ const Donor = require('../models/Donor');
 
 const { calculateOrder, addPaymentsToOrder, formatOrderWidget, cleanOrder } = require('../modules/orders');
 const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder } = require('../modules/ordersFetchEntries');
-const { runQueriesOnOrder, connectDonorInCustomer } = require('../modules/orderUpdates');
+const { runQueriesOnOrder } = require('../modules/orderUpdates');
+const {
+    connectDonorInCustomer,
+    successfulOneTimePaymentOverlay,
+    successfulSubscriptionPaymentOverlay,
+} = require('../modules/orderPostActions');
+
 const { default: mongoose } = require('mongoose');
 const { isValidEmail } = require('../modules/checkValidForm');
 const { saveLog } = require('../modules/logAction');
 
 const { logTemplates } = require('../modules/logTemplates');
 const { getCurrencyRates } = require('../modules/getCurrencyRates');
+const { slugToString } = require('../modules/helpers');
 
 exports.wScript = async (req, res) => {
     try {
         const scriptPath = path.join(__dirname, '..', 'static', 'webflow.js');
         const file = await fs.readFile(scriptPath, 'utf8');
-        const scriptContent = file
-            .replace('__CUSTOMER_PORTAL_URL__', process.env.CUSTOMER_PORTAL_URL);
+        const scriptContent = file.replace('__CUSTOMER_PORTAL_URL__', process.env.CUSTOMER_PORTAL_URL);
         res.setHeader('Content-Type', 'application/javascript');
         res.send(scriptContent);
     } catch (error) {
@@ -106,13 +112,13 @@ exports.createNewOrder = async (req, res) => {
         const currencyRate = parseFloat(currencyRates.rates['NOK'].toFixed(2));
         const amount = total * currencyRate;
 
-        console.log({ amount, currencyRate });
         if (amount < 100) throw new Error('Total can not be lower than 100 NOK');
 
         let order = new Subscription({
             customerId: customer._id,
             currency: country.currency.code,
             total,
+            totalAllTime: total, 
             monthlySubscription: monthly,
             countryCode: country.code,
             projectSlug: req.params.slug,
@@ -138,155 +144,6 @@ exports.deleteOrder = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(400).send(error.message);
-    }
-};
-
-exports.updateOrder = async (req, res) => {
-    try {
-        let order = await Order.findById({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
-
-        if (!order) throw new Error('Order not found!');
-
-        if (req.query.checkin) {
-            order = await Order.findOneAndUpdate({ _id: order._id }, { $set: { status: 'draft' } }, { new: true, lean: true });
-            return res.status(200).send('order is checked in');
-        }
-
-        if (order.status === 'draft' || order.status === 'pending payment') {
-            if (req.query.deleteOrder) {
-                await Order.deleteOne({ _id: order._id });
-                return res.status(200).send('order deleted successfully');
-            }
-        }
-
-        if (order.status !== 'draft') return res.status(404).send(`Order can not be edited in ${order.status} mode`);
-
-        const checkProject = await Project.findOne({ slug: req.params.slug }).lean();
-
-        if (!checkProject) throw new Error(`Project "${req.params.slug}" not found`);
-
-        if (req.query.addEntries) {
-            const currentEntries = order.projects.flatMap((project) => project.entries);
-            req.query.orderId = new mongoose.Types.ObjectId();
-            req.query.select = currentEntries.length + 3;
-
-            const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
-
-            const newEntries = allEntries
-                .filter((newEntry) => {
-                    return !currentEntries.some((existingEntry) => existingEntry.entryId.toString() === newEntry._id.toString());
-                })
-                .slice(0, 3);
-
-            const entriesForOrder = makeEntriesForWidgetOrder(newEntries, 0);
-            const updatedOrder = await Order.findOneAndUpdate(
-                { _id: order._id, 'projects.slug': checkProject.slug },
-                {
-                    $push: {
-                        'projects.$.entries': { $each: entriesForOrder },
-                    },
-                },
-                {
-                    lean: true,
-                    new: true,
-                },
-            );
-
-            const calculatedOrder = await calculateOrder(updatedOrder);
-            await addPaymentsToOrder(calculatedOrder);
-
-            const freshOrder = await Order.findById(order._id).lean();
-
-            const existingEntryIds = new Set(
-                order.projects.flatMap((project) => project.entries.map((entry) => entry.entryId.toString())),
-            );
-
-            freshOrder.projects.forEach((project) => {
-                project.entries = project.entries.filter((entry) => !existingEntryIds.has(entry.entryId.toString()));
-            });
-
-            const formattedOrder = await formatOrderWidget(freshOrder);
-
-            res.render('partials/widgetEntriesUpdated', {
-                layout: false,
-                data: {
-                    order: formattedOrder,
-                    project: checkProject,
-                },
-            });
-        }
-
-        if (req.query.subscriptions && req.query.entryId) {
-            req.query = {
-                orderId: order._id,
-                entryId: req.query.entryId,
-                subscriptions: req.query.subscriptions,
-            };
-            order = await runQueriesOnOrder(req, res, false);
-            const calculatedOrder = await calculateOrder(order);
-            await addPaymentsToOrder(calculatedOrder);
-            const updatedOrder = await Order.findById(order._id).lean();
-            const formattedOrder = await formatOrderWidget(updatedOrder);
-            let foundEntry;
-            for (const project of formattedOrder.projects) {
-                for (const entry of project.entries) {
-                    if (entry.entryId.toString() === req.query.entryId) {
-                        foundEntry = entry;
-                    }
-                }
-            }
-
-            if (!foundEntry) throw new Error('Entry not found.');
-
-            res.render('partials/widgetEntry', {
-                layout: false,
-                order: formattedOrder,
-                entry: foundEntry,
-            });
-        }
-
-        if (req.query.monthlySubscription) {
-            req.query.orderId = order._id;
-            order = await runQueriesOnOrder(req, res, false);
-            res.status(200).send('subscription monthly or one time updated');
-        }
-
-        if (req.query.months) {
-            if (req.query.months > 48) {
-                req.query.months = 48;
-            } else if (req.query.months < 1) {
-                req.query.months = 1;
-            }
-            req.query.orderId = order._id;
-            order = await runQueriesOnOrder(req, res, false);
-            const calculatedOrder = await calculateOrder(order);
-            await addPaymentsToOrder(calculatedOrder);
-            res.status(200).send('months changed');
-        }
-
-        if (req.query.currency && req.query.countryCode) {
-            req.query.orderId = order._id;
-            order = await runQueriesOnOrder(req, res, false);
-            const calculatedOrder = await calculateOrder(order);
-            await addPaymentsToOrder(calculatedOrder);
-            res.status(200).send('currency changed');
-        }
-
-        if (req.query.checkout) {
-            if (order.totalCost === 0 || order.totalCostSingleMonth === 0)
-                throw new Error('order can not be checked out with 0 cost');
-            order = await Order.findOneAndUpdate(
-                { _id: order._id },
-                { $set: { status: 'pending payment' } },
-                { new: true, lean: true },
-            );
-            const calculatedOrder = await calculateOrder(order);
-            await addPaymentsToOrder(calculatedOrder);
-            res.status(200).send('order is checked out');
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(400).send('Server error. Try refreshing your browser.');
     }
 };
 
@@ -350,7 +207,7 @@ exports.createSubscription = async (req, res) => {
             currency: order.currency,
             recurring: { interval: 'month' },
             product_data: {
-                name: `Order - ${order.projectSlug} - ${order.orderNo}`,
+                name: `${slugToString(order.projectSlug)} # ${order.orderNo}`,
             },
         });
 
@@ -389,7 +246,7 @@ exports.createSubscription = async (req, res) => {
 
         let checkCustomer = await Customer.findOne({ email }).lean();
 
-        const { customerId, dashboardLink } = await connectDonorInCustomer(updatedDonor, checkCustomer);
+        const { customerId, dashboardLink, freshCustomer } = await connectDonorInCustomer(updatedDonor, checkCustomer);
 
         await Subscription.updateOne({ _id: order._id }, { status: 'paid' });
 
@@ -401,6 +258,8 @@ exports.createSubscription = async (req, res) => {
             amount: `${order.total} ${order.currency}`,
             monthly: true,
         });
+
+        successfulSubscriptionPaymentOverlay(order._id, freshCustomer);
     } catch (error) {
         console.error('Subscription Error:', error);
         res.status(400).send(error.message || error || 'Server Error');
@@ -430,7 +289,7 @@ exports.createSetupIntent = async (req, res) => {
             },
             { upsert: true, new: true },
         ).lean();
-        
+
         const setupIntent = await stripe.setupIntents.create({
             payment_method_types: ['card'],
             metadata: { email: donor.email },
@@ -547,7 +406,7 @@ exports.createOneTime = async (req, res) => {
 
         const checkCustomer = await Customer.findOne({ email }).lean();
 
-        const { customerId, dashboardLink } = await connectDonorInCustomer(updatedDonor, checkCustomer);
+        const { customerId, dashboardLink, freshCustomer } = await connectDonorInCustomer(updatedDonor, checkCustomer);
 
         await Subscription.updateOne({ _id: order._id }, { status: 'paid' });
 
@@ -559,10 +418,11 @@ exports.createOneTime = async (req, res) => {
             monthly: false,
             amount: `${order.total} ${order.currency}`,
         });
+
+        successfulOneTimePaymentOverlay(order._id, freshCustomer);
     } catch (error) {
         console.error('Payment Error:', error);
         res.status(400).send(error.message || error || 'Server Error');
-        res.status(400).json('Server error. Could not create one-time!');
     }
 };
 
@@ -573,15 +433,6 @@ exports.linkOrderToCustomer = async (req, res) => {
         const customer = await Customer.findById(req.params.customerId).lean();
         if (!customer) throw new Error('Customer not found');
         await Subscription.updateOne({ _id: order._id }, { customerId: customer._id });
-        await saveLog(
-            logTemplates({
-                type: 'customerAddedToSubscription',
-                entity: order,
-                actor: customer,
-                order,
-                customer,
-            }),
-        );
         res.status(200).send('Customer linked to order');
     } catch (error) {
         console.error('Link order to customer error:', error);

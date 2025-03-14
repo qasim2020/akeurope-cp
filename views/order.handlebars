@@ -3,15 +3,16 @@
     <div class="row g-2 align-items-center">
       <div class="col">
         <div class="page-pretitle"> Overview </div>
-        <h2 class="page-title"> Invoice {{data.order.orderNo}} <span class="d-flex ms-1">{{{getOrderIcon
+        <h2 class="page-title"> Order {{data.order.orderNo}} <span class="d-flex ms-1">{{{getOrderIcon
             data.order.status}}}</span>
         </h2>
       </div>
       {{#if data.order.customer}}
       <div class="col-auto ms-auto d-print-none">
         <div class="btn-list">
-          {{#if data.order.stripeInfo}}
-          <a class="btn btn-primary-outline d-md-inline-block" href="/manage-subscription-from-order/{{data.order._id}}?subscriptionId={{data.order.stripeInfo.subscriptionId}}&paymentIntentId={{data.order.stripeInfo.paymentIntentId}}">
+          {{#if (and data.order.stripeInfo data.order.monthlySubscription)}}
+          <a class="btn btn-primary-outline d-md-inline-block"
+            href="/manage-subscription-from-order/{{data.order._id}}?subscriptionId={{data.order.stripeInfo.subscriptionId}}&paymentIntentId={{data.order.stripeInfo.paymentIntentId}}">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2">
               <path
@@ -21,9 +22,9 @@
             Stripe Dashboard
           </a>
           {{/if}}
+          {{#if (eq data.order.status 'draft')}}
           <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#editOrder" data-bs-toggle="modal"
             data-bs-target="#modal-{{data.order._id}}">
-            {{#if (eq data.order.status 'draft')}}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus me-1">
@@ -34,23 +35,9 @@
               <path d="M19 16v6"></path>
             </svg>
             Edit Selection
-            {{else}}
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-file-text me-1">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-              <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-              <path d="M9 9l1 0" />
-              <path d="M9 13l6 0" />
-              <path d="M9 17l6 0" />
-            </svg>
-            View Selection
-            {{/if}}
           </a>
           <a href="#" class="btn btn-primary d-md-none btn-icon" data-bs-toggle="modal"
             data-bs-target="#modal-{{data.order._id}}" aria-label="modal-order-{{data.order._id}}">
-            {{#if (eq data.order.status 'draft')}}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               class="icon icon-tabler icons-tabler-outline icon-tabler-pencil-plus m-0">
@@ -60,38 +47,27 @@
               <path d="M16 19h6"></path>
               <path d="M19 16v6"></path>
             </svg>
-            {{else}}
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-file-text m-0">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-              <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-              <path d="M9 9l1 0" />
-              <path d="M9 13l6 0" />
-              <path d="M9 17l6 0" />
-            </svg>
-            {{/if}}
           </a>
+          {{/if}}
         </div>
       </div>
       {{/if}}
     </div>
   </div>
 </div>
-<div class="m-3 pt-4 m-auto container-xl" id="data-container">
+<div class="m-3 pt-4 mx-auto mb-auto container-xl" id="data-container">
+  {{#if data.order.projects}}
   {{> showOrderEntries}}
+  {{/if}}
+  {{#unless data.order.stripeInfo}}
   <div class="card mb-3">
     <div class="card-body">
       {{>components/invoice-status order=data.order body=true}}
     </div>
   </div>
+  {{/unless}}
   <div class="row row-deck row-cards">
-    <div class="col-12 col-md-6 mb-auto d-flex flex-column">
-      {{> showOrderInvoice}}
-      {{> showOrder}}
-    </div>
-    <div class="d-block col-12 col-md-6">
+    <div class="d-block col-12">
       <div class="card mb-3" id="files-container">
         {{> showEntityFiles data=data order=true}}
       </div>
@@ -101,10 +77,13 @@
 </div>
 
 {{#if data.order.customer}}
+{{#if (findInArray data.role 'bulk-select')}}
 {{> emptyOrderModal}}
+{{/if}}
 {{/if}}
 
 <script src="/static/orders.js"></script>
+
 <script>
 
   const refreshContainers = function (modal) {

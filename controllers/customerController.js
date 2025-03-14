@@ -17,7 +17,7 @@ const { saveLog, customerLogs, visibleLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
-const { getSubscriptionByOrderId, getPaymentByOrderId } = require('../modules/orders');
+const { getLatestSubscriptionByOrderId, getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
 const { getEntriesByCustomerId } = require('../modules/ordersFetchEntries');
 const Donor = require('../models/Donor');
 
@@ -155,7 +155,7 @@ exports.customer = async (req, res) => {
         const orders = await Order.find({customerId: customer._id}).sort({orderNo: -1}).lean();
 
         for (const order of orders) {
-            order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
+            order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionsByOrderId(order._id);
         };
 
         const activeSubscriptions = await getEntriesByCustomerId(customer._id);
@@ -163,7 +163,7 @@ exports.customer = async (req, res) => {
         const subscriptions = await Subscription.find({customerId: customer._id}).sort({orderNo: -1}).lean();
 
         for (const subscription of subscriptions) {
-            subscription.stripeInfo = await getPaymentByOrderId(subscription._id) || await getSubscriptionByOrderId(subscription._id);
+            subscription.stripeInfo = await getPaymentByOrderId(subscription._id) || await getSubscriptionsByOrderId(subscription._id);
         };
 
         res.render('customer', {

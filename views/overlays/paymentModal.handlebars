@@ -1999,6 +1999,7 @@
                 $('#slide-container').css({ transform: `translateX(-${1 * 100}%)` });
                 $('.back-btn').attr({ index: 1 });
                 drawOrderEntries();
+                drawTotalCosts(await getOrderData(orderId));
             } catch (error) {
                 console.log(error);
                 alert('Order expired. Please refresh your browser.');

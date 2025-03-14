@@ -12,6 +12,18 @@ const { saveLog } = require('./logAction');
 const { logTemplates } = require('./logTemplates');
 const { capitalizeFirstLetter } = require('./helpers');
 
+
+const getSubscriptionsByOrderId = async (orderId) => {
+    try {
+        const donor = await Donor.findOne({'subscriptions.orderId': orderId}).lean();
+        const subscriptions = donor.subscriptions.filter(sub => sub.orderId.toString() === orderId.toString());
+        return subscriptions;
+    } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        return null;
+    }
+};
+
 const createPagination = ({ req, totalEntries, fieldFilters, filtersQuery, pageType }) => {
     const limit = parseInt(req.query.limit) || 10;
     const totalPages = Math.ceil(totalEntries / limit);
@@ -368,7 +380,7 @@ const getSingleOrder = async (req, res) => {
     const checkOrder = await Order.findOne({ _id: req.params.orderId, customerId: req.session.user._id }).lean();
     let order;
     if (!checkOrder) {
-        throw new Error('Payment do not exist!');
+        return false;
     }
     if (checkOrder.totalCost == undefined) {
         const calculatedOrder = await calculateOrder(checkOrder);
@@ -651,15 +663,20 @@ const cleanOrder = async (orderId) => {
     return true;
 };
 
-const getSubscriptionByOrderId = async (orderId) => {
+const getLatestSubscriptionByOrderId = async (orderId) => {
     try {
-        const donor = await Donor.findOne({
-            "subscriptions.orderId": orderId
-        }, { "subscriptions.$": 1 }).lean();
+        const donor = await Donor.findOne(
+            { "subscriptions.orderId": orderId },
+            { subscriptions: 1 } 
+        ).lean();
 
-        return donor ? donor.subscriptions[0] : null;
+        if (!donor || !donor.subscriptions.length) return null;
+
+        return donor.subscriptions
+            .filter(sub => sub.orderId.toString() === orderId.toString())
+            .sort((a, b) => new Date(b.currentPeriodEnd) - new Date(a.currentPeriodEnd))[0]; 
     } catch (error) {
-        console.error("Error fetching subscription:", error);
+        console.error("Error fetching latest subscription:", error);
         return null;
     }
 };
@@ -690,6 +707,7 @@ module.exports = {
     formatOrderWidget,
     calculateOrder,
     cleanOrder,
-    getSubscriptionByOrderId,
+    getSubscriptionsByOrderId,
+    getLatestSubscriptionByOrderId,
     getPaymentByOrderId,
 };

@@ -1,23 +1,196 @@
 const PDFDocument = require('pdfkit');
+const puppeteer = require('puppeteer');
+const crypto = require('crypto');
+const moment = require('moment');
 const fs = require('fs-extra');
 const path = require('path');
+const axios = require('axios');
+const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 const Order = require('../models/Order');
+const File = require('../models/File');
 const Customer = require('../models/Customer');
+const Project = require('../models/Project');
 const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
 const { Error } = require('mongoose');
+const { getPaymentByOrderId, getLatestSubscriptionByOrderId } = require('../modules/orders');
 const { formatDate, formatTime, expiresOn } = require('../modules/helpers');
+const Subscription = require('../models/Subscription');
+
+const downloadStripeReceipt = async (order, uploadedBy) => {
+    const stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+
+    if (!stripeInfo) throw new Error('No stripe information found for order');
+
+    const invoiceDir = path.join(__dirname, '../../invoices');
+
+    if (!fs.existsSync(invoiceDir)) fs.mkdirSync(invoiceDir, { recursive: true });
+
+    const month = moment(stripeInfo.currentPeriodStart || stripeInfo.created).format('MMMM');
+    const year = moment(stripeInfo.currentPeriodStart || stripeInfo.created).format('YYYY');
+
+    const receiptPath = path.join(invoiceDir, `order_no_${order.orderNo}_receipt_${month}_${year}.pdf`);
+
+    if (stripeInfo.paymentIntentId) {
+        const paymentIntent = await stripe.paymentIntents.retrieve(stripeInfo.paymentIntentId);
+        if (paymentIntent.latest_charge) {
+            const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+            if (charge.receipt_url) {
+                console.log('Receipt URL:', charge.receipt_url);
+                await generateReceiptPDF(charge.receipt_url, receiptPath);
+                const fileName = `Receipt - ${month} ${year}`;
+                await saveFileRecord(order, receiptPath, 'receipt', uploadedBy, fileName);
+            }
+        }
+    }
+};
+
+const downloadStripeInvoiceAndReceipt = async (order, uploadedBy) => {
+    const stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+
+    if (!stripeInfo) throw new Error('No stripe information found for order');
+
+    const invoiceDir = path.join(__dirname, '../../invoices');
+    if (!fs.existsSync(invoiceDir)) fs.mkdirSync(invoiceDir, { recursive: true });
+
+    const month = moment(stripeInfo.currentPeriodStart || stripeInfo.created).format('MMMM');
+    const year = moment(stripeInfo.currentPeriodStart || stripeInfo.created).format('YYYY');
+
+    const invoicePath = path.join(invoiceDir, `order_no_${order.orderNo}_invoice_${month}_${year}_${Date.now()}.pdf`);
+    const receiptPath = path.join(invoiceDir, `order_no_${order.orderNo}_receipt_${month}_${year}_${Date.now()}.pdf`);
+
+    let invoice = null;
+
+    if (stripeInfo.paymentIntentId) {
+        const paymentIntent = await stripe.paymentIntents.retrieve(stripeInfo.paymentIntentId);
+        if (paymentIntent.latest_charge) {
+            const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+            if (charge && charge.invoice) {
+                invoice = await stripe.invoices.retrieve(charge.invoice);
+            } 
+        }
+    } else if (stripeInfo.subscriptionId) {
+        const subscription = await stripe.subscriptions.retrieve(stripeInfo.subscriptionId);
+        if (subscription.latest_invoice) {
+            invoice = await stripe.invoices.retrieve(subscription.latest_invoice);
+        }
+    }
+    
+    if (invoice) {
+        const invoiceList = await stripe.invoices.list({
+            customer: invoice.customer,
+            limit: 1, 
+        });
+    
+        if (invoiceList.data.length > 0) {
+            invoice = invoiceList.data[0]; 
+        }
+    
+        if (invoice.invoice_pdf) {
+            await downloadPDF(invoice.invoice_pdf, invoicePath);
+            const fileName = `Invoice for ${month} ${year}`;
+            await saveFileRecord(order, invoicePath, 'invoice', uploadedBy, fileName);
+        }
+    
+        if (invoice.charge) {
+            const charge = await stripe.charges.retrieve(invoice.charge);
+            if (charge.receipt_url) {
+                console.log('Downloading receipt from:', charge.receipt_url);
+                await generateReceiptPDF(charge.receipt_url, receiptPath);
+                const fileName = `Receipt for ${month} ${year}`;
+                await saveFileRecord(order, receiptPath, 'receipt', uploadedBy, fileName);
+            }
+        }
+    }
+    
+};
+
+const generateReceiptPDF = async (url, filePath) => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle2' });
+    await page.pdf({ path: filePath, format: 'A4' });
+    await browser.close();
+};
+
+const downloadPDF = async (url, filePath) => {
+    try {
+        const response = await axios({
+            url,
+            method: 'GET',
+            responseType: 'arraybuffer',
+            headers: { Accept: 'application/pdf' },
+        });
+
+        fs.writeFileSync(filePath, response.data, 'binary');
+        console.log(`Downloaded: ${filePath}`);
+    } catch (error) {
+        console.error(`Error downloading PDF from ${url}:`, error.message);
+    }
+};
+
+const getOrderInvoiceFromDir = async (orderId) => {
+    const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+    const fileName = `order_no_${order.orderNo}.pdf`;  
+    const dirName = path.join(__dirname, '../../invoices');
+    const filePath = path.join(dirName, fileName);
+
+    if (fs.existsSync(filePath)) {
+        return filePath;  
+    } else {
+        const newPath = await generateInvoice(order);
+        return newPath;        
+    }
+};
+
+const saveFileRecord = async (order, filePath, category, uploadedBy, fileName) => {
+    const relativePath = filePath.replace(/^.*invoices\//, 'invoices/');
+    const stats = fs.statSync(filePath);
+    const fileSizeInKB = (stats.size / 1024).toFixed(2);
+    const fileRecord = new File({
+        links: [
+            {
+                entityId: order._id,
+                entityType: 'order',
+                entityUrl: `/order/${order._id}`,
+            },
+        ],
+        category,
+        access: ['customers'],
+        name: fileName ? fileName : `${category === 'invoice' ? 'Invoice' : 'Receipt'} ${order.monthlySubscription ? ` for ${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}` : ''}`,
+        size: fileSizeInKB,
+        path: relativePath,
+        mimeType: 'application/pdf',
+        uploadedBy,
+    });
+
+    await fileRecord.save();
+};
 
 const generateInvoice = async (order) => {
+    let invoicePath = '';
+
+    if (order.monthlySubscription) {
+        throw new Error('Cannot generate invoice for monthly subscription');
+    }
+
     const invoiceDir = path.join(__dirname, '../../invoices');
-    const invoicePath = path.join(invoiceDir, `order_no_${order.orderNo}.pdf`);
+    invoicePath = path.join(invoiceDir, `order_no_${order.orderNo}.pdf`);
+
+    order.customer = order.customer ? order.customer : await Customer.findById(order.customerId).lean();
+    order.projects = await Promise.all(
+        order.projects.map(async (project) => {
+            project.detail = project.detail ? project.detail : await Project.findOne({ slug: project.slug }).lean();
+            return project;
+        }),
+    );
 
     await fs.ensureDir(invoiceDir);
 
     return new Promise((resolve, reject) => {
         try {
-            const pageHeight = 720; // A4 page height in points
-            const footerMargin = 30; // Margin from the bottom for footer
+            const pageHeight = 720;
+            const footerMargin = 30;
 
             const doc = new PDFDocument();
 
@@ -114,19 +287,11 @@ const generateInvoice = async (order) => {
                 .lineTo(560, endY + 40)
                 .stroke();
 
-            if (order.monthlySubscription) {
-                doc.fontSize(12)
-                    .font('Helvetica')
-                    .text('Total: ', 350, endY + 60, { continued: true })
-                    .font('Helvetica-Bold')
-                    .text(`${order.totalCostSingleMonth} ${order.currency}`);
-            } else {
-                doc.fontSize(12)
-                    .font('Helvetica')
-                    .text('Total: ', 350, endY + 60, { continued: true })
-                    .font('Helvetica-Bold')
-                    .text(`${order.totalCost} ${order.currency}`);
-            }
+            doc.fontSize(12)
+                .font('Helvetica')
+                .text('Total: ', 350, endY + 60, { continued: true })
+                .font('Helvetica-Bold')
+                .text(`${order.totalCost} ${order.currency}`);
 
             let footerY = pageHeight - footerMargin - 30;
 
@@ -177,30 +342,20 @@ const drawTable = (doc, projects, startY, order) => {
     y += 14;
 
     doc.font('Helvetica');
-    if (order.monthlySubscription) {
-        projects.forEach((project) => {
-            y += 20;
-            const nameWidth = 150;
-            doc.fontSize(12).text(project.detail.name, 50, y, { width: nameWidth, align: 'left' });
-            doc.text(project.entriesCount, 250, y);
-            doc.text(1, 180, y);
-            doc.text(project.totalCostSingleMonth, 350, y);
-        });
-    } else {
-        projects.forEach((project) => {
-            y += 20;
-            const nameWidth = 150;
-            doc.fontSize(12).text(project.detail.name, 50, y, { width: nameWidth, align: 'left' });
-            doc.text(project.entriesCount, 250, y);
-            doc.text(project.months, 180, y);
-            doc.text(project.totalCostAllMonths, 350, y);
-        });
-    }
+
+    projects.forEach((project) => {
+        y += 20;
+        const nameWidth = 150;
+        doc.fontSize(12).text(project.detail.name, 50, y, { width: nameWidth, align: 'left' });
+        doc.text(project.entries.length, 250, y);
+        doc.text(project.months, 180, y);
+        doc.text(project.totalCostAllMonths, 350, y);
+    });
 
     return y;
 };
 
-function deletePath(filePath) {
+const deletePath = (filePath) => {
     if (fs.existsSync(filePath)) {
         try {
             fs.unlinkSync(filePath);
@@ -214,7 +369,7 @@ function deletePath(filePath) {
         console.log(`File does not exist: ${filePath}`);
         return false;
     }
-}
+};
 
 const deleteInvoice = async (orderId) => {
     const order = await Order.findOne({ _id: orderId });
@@ -227,47 +382,21 @@ const deleteInvoice = async (orderId) => {
     return deletePath(invoicePath);
 };
 
-const sendInvoiceToCustomer = async (order, customer) => {
-    const invoicesDirectory = '../invoices';
-    const invoiceFilename = `order_no_${order.orderNo}.pdf`;
-    const invoicePath = path.join(invoicesDirectory, invoiceFilename);
+const saveExistingInvoiceInFileCollection = async (order, uploadedBy) => {
+    const invoicePath = path.join(__dirname, `../../invoices/order_no_${order.orderNo}.pdf`);
 
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
-
-    const templatePath = path.join(__dirname, '../views/emails/invoice.handlebars');
-    const templateSource = await fs.readFile(templatePath, 'utf8');
-    const compiledTemplate = handlebars.compile(templateSource);
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: customer.email,
-        subject: `Invoice from Akeurope - ${order.totalCost}`,
-        html: compiledTemplate({
-            name: customer.name,
-        }),
-        attachments: [
-            {
-                filename: invoiceFilename,
-                path: invoicePath,
-            },
-        ],
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log('Invoice sent!');
-        return true;
-    } catch (err) {
-        throw new Error(`Failed to send email: ${err.message}`);
+    if (fs.existsSync(invoicePath)) {
+        await saveFileRecord(order, invoicePath, 'invoice', uploadedBy);
     }
 };
 
-module.exports = { generateInvoice, deleteInvoice, deletePath, sendInvoiceToCustomer };
+module.exports = {
+    saveFileRecord,
+    generateInvoice,
+    deleteInvoice,
+    deletePath,
+    downloadStripeInvoiceAndReceipt,
+    downloadStripeReceipt,
+    saveExistingInvoiceInFileCollection,
+    getOrderInvoiceFromDir,
+};

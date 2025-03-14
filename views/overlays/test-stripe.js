@@ -445,6 +445,13 @@ const loadDonationOverlay = function (slug) {
     }
 })();
 
+// {{#if this.stripeInfo.paymentIntentId}}
+// <a href="/manage-subscription?paymentIntentId={{this.stripeInfo.paymentIntentId}}">{{this.orderNo}}</a>
+// {{else}}
+// <a href="/manage-subscription?subscriptionId={{this.stripeInfo.0.subscriptionId}}">{{this.orderNo}}</a>
+// <i class="ti ti-refresh ms-1"></i>
+// {{/if}}
+
 {/* 
     <script src="https://partner.akeurope.org/script-red-btn/gaza-orphans"></script>
     <script src="https://partner.akeurope.org/script-webflow"></script> 

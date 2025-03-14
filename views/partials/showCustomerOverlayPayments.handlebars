@@ -9,7 +9,7 @@
       <table class="table table-striped mb-0">
         <thead>
           <tr>
-            <th>Payment #</th>
+            <th>Order #</th>
             <th>Date</th>
             <th>Amount</th>
             <th>Status</th>
@@ -19,22 +19,31 @@
           {{#each data.subscriptions}}
           <tr>
             <td>
-              {{#if this.stripeInfo}}
-              <a
-                href="/manage-subscription?subscriptionId={{this.stripeInfo.subscriptionId}}&paymentIntentId={{this.stripeInfo.paymentIntentId}}">{{this.orderNo}}</a>
-              {{#if this.monthlySubscription}} <i class="ti ti-refresh ms-1"></i> {{/if}}
+              {{#if this.stripeInfo.paymentIntentId}}
+              <a href="/order/{{this._id}}">{{this.orderNo}}</a>
               {{else}}
-              {{this.orderNo}}
+              <a href="/order/{{this._id}}">{{this.orderNo}}</a>
+              <i class="ti ti-refresh ms-1"></i>
               {{/if}}
             </td>
             <td>{{formatDate this.createdAt}}</td>
             <td>
-              {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
-              {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
-              {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
               {{#unless this.stripeInfo}} <i class="ti ti-home"></i> {{/unless}}
               <span>
-                {{this.total}} {{this.currency}}
+                {{#if this.monthlySubscription}}
+                  {{#each this.stripeInfo}}
+                  {{#if (eq this.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+                  {{#if (eq this.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+                  {{#if (eq this.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
+                  <span class="me-2">{{divide this.price 100}} {{capitalizeAll this.currency}} in {{getMonth this.currentPeriodStart}}</span> <br>
+                  {{/each}}
+                  <i class="ti ti-equal"></i> {{this.totalAllTime}} {{this.currency}}
+                {{else}}
+                  {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+                  {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+                  {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
+                  {{this.total}} {{this.currency}}
+                {{/if}}
               </span>
             </td>
             <td>

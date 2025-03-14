@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 
@@ -5,6 +6,7 @@ const User = require('../models/User');
 const Customer = require('../models/Customer');
 const Project = require('../models/Project');
 const Order = require('../models/Order');
+const Subscription = require('../models/Subscription');
 const File = require('../models/File');
 const { saveLog, customerLogs, visibleLogs, orderLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
@@ -14,11 +16,12 @@ const {
     getSingleOrder,
     updateOrderStatus,
     getPaymentByOrderId,
-    getSubscriptionByOrderId,
+    getLatestSubscriptionByOrderId,
     addPaymentsToOrder,
     openOrderProjectWithEntries,
 } = require('../modules/orders');
-const { generateInvoice, deleteInvoice, sendInvoiceToCustomer } = require('../modules/invoice');
+const { getOrderInvoiceFromDir, deleteInvoice, saveFileRecord } = require('../modules/invoice');
+const { downloadStripeInvoiceAndReceipt } = require('../modules/invoice');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
 
 exports.viewOrders = async (req, res) => {
@@ -32,12 +35,12 @@ exports.viewOrders = async (req, res) => {
         } else {
             visibleDateFields = await visibleProjectDateFields(projects[0]);
         }
-        
+
         const { orders, pagination } = await getPaginatedOrders(req, res);
 
         for (const order of orders) {
-            order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
-        };
+            order.stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+        }
 
         const customers = await Customer.find().lean();
         res.render('orders', {
@@ -79,16 +82,24 @@ exports.viewOrder = async (req, res) => {
             visibleDateFields = await visibleProjectDateFields(projects[0]);
         }
 
-        const order = await getSingleOrder(req, res);
+        let order = await getSingleOrder(req, res);
 
-        order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
+        if (!order) {
+            order = await Subscription.findById(req.params.orderId).lean();
+            if (!order) throw new Error('Order not found');
+            order.customer = await Customer.findById(order.customerId).lean();
+        }
 
-        const files = await File.find({
+        order.stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+
+        let files = await File.find({
             'links.entityId': req.params.orderId,
             access: {
                 $in: ['customer', 'customers'],
             },
-        }).lean();
+        })
+            .sort({ createdAt: -1 })
+            .lean();
 
         for (const file of files) {
             if (file.uploadedBy?.actorType === 'user') {
@@ -109,7 +120,7 @@ exports.viewOrder = async (req, res) => {
                 projects,
                 visibleDateFields,
                 orderLogs: await orderLogs(req, res),
-                activeMenu: 'orders',
+                activeMenu: 'customers',
                 order,
                 files,
             },
@@ -128,9 +139,9 @@ exports.getOrdersData = async (req, res) => {
         const { orders, pagination } = await getPaginatedOrders(req, res);
 
         for (const order of orders) {
-            order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionByOrderId(order._id);
-        };
-        
+            order.stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+        }
+
         res.render('partials/showOrders', {
             layout: false,
             data: {

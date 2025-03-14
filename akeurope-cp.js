@@ -6,7 +6,8 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const hbsHelpers = require('./modules/helpers');
 const MongoStore = require('connect-mongo');
-const { sendErrorToTelegram } = require('./modules/telegramBot');
+const { sendErrorToTelegram, notifyTelegram } = require('./modules/telegramBot');
+ 
 
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -17,15 +18,22 @@ const entryRoutes = require('./routes/entryRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const filesRoutes = require('./routes/filesRoutes');
 const widgetRoutes = require('./routes/widgetRoutes');
+const stripeRoutes = require('./routes/stripeRoutes');
 
 require('dotenv').config();
 mongoose();
 
 const app = express();
+
 app.engine('handlebars', exphbs.engine({ helpers: hbsHelpers }));
 app.set('view engine', 'handlebars');
+
 app.use(express.urlencoded({ extended: true }));
+
+app.use('/webhook', express.raw({ type: 'application/json' }), stripeRoutes);
+
 app.use(express.json());
+
 app.use(
     session({
         name: 'akeurope-cp-id',
@@ -37,7 +45,7 @@ app.use(
             collectionName: 'sessions_customer_portal',
         }),
         cookie: {
-            maxAge: 1000 * 60 * 60 * 24, 
+            maxAge: 1000 * 60 * 60 * 24,
         },
     }),
 );
@@ -60,21 +68,21 @@ app.use((req, res, next) => {
         return oldJson.apply(res, arguments);
     };
 
-    const forbiddenErrors = ["/overlay/fonts/Karla-regular.woff", "/robots.txt"];
+    const forbiddenErrors = ['/overlay/fonts/Karla-regular.woff', '/robots.txt'];
 
-    res.on("finish", () => { 
+    res.on('finish', () => {
         if (res.statusCode > 399 && !forbiddenErrors.includes(req.originalUrl)) {
             const errorData = {
                 message: responseBody,
                 status: res.statusCode,
                 url: req.originalUrl,
             };
-    
+
             sendErrorToTelegram(errorData);
         }
     });
-    
-    next(); 
+
+    next();
 });
 
 app.use(flash());
@@ -95,6 +103,36 @@ app.use(widgetRoutes);
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
     res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));
+});
+
+app.get('/preview-email', async (req, res) => {
+    const templateName = 'invoiceRenewel';
+
+    const data = {
+        name: 'Hassam Bukhari',
+        invoiceNreceipt: true,
+        newUser: false,
+        invoiceUrl: '123',
+        receiptUrl: '123',
+        portalUrl: '123'
+    };
+
+    res.render(`emails/${templateName}`, data);
+});
+
+app.get('/testing', async (req, res) => {
+    try {
+        const { successfulOneTimePaymentOverlay } = require('./modules/orderPostActions');
+        const Subscription = require('./models/Subscription');
+        const Customer = require('./models/Customer');
+        const order = await Subscription.findById('67d184cd1ffa59566f463801').lean();
+        const checkCustomer = await Customer.findById(order.customerId).lean();
+        await successfulOneTimePaymentOverlay(order, checkCustomer);
+        res.status(200).send('Done');
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message);
+    }
 });
 
 app.get('/', (req, res) => {

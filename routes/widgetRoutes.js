@@ -30,7 +30,6 @@ router.post('/widget-order-customer/:orderId/:customerId', notifyTelegram, widge
 router.get('/script-webflow', overlayController.wScript);
 router.get('/overlay-products/:code', overlayController.overlayProducts);
 
-router.post('/overlay-update-order/:orderId/:slug', overlayController.updateOrder);
 router.post('/overlay-create-order/:slug', overlayController.createNewOrder);
 router.post('/overlay-delete-order/:orderId', overlayController.deleteOrder);
 router.post('/overlay-setup-intent/:orderId/:slug', notifyTelegram, overlayController.createSetupIntent);

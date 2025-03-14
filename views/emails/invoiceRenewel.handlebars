@@ -9,15 +9,11 @@
             <img src="https://res.cloudinary.com/miscellaneous/image/upload/v1729975173/akeurope/logo-full.png"
                 style="height: 35px; margin-bottom: 20px; margin-top: 20px" alt="akeurope.org Logo" />
         </div>
-        <h2 style="color: #333333;">Thank you for your order!</h2>
+        <h2 style="color: #333333;">🎊 Thank you for your payment!</h2>
         <p style="color: #333333;">Dear {{name}},</p>
-        <p style="color: #333333; line-height: 1.5rem;">
-            We are truly grateful for your support in our mission to aid children and families affected by conflict,
-            disaster, and displacement. Your generosity helps us provide critical relief where it's needed most.
-        </p>
         {{#if invoiceNreceipt}}
         <p style="color: #333333; line-height: 1.5rem; margin-bottom: 4px;">
-            Below, you’ll find secure links to download your invoice and receipt for your recent order:
+            Here are the secure links to download your invoice and receipt for your recent subscription renewel.
         </p>
         <a href="{{invoiceUrl}}"
             style="display: inline-block; padding: 10px 20px; margin-top: 5px; margin-right: 5px; background-color: #007A78; color: #ffffff; text-decoration: none; border-radius: 4px;">
@@ -34,13 +30,9 @@
             href="mailto:info@admin.akeurope.org">info@admin.akeurope.org</a>.
         {{/if}}
         {{#if receiptOnly}}
-        <p style="color: #333333; line-height: 1.5rem; margin-bottom: 4px;">
-            Below is the secure link to download your receipt.
-        </p>
-        <a href="{{receiptUrl}}"
-            style="display: inline-block; padding: 10px 20px; margin-top: 5px; margin-bottom: 10px; background-color: #007A78; color: #ffffff; text-decoration: none; border-radius: 4px;">
-            Click to download receipt
-        </a>
+        Thank you for your recent order. Please find your receipt attached to this email. If you have any questions
+        or concerns, please don’t hesitate to reach out to us at <a
+            href="mailto:info@admin.akeurope.org">info@admin.akeurope.org</a>.
         {{/if}}
         {{#if newUser}}
         <p style="color: #333333; line-height: 1.5rem; margin-bottom: 4px; margin-top: 10px;">

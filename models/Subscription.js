@@ -8,6 +8,7 @@ const SubscriptionRecordSchema = new mongoose.Schema(
         customerId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Customer' },
         currency: { type: String, required: true },
         total: { type: Number, required: true },
+        totalAllTime: { type: Number, required: true },
         monthlySubscription: { type: Boolean, default: false },
         countryCode: { type: String, required: true },
         projectSlug: { type: String, required: true },

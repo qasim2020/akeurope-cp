@@ -49,7 +49,7 @@ const OrderSchema = new mongoose.Schema(
                 ],
             },
         ],
-        // DONOR PORTAL REQUIRED
+        // DONOR PORTAL REQUIRED (MONTHLY SUBSCRIPTION)
         monthlySubscription: {
             type: Boolean,
         },

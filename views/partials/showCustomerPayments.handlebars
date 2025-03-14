@@ -10,7 +10,7 @@
       <table class="table table-striped mb-0">
         <thead>
           <tr>
-            <th>Payment #</th>
+            <th>Order #</th>
             <th>Date</th>
             <th>Amount</th>
             <th>Status</th>
@@ -25,17 +25,20 @@
             </td>
             <td>{{formatDate this.createdAt}}</td>
             <td>
-              {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
-              {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
-              {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
-              {{#unless this.stripeInfo}} <i class="ti ti-home"></i> {{/unless}}
-              <span>
-                {{#if this.monthlySubscription}}
-                {{this.totalCostSingleMonth}} {{this.currency}}
-                {{else}}
+              {{#if this.monthlySubscription}}
+                {{#each this.stripeInfo}}
+                {{#if (eq this.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+                {{#if (eq this.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+                {{#if (eq this.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
+                <span class="me-2">{{divide this.price 100}} {{capitalizeAll this.currency}} in {{getMonth this.currentPeriodStart}}</span> <br>
+                {{/each}}
+                <i class="ti ti-equal"></i> {{this.totalCost}} {{this.currency}}
+              {{else}}
+                {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+                {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+                {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
                 {{this.totalCost}} {{this.currency}}
-                {{/if}}
-              </span>
+              {{/if}}
             </td>
             <td>
               <span>{{{getOrderIcon this.status}}} </span>

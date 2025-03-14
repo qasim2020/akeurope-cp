@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const fileSchema = new mongoose.Schema(
@@ -14,12 +15,14 @@ const fileSchema = new mongoose.Schema(
         notes: { type: String },
         name: { type: String, required: true },
         size: { type: String, required: true },
-        path: { type: String, required: true, unique: true },
+        path: { type: String, required: true },
+        secretToken: { type: String, unique: true, default: () => crypto.randomBytes(32).toString('hex') },
+        public: { type: Boolean, default: false },
         mimeType: { type: String, required: true },
         uploadedBy: {
-            actorType: { type: String, required: true },
+            actorType: { type: String },
             actorId: { type: String, required: true },
-            actorUrl: { type: String, required: true }
+            actorUrl: { type: String }
         }
     },
     {
