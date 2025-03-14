@@ -263,6 +263,7 @@ async function renewWidgetOrder(req, event) {
 }
 
 exports.renewOrder = async (req, res) => {
+    console.log(req.originalUrl);
     const sig = req.headers['stripe-signature'];
     let event;
 
@@ -270,7 +271,7 @@ exports.renewOrder = async (req, res) => {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
         console.error('Webhook signature verification failed:', err);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
+        return res.json({ received: true });
     }
 
     if (event.type === 'invoice.payment_succeeded') {

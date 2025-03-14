@@ -61,6 +61,7 @@ const notifyTelegramStripe = async (req, res, next) => {
         const event = JSON.parse(rawBody);
 
         const message = `🔔 *Stripe Webhook Received*\n\n` +
+            `🔹 *Url:* ${req.originalUrl}\n` +
             `🔹 *Type:* ${event.type}\n` +
             `🔹 *ID:* ${escapeMarkdown(event.id)}\n` +
             `🔹 *Created:* ${escapeMarkdown(new Date(event.created * 1000).toUTCString())}`;

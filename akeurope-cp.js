@@ -7,7 +7,6 @@ const path = require('path');
 const hbsHelpers = require('./modules/helpers');
 const MongoStore = require('connect-mongo');
 const { sendErrorToTelegram, notifyTelegramStripe } = require('./modules/telegramBot');
- 
 
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -31,6 +30,7 @@ app.set('view engine', 'handlebars');
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/webhook', express.raw({ type: 'application/json' }), notifyTelegramStripe, stripeRoutes);
+app.use('/webhooks', express.raw({ type: 'application/json' }), notifyTelegramStripe, stripeRoutes);
 
 app.use(express.json());
 
