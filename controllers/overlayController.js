@@ -350,7 +350,7 @@ exports.createPaymentIntent = async (req, res) => {
             amount: amount,
             currency: order.currency,
             customer: customer.id,
-            automatic_payment_methods: { enabled: true },
+            automatic_payment_methods: { enabled: true }
         });
 
         res.json({ clientSecret: paymentIntent.client_secret });
@@ -369,6 +369,7 @@ exports.createOneTime = async (req, res) => {
         if (!donor) throw new Error('Donor not found.');
 
         const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        
         if (!order) throw new Error('Order not found!');
 
         if (!email) throw new Error('Email is required');

@@ -6,7 +6,7 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const hbsHelpers = require('./modules/helpers');
 const MongoStore = require('connect-mongo');
-const { sendErrorToTelegram, notifyTelegram } = require('./modules/telegramBot');
+const { sendErrorToTelegram, notifyTelegramStripe } = require('./modules/telegramBot');
  
 
 const authRoutes = require('./routes/authRoutes');
@@ -30,7 +30,7 @@ app.set('view engine', 'handlebars');
 
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/webhook', express.raw({ type: 'application/json' }), stripeRoutes);
+app.use('/webhook', express.raw({ type: 'application/json' }), notifyTelegramStripe, stripeRoutes);
 
 app.use(express.json());
 

@@ -57,22 +57,20 @@ const escapeMarkdown = (text) => {
 
 const notifyTelegramStripe = async (req, res, next) => {
     try {
-        const event = req.body;  // Stripe webhook payload
+        const rawBody = req.body.toString();
+        const event = JSON.parse(rawBody);
 
-        // Format the message for Telegram
         const message = `🔔 *Stripe Webhook Received*\n\n` +
             `🔹 *Type:* ${event.type}\n` +
             `🔹 *ID:* ${escapeMarkdown(event.id)}\n` +
             `🔹 *Created:* ${escapeMarkdown(new Date(event.created * 1000).toUTCString())}`;
 
-        // Send the message to Telegram
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
             text: message,
             parse_mode: 'Markdown'
         });
 
-        // Pass control to the next middleware or route handler
         next();
     } catch (err) {
         console.error('Error in Stripe Webhook Middleware:', err);

@@ -37,7 +37,7 @@ const downloadStripeReceipt = async (order, uploadedBy) => {
             const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
             if (charge.receipt_url) {
                 console.log('Receipt URL:', charge.receipt_url);
-                await generateReceiptPDF(charge.receipt_url, receiptPath);
+                await generateColoredReceiptPDF(charge.receipt_url, receiptPath);
                 const fileName = `Receipt - ${month} ${year}`;
                 await saveFileRecord(order, receiptPath, 'receipt', uploadedBy, fileName);
             }
@@ -96,13 +96,30 @@ const downloadStripeInvoiceAndReceipt = async (order, uploadedBy) => {
             const charge = await stripe.charges.retrieve(invoice.charge);
             if (charge.receipt_url) {
                 console.log('Downloading receipt from:', charge.receipt_url);
-                await generateReceiptPDF(charge.receipt_url, receiptPath);
+                await generateColoredReceiptPDF(charge.receipt_url, receiptPath);
                 const fileName = `Receipt for ${month} ${year}`;
                 await saveFileRecord(order, receiptPath, 'receipt', uploadedBy, fileName);
             }
         }
     }
     
+};
+
+const generateColoredReceiptPDF = async (url, filePath) => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    
+    await page.goto(url, { waitUntil: 'networkidle2' });
+
+    await page.emulateMediaType('screen'); // Enable color mode
+    
+    await page.pdf({
+        path: filePath,
+        format: 'A4',
+        printBackground: true // Ensures background colors and images are included
+    });
+
+    await browser.close();
 };
 
 const generateReceiptPDF = async (url, filePath) => {
