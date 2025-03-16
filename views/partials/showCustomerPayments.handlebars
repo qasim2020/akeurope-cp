@@ -7,7 +7,7 @@
     </div>
     {{#if data.orders}}
     <div class="p-md-3">
-      <table class="table table-striped mb-0">
+      <table class="table mb-0">
         <thead>
           <tr>
             <th>Order #</th>
@@ -18,26 +18,36 @@
         </thead>
         <tbody>
           {{#each data.orders}}
-          <tr>
+          <tr class="card-hover" onclick="window.location.href='/order/{{this._id}}'" style="cursor: pointer;">
             <td>
-              <a href="/order/{{this._id}}">{{this.orderNo}}</a>
-              {{#if this.monthlySubscription}} <i class="ti ti-refresh ms-1"></i> {{/if}}
+              <span class="text-blue">{{this.orderNo}}</span>
+              {{#if this.monthlySubscription}} <i class="ti ti-refresh ms-1 fs-5"></i> {{/if}}
             </td>
             <td>{{formatDate this.createdAt}}</td>
             <td>
               {{#if this.monthlySubscription}}
-                {{#each this.stripeInfo}}
-                {{#if (eq this.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
-                {{#if (eq this.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
-                {{#if (eq this.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
-                <span class="me-2">{{divide this.price 100}} {{capitalizeAll this.currency}} in {{getMonth this.currentPeriodStart}}</span> <br>
-                {{/each}}
-                <i class="ti ti-equal"></i> {{this.totalCost}} {{this.currency}}
+              {{#each this.stripeInfo}}
+              {{#if (eq this.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+              {{#if (eq this.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+              {{#if (eq this.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
+              <span class="me-2">{{divide this.price 100}} {{capitalizeAll this.currency}} in {{getMonth
+                this.currentPeriodStart}}</span> <br>
+              {{/each}}
+              <i class="ti ti-equal"></i> {{this.totalCost}} {{this.currency}}
               {{else}}
-                {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
-                {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
-                {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
-                {{this.totalCost}} {{this.currency}}
+              {{#each this.projects}}
+
+              {{#if (eq this.stripeInfo.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
+              {{#if (eq this.stripeInfo.paymentMethodType 'apple_pay')}} <i class="ti ti-brand-apple"></i> {{/if}}
+              {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
+              {{#unless this.stripeInfo}}<i class="ti ti-building-bank"></i> {{/unless}}
+              <span class="me-2">
+                {{this.totalCostSingleMonth}} {{../this.currency}}
+                <i class="ti ti-x fs-5"></i>
+                {{this.months}} Month(s)
+              </span> <br>
+              {{/each}}
+              <i class="ti ti-equal"></i> {{this.totalCost}} {{this.currency}}
               {{/if}}
             </td>
             <td>
@@ -45,6 +55,7 @@
               <span class="ms-1">{{capitalizeFirstLetter this.status}}</span>
             </td>
           </tr>
+          </a>
           {{/each}}
         </tbody>
       </table>
