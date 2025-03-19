@@ -9,6 +9,8 @@ router.get('/widgets', authenticate, authorize('viewWidgets'), widgetController.
 
 router.get('/script/:slug', widgetController.script);
 router.get('/script-red-btn/:slug', widgetController.script);
+router.get('/script-iframe/:slug', widgetController.scriptIframe);
+
 router.get('/overlay/:slug', widgetController.overlay);
 router.get('/get-country-list/:code', widgetController.getCountryList);
 router.get('/widget-new-order/:slug', widgetController.createNewOrder);

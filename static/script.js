@@ -61,7 +61,6 @@
             </div>
         `);
 
-        $('body').find('[akeurope-script="true"]').remove();
         $('body').append(css);
         $('body').append($button);
 

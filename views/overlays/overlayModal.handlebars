@@ -479,11 +479,6 @@
                 class="col-12 col-md-6 col-lg-4 card shadow-lg border-0 ms-md-2 me-md-3 p-0 rounded-md-4 overflow-hidden">
                 <div class="img-responsive img-responsive-21x9 card-img-top"
                     style="height: 300px; position: relative; background-image: url({{{data.project.cover}}})">
-                    <div class="logo-container">
-                        <img class="logo"
-                            src="https://res.cloudinary.com/miscellaneous/image/upload/v1737903106/akeurope/Group_427320398.png"
-                            alt="Logo">
-                    </div>
                 </div>
                 <div class="card-body p-4 d-flex flex-column align-items-start">
                     <h2 class="fw-medium mb-2">{{data.project.heading}}</h2>
@@ -1208,15 +1203,15 @@
             }
 
             try {
-                const amount = monthly
-                    ? Math.max(1, Math.round(order.total * 100))
-                    : Math.max(1, Math.round(order.total * 100));
+                const amount = Math.max(1, Math.round(order.total * 100));
 
                 const paymentRequest = stripe.paymentRequest({
                     country: order.countryCode,
                     currency: order.currency.toLowerCase(),
                     total: {
-                        label: monthly ? `Monthly Subscription - ${order.projectSlug} - ${order.orderNo}` : `One Time Payment - ${order.projectSlug} - ${order.orderNo}`,
+                        label: monthly ? 
+                        `Monthly Subscription - ${order.projectSlug} - ${order.orderNo}`:
+                        `One Time Payment - ${order.projectSlug} - ${order.orderNo}`,
                         amount
                     },
                     requestPayerName: true,
@@ -1224,6 +1219,8 @@
                 });
 
                 paymentRequest.canMakePayment().then((result) => {
+
+                    console.log(result);
 
                     if (!result) {
                         $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
@@ -2005,7 +2002,6 @@
         });
 
         function triggerEvent(eventName, data = {}) {
-            console.log({eventName, data});
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push({
                 event: eventName,

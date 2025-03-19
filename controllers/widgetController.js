@@ -21,6 +21,7 @@ const {
 
 const { default: mongoose } = require('mongoose');
 const { isValidEmail } = require('../modules/checkValidForm');
+const { slugToCamelCase } = require('../modules/helpers');
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { notifyTelegram } = require('../modules/telegramBot');
@@ -90,6 +91,29 @@ exports.overlay = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(400).send(error);
+    }
+};
+
+exports.scriptIframe = async (req, res) => {
+    try {
+        const overlayUrl = `${process.env.CUSTOMER_PORTAL_URL}/overlay/${req.params.slug}`;
+        const scriptPath = path.join(__dirname, '..', 'static', 'scriptIframe.js');
+
+        const file = await fs.readFile(scriptPath, 'utf8');
+        const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
+
+        if (!project) throw new Error('Project not found!');
+
+        const scriptContent = file
+            .replaceAll('__OVERLAY_URL__', overlayUrl)
+            .replaceAll('__PROJECT_SLUG__', project.slug)
+            .replaceAll('__PROJECT_CAMEL_CASE__', slugToCamelCase(project.slug));
+        
+        res.setHeader('Content-Type', 'application/javascript');
+        res.send(scriptContent);
+    } catch (error) {
+        console.error('Unexpected error:', error);
+        res.status(500).send('Internal Server Error');
     }
 };
 
@@ -654,15 +678,7 @@ exports.createSubscription = async (req, res) => {
                 },
             });
         } else {
-            const customerDetails = await stripe.customers.retrieve(customer.id);
-
-            if (!customerDetails.invoice_settings.default_payment_method) {
-                await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-
-                await stripe.customers.update(customer.id, {
-                    invoice_settings: { default_payment_method: paymentMethodId },
-                });
-            }
+            await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
         }
 
         const amount = Math.max(100, Math.round(order.totalCostSingleMonth * 100));
@@ -680,8 +696,16 @@ exports.createSubscription = async (req, res) => {
             customer: customer.id,
             items: [{ price: price.id }],
             payment_settings: { payment_method_types: ['card'] },
+            default_payment_method: paymentMethodId,
             expand: ['latest_invoice.payment_intent'],
         });
+
+        const paymentIntent = subscription.latest_invoice.payment_intent;
+
+        if (paymentIntent.status !== 'succeeded') {
+            console.error('Payment failed:', paymentIntent.last_payment_error?.message);
+            throw new Error(`Payment failed: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`);
+        }
 
         const paymentMethod = await stripe.paymentMethods.retrieve(subscription.latest_invoice.payment_intent.payment_method);
 

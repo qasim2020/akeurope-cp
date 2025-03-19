@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         initOverlay();
     }
-    console.log('webflow script loaded');
 });
 
 async function initOverlay() {
+    
     let countryCode;
     try {
         const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
@@ -98,7 +98,10 @@ async function initOverlay() {
 function attachIframe(elem, code) {
     const partnerPortal = $(elem).attr('partnerSlug');
 
-    if (partnerPortal) return console.log('partner portal script should attach the iframe directly');
+    if (partnerPortal){
+        console.log(partnerPortal);
+        return;
+    } 
 
     const slug = encodeURIComponent($(elem).attr('projectSlug'));
     const name = encodeURIComponent($(elem).attr('projectName'));

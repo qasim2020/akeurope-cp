@@ -189,15 +189,7 @@ exports.createSubscription = async (req, res) => {
                 },
             });
         } else {
-            const customerDetails = await stripe.customers.retrieve(customer.id);
-
-            if (!customerDetails.invoice_settings.default_payment_method) {
-                await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-
-                await stripe.customers.update(customer.id, {
-                    invoice_settings: { default_payment_method: paymentMethodId },
-                });
-            }
+            await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
         }
 
         const amount = Math.max(100, Math.round(order.total * 100));
@@ -215,8 +207,16 @@ exports.createSubscription = async (req, res) => {
             customer: customer.id,
             items: [{ price: price.id }],
             payment_settings: { payment_method_types: ['card'] },
+            default_payment_method: paymentMethodId,
             expand: ['latest_invoice.payment_intent'],
         });
+
+        const paymentIntent = subscription.latest_invoice.payment_intent;
+
+        if (paymentIntent.status !== 'succeeded') {
+            console.error('Payment failed:', paymentIntent.last_payment_error?.message);
+            throw new Error(`Payment failed: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`);
+        }
 
         const paymentMethod = await stripe.paymentMethods.retrieve(subscription.latest_invoice.payment_intent.payment_method);
 
