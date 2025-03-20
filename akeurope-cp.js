@@ -18,6 +18,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const filesRoutes = require('./routes/filesRoutes');
 const widgetRoutes = require('./routes/widgetRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
+const vippsRoutes = require('./routes/vippsRoutes');
 
 require('dotenv').config();
 mongoose();
@@ -100,6 +101,7 @@ app.use(orderRoutes);
 app.use(customerRoutes);
 app.use(filesRoutes);
 app.use(widgetRoutes);
+app.use(vippsRoutes);
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
     res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));

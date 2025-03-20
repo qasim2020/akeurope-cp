@@ -17,7 +17,7 @@ const { saveLog, customerLogs, visibleLogs } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
-const { getLatestSubscriptionByOrderId, getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
+const { getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
 const { getEntriesByCustomerId } = require('../modules/ordersFetchEntries');
 const Donor = require('../models/Donor');
 
@@ -84,6 +84,10 @@ exports.updateCustomer = async (req, res) => {
             return false;
         }
 
+        await Donor.updateOne({email: req.session.user.email}, {$set: {
+            tel,
+        }})
+
         const updatedFields = {
             name,
             organization,
@@ -94,8 +98,6 @@ exports.updateCustomer = async (req, res) => {
         const customer = await Customer.findById(req.session.user._id).lean();
 
         const changes = getChanges(customer, updatedFields);
-
-        console.log({changes});
 
         if (changes.length > 0) {
             await saveLog(
