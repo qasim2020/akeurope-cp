@@ -18,6 +18,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const filesRoutes = require('./routes/filesRoutes');
 const widgetRoutes = require('./routes/widgetRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
+const { sendThankYouMessage } = require('./modules/emails');
 
 require('dotenv').config();
 mongoose();
@@ -120,20 +121,15 @@ app.get('/preview-email', async (req, res) => {
     res.render(`emails/${templateName}`, data);
 });
 
-app.get('/testing', async (req, res) => {
-    try {
-        const { successfulOneTimePaymentOverlay } = require('./modules/orderPostActions');
-        const Subscription = require('./models/Subscription');
-        const Customer = require('./models/Customer');
-        const order = await Subscription.findById('67d184cd1ffa59566f463801').lean();
-        const checkCustomer = await Customer.findById(order.customerId).lean();
-        await successfulOneTimePaymentOverlay(order, checkCustomer);
-        res.status(200).send('Done');
-    } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message);
-    }
-});
+// app.get('/testing/:tel', async (req, res) => {
+//     try {
+//         await sendThankYouMessage(req.params.tel, 'https://akeurope.org');
+//         res.status(200).send('Done');
+//     } catch (error) {
+//         console.log(error);
+//         res.status(400).send(error.message);
+//     }
+// });
 
 app.get('/', (req, res) => {
     if (req.session.user) {

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Subscription = require('../models/Subscription');
@@ -6,7 +7,6 @@ const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { downloadStripeInvoiceAndReceipt, downloadStripeReceipt, generateInvoice, saveFileRecord } = require('../modules/invoice');
 const { sendInvoiceAndReceiptToCustomer, sendReceiptToCustomer } = require('../modules/emails');
-
 const { sendErrorToTelegram } = require('../modules/telegramBot');
 
 const connectDonorInCustomer = async (donor, checkCustomer) => {

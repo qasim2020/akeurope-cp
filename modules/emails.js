@@ -8,6 +8,9 @@ const fs = require('fs').promises;
 const handlebars = require('handlebars');
 const moment = require('moment');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
+const twilio = require('twilio');
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 const { getPaymentByOrderId, getLatestSubscriptionByOrderId } = require('../modules/orders');
 const { saveLog } = require('../modules/logAction');
@@ -79,12 +82,47 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
 
     try {
         await transporter.sendMail(mailOptions);
+        await sendThankYouMessage(customer.tel, portalUrl);
         console.log('Invoice & receipt sent!');
         return true;
     } catch (err) {
         throw new Error(`Failed to send email: ${err.message}`);
     }
 };
+
+function formatPhoneNumber(phone) {
+    phone = phone.replace(/[^\d+]/g, '');
+    if (!phone.startsWith('+')) {
+        phone = `+${phone}`;
+    }
+    return phone;
+}
+
+const sendThankYouMessage = async (phone, url) => {
+    try {
+        phone = formatPhoneNumber(phone);
+        
+        if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
+            throw new Error('Invalid phone number format');
+        }
+        
+        const message = `Jazak Allah for your support to Alkhidmat Europe! View your payments here: ${url}`;
+
+        const response = await client.messages.create({
+            body: message,
+            from: process.env.TWILIO_MESSAGING_SERVICE_SID,
+            to: phone
+        });
+        
+        if (response.errorCode) {
+            console.error(`Failed to send message to ${phone}: ${response.errorMessage}`);
+        } else {
+            console.log('Thank you message sent to', phone);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+    }
+}
 
 const sendInvoiceToCustomer = async (order, customer) => {
     throw new Error('not required ? ');
@@ -192,6 +230,7 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
 
     try {
         await transporter.sendMail(mailOptions);
+        await sendThankYouMessage(customer.tel, portalUrl);
         console.log('Invoice & receipt sent!');
         return true;
     } catch (err) {
@@ -252,6 +291,7 @@ const sendReceiptToCustomer = async(order, customer) => {
 
     try {
         await transporter.sendMail(mailOptions);
+        await sendThankYouMessage(customer.tel, portalUrl);
         console.log('Invoice & receipt sent!');
         return true;
     } catch (err) {
@@ -308,5 +348,6 @@ module.exports = {
     sendInvoiceToCustomer,
     sendReceiptToCustomer,
     sendCustomerInvite,
-    sendStripeRenewelInvoiceToCustomer
+    sendStripeRenewelInvoiceToCustomer,
+    sendThankYouMessage,
 };

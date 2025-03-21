@@ -1046,6 +1046,20 @@
                     }
                 }
 
+                if (setupIntent.status === "requires_action" && setupIntent.next_action) {
+                    ({ paymentIntent, error } = await stripe.confirmCardPayment(clientSecret));
+
+                    if (error) {
+                        console.error("3D Secure Authentication Failed:", error);
+                        alert("Authentication failed. Please try again.");
+                        return;
+                    }
+
+                    setupIntent = paymentIntent;
+                }
+
+                console.log(setupIntent);
+
                 const orderId = $('#project-entries').attr('order-id');
 
                 const subscriptionData = await $.ajax({
