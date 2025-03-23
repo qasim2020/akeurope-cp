@@ -1216,7 +1216,9 @@
                     country: order.countryCode,
                     currency: order.currency.toLowerCase(),
                     total: {
-                        label: monthly ? `Monthly Subscription - ${order.projectSlug} - ${order.orderNo}` : `One Time Payment - ${order.projectSlug} - ${order.orderNo}`,
+                        label: monthly ?
+                         `Monthly Subscription - ${order.projectSlug} - ${order.orderNo}` : 
+                         `One Time Payment - ${order.projectSlug} - ${order.orderNo}`,
                         amount
                     },
                     requestPayerName: true,
