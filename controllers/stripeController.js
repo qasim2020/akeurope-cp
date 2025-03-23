@@ -280,3 +280,14 @@ exports.renewOrder = async (req, res) => {
 
     res.json({ received: true });
 };
+
+exports.stripeReceipt = async (req,res) => {
+    try {
+        const invoice = await stripe.invoices.retrieve(req.params.invoiceId);
+        if (!invoice) throw new Error('No invoice found in stripe');
+        res.redirect(invoice.hosted_invoice_url);
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message || 'Could not re direct to stripe page');
+    }
+}

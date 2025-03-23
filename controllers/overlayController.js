@@ -118,7 +118,7 @@ exports.createNewOrder = async (req, res) => {
             customerId: customer._id,
             currency: country.currency.code,
             total,
-            totalAllTime: total, 
+            totalAllTime: total,
             monthlySubscription: monthly,
             countryCode: country.code,
             projectSlug: req.params.slug,
@@ -350,10 +350,24 @@ exports.createPaymentIntent = async (req, res) => {
             amount: amount,
             currency: order.currency,
             customer: customer.id,
-            automatic_payment_methods: { enabled: true }
+            automatic_payment_methods: { enabled: true },
         });
 
-        res.json({ clientSecret: paymentIntent.client_secret });
+        const invoice = await stripe.invoices.create({
+            customer: paymentIntent.customer,
+            collection_method: 'charge_automatically',
+            auto_advance: true,
+        });
+
+        await stripe.invoiceItems.create({
+            customer: paymentIntent.customer,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            description: `${slugToString(order.projectSlug)} # ${order.orderNo}`,
+            invoice: invoice.id,
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret, invoiceId: invoice.id });
     } catch (error) {
         console.log(error);
         res.status(500).send(error.message || 'Error creating payment intent');
@@ -362,14 +376,14 @@ exports.createPaymentIntent = async (req, res) => {
 
 exports.createOneTime = async (req, res) => {
     try {
-        const { paymentMethodId, paymentIntentId, email: emailProvided } = req.body;
+        const { paymentMethodId, paymentIntentId, invoiceId, email: emailProvided } = req.body;
         const email = emailProvided.toLowerCase();
 
         const donor = await Donor.findOne({ email }).lean();
         if (!donor) throw new Error('Donor not found.');
 
         const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
-        
+
         if (!order) throw new Error('Order not found!');
 
         if (!email) throw new Error('Email is required');
@@ -383,6 +397,10 @@ exports.createOneTime = async (req, res) => {
         if (paymentIntent.status !== 'succeeded') {
             throw new Error('Payment intent not completed successfully');
         }
+
+        await stripe.invoices.pay(invoiceId, {
+            paid_out_of_band: true,
+        });
 
         const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
 
@@ -399,6 +417,7 @@ exports.createOneTime = async (req, res) => {
                         paymentMethodId: paymentMethodId,
                         paymentMethodType: paymentMethod.type,
                         created: new Date(paymentIntent.created * 1000),
+                        invoiceId, 
                     },
                 },
             },

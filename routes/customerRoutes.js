@@ -14,5 +14,6 @@ router.get("/getCustomerLogs/:customerId", authenticate, authorize("viewSelf"), 
 
 router.get('/manage-subscription', authenticate, authorize("viewSelf"), stripeController.customerPortal);
 router.get('/manage-subscription-from-order/:orderId', authenticate, authorize("viewSelf"), stripeController.customerPortal);
+router.get('/show-stripe-receipt/:invoiceId', authenticate, authorize('viewSelf'), stripeController.stripeReceipt);
 
 module.exports = router;

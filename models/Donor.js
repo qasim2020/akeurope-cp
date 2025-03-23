@@ -40,6 +40,7 @@ const DonorSchema = new mongoose.Schema(
                 amount: { type: Number },
                 currency: { type: String },
                 paymentMethodId: { type: String },
+                invoiceId: { type: String },
                 created: { type: Date, default: Date.now },
             },
         ],

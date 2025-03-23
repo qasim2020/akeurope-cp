@@ -19,6 +19,7 @@ const filesRoutes = require('./routes/filesRoutes');
 const widgetRoutes = require('./routes/widgetRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const { sendThankYouMessage } = require('./modules/emails');
+const { downloadStripeInvoiceAndReceipt } = require('./modules/invoice');
 
 require('dotenv').config();
 mongoose();
@@ -115,10 +116,28 @@ app.get('/preview-email', async (req, res) => {
         newUser: false,
         invoiceUrl: '123',
         receiptUrl: '123',
-        portalUrl: '123'
+        portalUrl: '123',
     };
 
     res.render(`emails/${templateName}`, data);
+});
+
+app.get('/testing', async (req, res) => {
+    try {
+        const Order = require('./models/Subscription');
+        const order = await Order.findOne({orderNo: 4888}).lean();
+        const uploadedBy = {
+            actorType: 'customer',
+            actorId: '67c97fc0a71f7cc36dee2f37',
+            actorUrl: '/customer/67c97fc0a71f7cc36dee2f37',
+        };
+
+        await downloadStripeInvoiceAndReceipt(order, uploadedBy);
+        res.status(200).send('Done');
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message);
+    }
 });
 
 // app.get('/testing/:tel', async (req, res) => {

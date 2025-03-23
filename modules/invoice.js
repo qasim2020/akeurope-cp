@@ -45,6 +45,25 @@ const downloadStripeReceipt = async (order, uploadedBy) => {
     }
 };
 
+const downloadStripeInvoice = async (order, uploadedBy) => {
+    const stripeInfo = await getPaymentByOrderId(order._id);
+    if (!stripeInfo.invoiceId) throw new Error('Invoice not attached to the payment');
+
+    const invoiceDir = path.join(__dirname, '../../invoices');
+    if (!fs.existsSync(invoiceDir)) fs.mkdirSync(invoiceDir, { recursive: true });
+
+    const month = moment(stripeInfo.currentPeriodStart || stripeInfo.created).format('MMMM');
+    const year = moment(stripeInfo.currentPeriodStart || stripeInfo.created).format('YYYY');
+
+    const invoicePath = path.join(invoiceDir, `order_no_${order.orderNo}_invoice_${month}_${year}_${Date.now()}.pdf`);
+
+    const invoice = await stripe.invoices.retrieve(stripeInfo.invoiceId);
+
+    await downloadPDF(invoice.invoice_pdf, invoicePath);
+    const fileName = `Invoice - ${month} ${year}`;
+    await saveFileRecord(order, invoicePath, 'invoice', uploadedBy, fileName);
+};
+
 const downloadStripeInvoiceAndReceipt = async (order, uploadedBy) => {
     const stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
 
@@ -67,7 +86,9 @@ const downloadStripeInvoiceAndReceipt = async (order, uploadedBy) => {
             const charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
             if (charge && charge.invoice) {
                 invoice = await stripe.invoices.retrieve(charge.invoice);
-            } 
+            } else {
+                invoice = await stripe.invoices.retrieve(stripeInfo.invoiceId);
+            }
         }
     } else if (stripeInfo.subscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(stripeInfo.subscriptionId);
@@ -75,51 +96,53 @@ const downloadStripeInvoiceAndReceipt = async (order, uploadedBy) => {
             invoice = await stripe.invoices.retrieve(subscription.latest_invoice);
         }
     }
-    
+
     if (invoice) {
         const invoiceList = await stripe.invoices.list({
             customer: invoice.customer,
-            limit: 1, 
+            limit: 1,
         });
-    
+
         if (invoiceList.data.length > 0) {
-            invoice = invoiceList.data[0]; 
+            invoice = invoiceList.data[0];
         }
-    
+
         if (invoice.invoice_pdf) {
             await downloadPDF(invoice.invoice_pdf, invoicePath);
-            const fileName = `Invoice for ${month} ${year}`;
+            const fileName = `Invoice - ${month} ${year}`;
             await saveFileRecord(order, invoicePath, 'invoice', uploadedBy, fileName);
         }
-    
+
         if (invoice.charge) {
             const charge = await stripe.charges.retrieve(invoice.charge);
             if (charge.receipt_url) {
                 console.log('Downloading receipt from:', charge.receipt_url);
                 await generateColoredReceiptPDF(charge.receipt_url, receiptPath);
-                const fileName = `Receipt for ${month} ${year}`;
+                const fileName = `Receipt - ${month} ${year}`;
                 await saveFileRecord(order, receiptPath, 'receipt', uploadedBy, fileName);
             }
         }
     }
-    
 };
 
 const generateColoredReceiptPDF = async (url, filePath) => {
     const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    
-    await page.goto(url, { waitUntil: 'networkidle2' });
 
-    await page.emulateMediaType('screen'); // Enable color mode
-    
+    const page = await browser.newPage();
+
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+    await page.emulateMediaType('screen');
+
     await page.pdf({
         path: filePath,
         format: 'A4',
-        printBackground: true // Ensures background colors and images are included
+        printBackground: true,
     });
 
     await browser.close();
+
+    console.log(`Downloaded: ${filePath}`);
 };
 
 const generateReceiptPDF = async (url, filePath) => {
@@ -148,15 +171,15 @@ const downloadPDF = async (url, filePath) => {
 
 const getOrderInvoiceFromDir = async (orderId) => {
     const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
-    const fileName = `order_no_${order.orderNo}.pdf`;  
+    const fileName = `order_no_${order.orderNo}.pdf`;
     const dirName = path.join(__dirname, '../../invoices');
     const filePath = path.join(dirName, fileName);
 
     if (fs.existsSync(filePath)) {
-        return filePath;  
+        return filePath;
     } else {
         const newPath = await generateInvoice(order);
-        return newPath;        
+        return newPath;
     }
 };
 
@@ -174,7 +197,13 @@ const saveFileRecord = async (order, filePath, category, uploadedBy, fileName) =
         ],
         category,
         access: ['customers'],
-        name: fileName ? fileName : `${category === 'invoice' ? 'Invoice' : 'Receipt'} ${order.monthlySubscription ? ` for ${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}` : ''}`,
+        name: fileName
+            ? fileName
+            : `${category === 'invoice' ? 'Invoice' : 'Receipt'} ${
+                  order.monthlySubscription
+                      ? ` for ${new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}`
+                      : ''
+              }`,
         size: fileSizeInKB,
         path: relativePath,
         mimeType: 'application/pdf',
@@ -182,6 +211,175 @@ const saveFileRecord = async (order, filePath, category, uploadedBy, fileName) =
     });
 
     await fileRecord.save();
+};
+
+const generateInvoiceOverlay = async (order) => {
+    let invoicePath = '';
+
+    if (order.monthlySubscription) {
+        throw new Error('Cannot generate invoice for monthly subscription');
+    }
+
+    const invoiceDir = path.join(__dirname, '../../invoices');
+    invoicePath = path.join(invoiceDir, `order_no_${order.orderNo}.pdf`);
+
+    order.customer = order.customer ? order.customer : await Customer.findById(order.customerId).lean();
+
+    await fs.ensureDir(invoiceDir);
+
+    return new Promise((resolve, reject) => {
+        try {
+            const pageHeight = 720;
+            const footerMargin = 30;
+
+            const doc = new PDFDocument();
+
+            const writeStream = fs.createWriteStream(invoicePath);
+
+            doc.pipe(writeStream);
+
+            // Add a company logo
+            doc.image(path.join(__dirname, '../static/images/logo.png'), 50, 50, { width: 20 });
+
+            // Add company name and details
+            doc.fontSize(16).text('Alkhidmat Europe', 120, 50);
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Address: ', 120, 70, { continued: true })
+                .font('Helvetica')
+                .text('Grønland 6, 0188, Oslo');
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Email: ', 120, 85, { continued: true })
+                .font('Helvetica')
+                .text('regnskap@akeurope.org | ', { continued: true })
+                .font('Helvetica-Bold')
+                .text('Phone: ', { continued: true })
+                .font('Helvetica')
+                .text('+47 40150015');
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Organization No: ', 120, 100, { continued: true })
+                .font('Helvetica')
+                .text('915487440');
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Case Manager: ', 120, 115, { continued: true })
+                .font('Helvetica')
+                .text('Muhammad Sadiq');
+
+            // Draw a separator line
+            doc.moveTo(50, 140).lineTo(560, 140).stroke();
+
+            // Add invoice details
+            doc.fontSize(16).text('Invoice', 50, 150);
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Account Number: ', 50, 170, { continued: true })
+                .font('Helvetica')
+                .text('22702596711');
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Invoice Number: ', 50, 185, { continued: true })
+                .font('Helvetica')
+                .text(`${order.orderNo}`);
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Invoice Date: ', 50, 200, { continued: true })
+                .font('Helvetica')
+                .text(`${formatTime(order.createdAt)}`);
+
+            doc.fontSize(16).text(`Billed To:`, 350, 150);
+            doc.fontSize(12);
+            doc.text(`${order.customer.name}`, 350, 170);
+            doc.text(`${order.customer.email}`, 350, 185);
+
+            doc.fontSize(12)
+                .font('Helvetica-Bold')
+                .text('Organization: ', 350, 200, { continued: true })
+                .font('Helvetica')
+                .text(`${order.customer.organization || 'Not Listed'}`);
+
+            doc.fontSize(12).font('Helvetica-Bold').text('Address: ', 350, 215);
+
+            doc.fontSize(12)
+                .font('Helvetica')
+                .text(`${order.customer.address || ''}`, 350, 230);
+
+            const startY = 320;
+            const endY = drawTableOverlay(doc, order.projectSlug, startY, order);
+
+            doc.moveTo(50, endY + 40)
+                .lineTo(560, endY + 40)
+                .stroke();
+
+            doc.fontSize(12)
+                .font('Helvetica')
+                .text('Total: ', 350, endY + 60, { continued: true })
+                .font('Helvetica-Bold')
+                .text(`${order.total} ${order.currency}`);
+
+            let footerY = pageHeight - footerMargin - 30;
+
+            doc.font('Helvetica');
+            doc.fontSize(12).text('Thank you for your business!', 50, footerY, {
+                align: 'center',
+            });
+
+            footerY += 20;
+
+            doc.text('If you have any questions, feel free to contact us.', 50, footerY, {
+                align: 'center',
+            });
+
+            footerY += 20;
+
+            doc.fontSize(12).text('regnskap@akeurope.org | +47 40150015', 50, footerY, { align: 'center' });
+
+            doc.end();
+
+            writeStream.on('finish', () => {
+                resolve(invoicePath);
+            });
+
+            writeStream.on('error', (err) => {
+                console.error(`Error writing file: ${err.message}`);
+                reject(err);
+            });
+        } catch (error) {
+            console.error(`Error generating PDF: ${error.message}`);
+            reject(error);
+        }
+    });
+};
+
+const drawTableOverlay = (doc, projectSlug, startY, order) => {
+    let y = startY;
+    doc.font('Helvetica-Bold');
+    doc.fontSize(12).text('Project', 50, y);
+    doc.text(`Total Cost (${order.currency})`, 350, y);
+
+    doc.moveTo(50, y + 20)
+        .lineTo(560, y + 20)
+        .stroke();
+
+    y += 14;
+
+    doc.font('Helvetica');
+
+    y += 20;
+    const nameWidth = 150;
+    doc.fontSize(12).text(project.detail.name, 50, y, { width: nameWidth, align: 'left' });
+    doc.text(project.entries.length, 250, y);
+    doc.text(project.months, 180, y);
+    doc.text(project.totalCostAllMonths, 350, y);
+
+    return y;
 };
 
 const generateInvoice = async (order) => {
@@ -414,6 +612,7 @@ module.exports = {
     deletePath,
     downloadStripeInvoiceAndReceipt,
     downloadStripeReceipt,
+    downloadStripeInvoice,
     saveExistingInvoiceInFileCollection,
     getOrderInvoiceFromDir,
 };

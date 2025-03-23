@@ -906,12 +906,12 @@
 
             const { cardNumber, elements } = await mountStripeElems(stripe, data.clientSecret);
 
-            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false, elements);
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false, elements, data.invoiceId);
 
             return true;
         }
 
-        const chargeOneTime = async function (stripe, clientSecret, cardNumber, elements) {
+        const chargeOneTime = async function (stripe, clientSecret, cardNumber, elements, invoiceId) {
             const elem = $('#stripe-submit');
             const currentBtnHtml = $('#stripe-submit').html();
             $(elem).html(`
@@ -965,6 +965,7 @@
                     data: JSON.stringify({
                         paymentIntentId: paymentIntent.id,
                         paymentMethodId: paymentIntent.payment_method,
+                        invoiceId: invoiceId,
                         email: $('[name=email]').val(),
                     }),
                 });
@@ -1166,7 +1167,7 @@
             return { cardNumber, cardExpiry, cardCvc, elements };
         }
 
-        const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly, elements) {
+        const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly, elements, invoiceId) {
 
             const orderId = $('#project-card').attr('order-id');
 
@@ -1184,7 +1185,7 @@
                 $('#stripe-total').html(`${order.total} ${order.currency}`);
                 $('#stripe-submit').find('span').html('Pay Now');
                 $('#stripe-submit').off('click').on('click', function (e) {
-                    chargeOneTime(stripe, clientSecret, cardNumber);
+                    chargeOneTime(stripe, clientSecret, cardNumber, null, invoiceId);
                 })
             }
 
@@ -1209,9 +1210,9 @@
                     country: order.countryCode,
                     currency: order.currency.toLowerCase(),
                     total: {
-                        label: monthly ? 
-                        `Monthly Subscription - ${order.projectSlug} - ${order.orderNo}`:
-                        `One Time Payment - ${order.projectSlug} - ${order.orderNo}`,
+                        label: monthly ?
+                            `Monthly Subscription - ${order.projectSlug} - ${order.orderNo}` :
+                            `One Time Payment - ${order.projectSlug} - ${order.orderNo}`,
                         amount
                     },
                     requestPayerName: true,
@@ -1251,7 +1252,7 @@
                         if (monthly) {
                             startMonthlySubscription(stripe, clientSecret, null, elements);
                         } else {
-                            chargeOneTime(stripe, clientSecret, null, elements);
+                            chargeOneTime(stripe, clientSecret, null, elements, invoiceId);
                         }
                     });
 
@@ -1575,11 +1576,11 @@
             if (freq === 'once') {
                 $('#donate-btn').find('span').html('Donate Once');
                 $('.donation-amount').first().addClass('active');
-                $('#project-card').attr({monthly: false});
+                $('#project-card').attr({ monthly: false });
             } else {
                 $('#donate-btn').find('span').html('Donate Monthly');
                 $('.donation-amount').last().addClass('active');
-                $('#project-card').attr({monthly: true});
+                $('#project-card').attr({ monthly: true });
             }
         });
 

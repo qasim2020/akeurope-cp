@@ -21,7 +21,7 @@ const {
 
 const { default: mongoose } = require('mongoose');
 const { isValidEmail } = require('../modules/checkValidForm');
-const { slugToCamelCase } = require('../modules/helpers');
+const { slugToCamelCase, slugToString } = require('../modules/helpers');
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { notifyTelegram } = require('../modules/telegramBot');
@@ -543,7 +543,28 @@ exports.createPaymentIntent = async (req, res) => {
             automatic_payment_methods: { enabled: true },
         });
 
-        res.json({ clientSecret: paymentIntent.client_secret });
+        const invoice = await stripe.invoices.create({
+            customer: paymentIntent.customer,
+            collection_method: 'charge_automatically',
+            auto_advance: true,
+        });
+
+        for (const project of order.projects) {
+            
+        }
+
+        const projects = order.projects.map(proj => slugToString(proj.slug)).join(', ');
+        const description = `Order # ${order.orderNo} in ${projects}`;
+
+        await stripe.invoiceItems.create({
+            customer: paymentIntent.customer,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            description,
+            invoice: invoice.id,
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret, invoiceId: invoice.id });
     } catch (error) {
         console.log(error);
         res.status(500).send('Server error. Error creating payment intent.');
@@ -552,7 +573,7 @@ exports.createPaymentIntent = async (req, res) => {
 
 exports.createOneTime = async (req, res) => {
     try {
-        const { paymentMethodId, paymentIntentId, email } = req.body;
+        const { paymentMethodId, paymentIntentId, invoiceId, email } = req.body;
 
         const donor = await Donor.findOne({ email }).lean();
         if (!donor) throw new Error('Donor not found.');
@@ -572,6 +593,10 @@ exports.createOneTime = async (req, res) => {
             throw new Error('Payment intent not completed successfully');
         }
 
+        await stripe.invoices.pay(invoiceId, {
+            paid_out_of_band: true,
+        });
+
         const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
 
         const updatedDonor = await Donor.findOneAndUpdate(
@@ -586,6 +611,7 @@ exports.createOneTime = async (req, res) => {
                         currency: paymentIntent.currency,
                         paymentMethodId: paymentMethodId,
                         paymentMethodType: paymentMethod.type,
+                        invoiceId, 
                         created: new Date(paymentIntent.created * 1000),
                     },
                 },

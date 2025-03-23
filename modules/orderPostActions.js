@@ -5,7 +5,7 @@ const Subscription = require('../models/Subscription');
 
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
-const { downloadStripeInvoiceAndReceipt, downloadStripeReceipt, generateInvoice, saveFileRecord } = require('../modules/invoice');
+const { downloadStripeInvoiceAndReceipt, downloadStripeReceipt, downloadStripeInvoice, generateInvoice, saveFileRecord } = require('../modules/invoice');
 const { sendInvoiceAndReceiptToCustomer, sendReceiptToCustomer } = require('../modules/emails');
 const { sendErrorToTelegram } = require('../modules/telegramBot');
 
@@ -87,7 +87,6 @@ const successfulOneTimePayment = async (orderId, customer) => {
         order.customer = customer;
         const invoicePath = await generateInvoice(order);
         await saveFileRecord(order, invoicePath, 'invoice', uploadedBy);
-        await downloadStripeReceipt(order, uploadedBy);
         await sendInvoiceAndReceiptToCustomer(order, customer);
         await saveLog(
             logTemplates({
@@ -148,8 +147,8 @@ const successfulOneTimePaymentOverlay = async (orderId, customer) => {
             actorUrl: `/customer/${customer._id}`,
         };
         order.customer = customer;
-        await downloadStripeReceipt(order, uploadedBy);
-        await sendReceiptToCustomer(order, customer);
+        await downloadStripeInvoice(order, uploadedBy);
+        await sendInvoiceAndReceiptToCustomer(order, customer);
         await saveLog(
             logTemplates({
                 type: 'successfulOneTimePaymentOverlay',

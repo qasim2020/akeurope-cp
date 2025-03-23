@@ -889,12 +889,12 @@
 
             const { cardNumber, elements } = await mountStripeElems(stripe, data.clientSecret);
 
-            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false, elements);
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false, elements, data.invoiceId);
 
             return true;
         }
 
-        const chargeOneTime = async function (stripe, clientSecret, cardNumber, elements) {
+        const chargeOneTime = async function (stripe, clientSecret, cardNumber, elements, invoiceId) {
             const elem = $('#stripe-submit');
             const currentBtnHtml = $('#stripe-submit').html();
             $(elem).html(`
@@ -940,7 +940,7 @@
                 }
 
                 const orderId = $('#project-entries').attr('order-id');
-
+                console.log({invoiceId});
                 const paymentData = await $.ajax({
                     url: `/create-one-time/${orderId}/{{data.project.slug}}`,
                     method: 'POST',
@@ -948,6 +948,7 @@
                     data: JSON.stringify({
                         paymentIntentId: paymentIntent.id,
                         paymentMethodId: paymentIntent.payment_method,
+                        invoiceId, 
                         email: $('[name=email]').val(),
                     }),
                 });
@@ -993,7 +994,7 @@
 
             const { cardNumber, elements } = await mountStripeElems(stripe, data.clientSecret);
 
-            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, true, elements);
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, true, elements, data.invoiceId);
 
             return true;
 
@@ -1163,7 +1164,7 @@
             return { cardNumber, cardExpiry, cardCvc, elements };
         }
 
-        const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly, elements) {
+        const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly, elements, invoiceId) {
 
             const orderId = $('#project-entries').attr('order-id');
 
@@ -1181,7 +1182,7 @@
                 $('#stripe-total').html(`${order.totalCost} ${order.currency}`);
                 $('#stripe-submit').find('span').html('Pay Now');
                 $('#stripe-submit').off('click').on('click', function (e) {
-                    chargeOneTime(stripe, clientSecret, cardNumber);
+                    chargeOneTime(stripe, clientSecret, cardNumber, null, invoiceId);
                 })
             }
 
@@ -1246,7 +1247,7 @@
                         if (monthly) {
                             startMonthlySubscription(stripe, clientSecret, null, elements);
                         } else {
-                            chargeOneTime(stripe, clientSecret, null, elements);
+                            chargeOneTime(stripe, clientSecret, null, elements, invoiceId);
                         }
                     });
 

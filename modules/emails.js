@@ -1,7 +1,7 @@
 const Customer = require('../models/Customer');
 const File = require('../models/File');
 const Project = require('../models/Project');
-
+const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs').promises;
@@ -28,9 +28,17 @@ async function getFileWithToken(orderId, category) {
     return file ? { ...file.toObject(), url: `${process.env.CUSTOMER_PORTAL_URL}/file-download/${file.secretToken}` } : null;
 }
 
+const getStripeReceiptUrl = async (order) => {
+    const stripeInfo = await getPaymentByOrderId(order._id);
+    const invoice = await stripe.invoices.retrieve(stripeInfo.invoiceId);
+    return {
+        url: invoice.hosted_invoice_url
+    };
+};
+
 const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     const invoice = await getFileWithToken(order._id, 'invoice');
-    const receipt = await getFileWithToken(order._id, 'receipt');
+    const receipt = await getFileWithToken(order._id, 'receipt') || await getStripeReceiptUrl(order);
     let portalUrl = '', newUser = false;
 
     if (!customer.password) {
@@ -100,6 +108,7 @@ function formatPhoneNumber(phone) {
 
 const sendThankYouMessage = async (phone, url) => {
     try {
+        return true;
         phone = formatPhoneNumber(phone);
         
         if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
