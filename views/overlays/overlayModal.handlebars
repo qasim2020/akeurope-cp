@@ -945,7 +945,7 @@
                         elements,
                         clientSecret,
                         confirmParams: {
-                            return_url: `https://partner.akeurope.org/widget-payment-success/${orderId}/{{data.project.slug}}`,
+                            return_url: `https://partner.akeurope.org`,
                         },
                         redirect: "if_required",
                     }));
@@ -1349,10 +1349,10 @@
             $('.shake').one('animationend', function () {
                 $(this).removeClass('shake');
             });
-
+            const currentBtnHtml = $('#save-user-btn').html();
             try {
                 if (isValid) {
-                    const currentBtnHtml = $('#save-user-btn').html();
+                    
                     $('#save-user-btn').html(`<span class="spinner-border spinner-border-sm mx-2" role="status"></span> Processing ...`);
                     const monthly = $('#project-card').attr('monthly');
                     if (monthly == 'true') {
@@ -1360,14 +1360,13 @@
                     } else {
                         await handleOneTimePayment();
                     }
-
+                    $('#save-user-btn').html(currentBtnHtml);
                     $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
                     $('.back-btn').attr({ index: 2 });
-                    $('#save-user-btn').html(currentBtnHtml);
                 }
             } catch (error) {
                 console.log(error);
-                alert('Could not save your information. Try from start again.')
+                showCardError($('#save-user-btn'), error.message || error.responseText, currentBtnHtml);
             }
 
         };

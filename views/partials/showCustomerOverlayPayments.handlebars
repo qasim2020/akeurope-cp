@@ -5,13 +5,14 @@
       <div class="text-secondary">Payments made through website that are not linked to any beneficiary.</div>
     </div>
     {{#if data.subscriptions}}
-    <div class="p-md-3">
-      <table class="table table-striped mb-0">
+    <div class="p-md-3 table-responsive">
+      <table class="table table-striped mb-0 text-nowrap">
         <thead>
           <tr>
             <th>Order #</th>
             <th>Date</th>
             <th>Amount</th>
+            <th>Project</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -45,6 +46,9 @@
                   {{this.total}} {{this.currency}}
                 {{/if}}
               </span>
+            </td>
+            <td>
+              <span class="badge bg-red-lt">{{slugToString this.projectSlug}}</span>
             </td>
             <td>
               <span>{{{getOrderIcon this.status}}} </span>

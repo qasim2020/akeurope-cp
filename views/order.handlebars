@@ -3,7 +3,11 @@
     <div class="row g-2 align-items-center">
       <div class="col">
         <div class="page-pretitle"> Overview </div>
-        <h2 class="page-title"> Order {{data.order.orderNo}} <span class="d-flex ms-1">{{{getOrderIcon
+        <h2 class="page-title"> {{#if data.order.projectSlug}}
+          {{slugToString data.order.projectSlug}} in 
+          {{/if}}
+          Order {{data.order.orderNo}} 
+          <span class="d-flex ms-1">{{{getOrderIcon
             data.order.status}}}</span>
         </h2>
       </div>

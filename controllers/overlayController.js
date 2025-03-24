@@ -304,9 +304,11 @@ exports.createSetupIntent = async (req, res) => {
 exports.createPaymentIntent = async (req, res) => {
     try {
         const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+
         if (!isValidEmail(email)) throw new Error('Email provided is invalid');
 
         const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+
         if (!order) throw new Error('Order not found');
 
         const amount = Math.max(1, Math.round(order.total * 100));
@@ -346,26 +348,11 @@ exports.createPaymentIntent = async (req, res) => {
             { upsert: true, new: true },
         ).lean();
 
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: order.currency,
-            customer: customer.id,
-            automatic_payment_methods: { enabled: true },
-        });
+        const description = `${slugToString(order.projectSlug)} # ${order.orderNo}`;
 
-        const invoice = await stripe.invoices.create({
-            customer: paymentIntent.customer,
-            collection_method: 'charge_automatically',
-            auto_advance: true,
-        });
+        const { createStripeInvoice } = require('../modules/stripe');
 
-        await stripe.invoiceItems.create({
-            customer: paymentIntent.customer,
-            amount: paymentIntent.amount,
-            currency: paymentIntent.currency,
-            description: `${slugToString(order.projectSlug)} # ${order.orderNo}`,
-            invoice: invoice.id,
-        });
+        const { paymentIntent, invoice } = await createStripeInvoice(order, amount, description, customer);
 
         res.json({ clientSecret: paymentIntent.client_secret, invoiceId: invoice.id });
     } catch (error) {
@@ -398,10 +385,6 @@ exports.createOneTime = async (req, res) => {
             throw new Error('Payment intent not completed successfully');
         }
 
-        await stripe.invoices.pay(invoiceId, {
-            paid_out_of_band: true,
-        });
-
         const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
 
         const updatedDonor = await Donor.findOneAndUpdate(
@@ -417,7 +400,7 @@ exports.createOneTime = async (req, res) => {
                         paymentMethodId: paymentMethodId,
                         paymentMethodType: paymentMethod.type,
                         created: new Date(paymentIntent.created * 1000),
-                        invoiceId, 
+                        invoiceId,
                     },
                 },
             },

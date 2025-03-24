@@ -108,14 +108,13 @@ function formatPhoneNumber(phone) {
 
 const sendThankYouMessage = async (phone, url) => {
     try {
-        return true;
         phone = formatPhoneNumber(phone);
         
         if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
             throw new Error('Invalid phone number format');
         }
         
-        const message = `Jazak Allah for your support to Alkhidmat Europe! View your payments here: ${url}`;
+        const message = `Jazak Allah for your donation to Alkhidmat Europe! View your payments here: ${url}`;
 
         const response = await client.messages.create({
             body: message,

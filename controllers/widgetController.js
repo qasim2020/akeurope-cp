@@ -25,6 +25,7 @@ const { slugToCamelCase, slugToString } = require('../modules/helpers');
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { notifyTelegram } = require('../modules/telegramBot');
+const { createStripeInvoice } = require('../modules/stripe');
 
 exports.widgets = async (req, res) => {
     try {
@@ -536,33 +537,10 @@ exports.createPaymentIntent = async (req, res) => {
             { upsert: true, new: true },
         ).lean();
 
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: order.currency,
-            customer: customer.id,
-            automatic_payment_methods: { enabled: true },
-        });
-
-        const invoice = await stripe.invoices.create({
-            customer: paymentIntent.customer,
-            collection_method: 'charge_automatically',
-            auto_advance: true,
-        });
-
-        for (const project of order.projects) {
-            
-        }
-
         const projects = order.projects.map(proj => slugToString(proj.slug)).join(', ');
         const description = `Order # ${order.orderNo} in ${projects}`;
 
-        await stripe.invoiceItems.create({
-            customer: paymentIntent.customer,
-            amount: paymentIntent.amount,
-            currency: paymentIntent.currency,
-            description,
-            invoice: invoice.id,
-        });
+        const { paymentIntent, invoice } = await createStripeInvoice(order, amount, description, customer);
 
         res.json({ clientSecret: paymentIntent.client_secret, invoiceId: invoice.id });
     } catch (error) {
@@ -592,10 +570,6 @@ exports.createOneTime = async (req, res) => {
         if (paymentIntent.status !== 'succeeded') {
             throw new Error('Payment intent not completed successfully');
         }
-
-        await stripe.invoices.pay(invoiceId, {
-            paid_out_of_band: true,
-        });
 
         const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
 
@@ -688,7 +662,7 @@ exports.createSubscription = async (req, res) => {
 
         let customers = await stripe.customers.list({ email: donor.email });
 
-        let customer = customers.data.find((c) => c.metadata.currency === order.currency);
+        let customer = customers.data.find((c) => c.currency === order.currency.toLowerCase());
 
         if (!customer) {
             customer = await stripe.customers.create({
