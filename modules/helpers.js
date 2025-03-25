@@ -347,7 +347,24 @@ const divide = function(a, b) {
     return a / b;
 };
 
+const dynamicRound = (value) => {
+    let magnitude;
+
+    if (value < 10) {
+        magnitude = 1;
+    } else if (value < 100) {
+        magnitude = 10;
+    } else if (value < 1000) {
+        magnitude = 100;
+    } else {
+        magnitude = 1000;
+    }
+
+    return Math.ceil(value / magnitude) * magnitude;
+};
+
 module.exports = {
+    dynamicRound,
     divide,
     slugToString,
     slugToCamelCase,

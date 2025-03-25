@@ -3,33 +3,26 @@ const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 
 const fs = require('fs').promises;
 const path = require('path');
-const crypto = require('crypto');
-const handlebars = require('handlebars');
-const moment = require('moment');
-const nodemailer = require('nodemailer');
 
 const Country = require('../models/Country');
-const Project = require('../models/Project');
 const Subscription = require('../models/Subscription');
 const Customer = require('../models/Customer');
 const Donor = require('../models/Donor');
-
-const { calculateOrder, addPaymentsToOrder, formatOrderWidget, cleanOrder } = require('../modules/orders');
-const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder } = require('../modules/ordersFetchEntries');
-const { runQueriesOnOrder } = require('../modules/orderUpdates');
 const {
     connectDonorInCustomer,
     successfulOneTimePaymentOverlay,
     successfulSubscriptionPaymentOverlay,
 } = require('../modules/orderPostActions');
-
-const { default: mongoose } = require('mongoose');
 const { isValidEmail } = require('../modules/checkValidForm');
-const { saveLog } = require('../modules/logAction');
-
-const { logTemplates } = require('../modules/logTemplates');
 const { getCurrencyRates } = require('../modules/getCurrencyRates');
 const { slugToString } = require('../modules/helpers');
+const {
+    createSubscriptionModule,
+    createSetupIntentModule,
+    createStripeInvoice,
+    createOneTimeModule,
+    createPaymentIntentModule,
+} = require('../modules/stripe');
 
 exports.wScript = async (req, res) => {
     try {
@@ -160,6 +153,35 @@ exports.getOrderData = async (req, res) => {
     }
 };
 
+exports.createSetupIntent = async (req, res) => {
+    try {
+        const { email: emailProvided, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        const email = emailProvided.toLowerCase();
+
+        if (!isValidEmail(email)) throw new Error('Email provided is invalid');
+
+        const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+
+        if (!order) throw new Error('Order not found');
+
+        const setupIntent = await createSetupIntentModule(
+            order,
+            email,
+            firstName,
+            lastName,
+            tel,
+            organization,
+            anonymous,
+            countryCode,
+        );
+
+        res.json({ clientSecret: setupIntent.client_secret });
+    } catch (error) {
+        console.error('Error creating SetupIntent:', error);
+        res.status(500).send(error.message || 'Server Error. Could not create setup intent.');
+    }
+};
+
 exports.createSubscription = async (req, res) => {
     try {
         const { paymentMethodId, email: providedEmail } = req.body;
@@ -169,80 +191,14 @@ exports.createSubscription = async (req, res) => {
         if (!donor) throw new Error('Donor not found.');
 
         const order = await Subscription.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+
         if (!order) throw new Error('Order not found!');
 
-        let customers = await stripe.customers.list({ email: donor.email });
+        const amount = Math.max(1, Math.round(order.total * 100));
 
-        let customer = customers.data.find((c) => c.metadata.currency === order.currency);
+        const description = `${slugToString(order.projectSlug)} # ${order.orderNo}`;
 
-        if (!customer) {
-            customer = await stripe.customers.create({
-                email: donor.email,
-                name: `${donor.firstName} ${donor.lastName}`,
-                phone: donor.tel,
-                payment_method: paymentMethodId,
-                invoice_settings: { default_payment_method: paymentMethodId },
-                metadata: {
-                    orderId: order._id.toString(),
-                    orderNo: order.orderNo,
-                    currency: order.currency,
-                },
-            });
-        } else {
-            await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
-        }
-
-        const amount = Math.max(100, Math.round(order.total * 100));
-
-        const price = await stripe.prices.create({
-            unit_amount: amount,
-            currency: order.currency,
-            recurring: { interval: 'month' },
-            product_data: {
-                name: `${slugToString(order.projectSlug)} # ${order.orderNo}`,
-            },
-        });
-
-        const subscription = await stripe.subscriptions.create({
-            customer: customer.id,
-            items: [{ price: price.id }],
-            payment_settings: { payment_method_types: ['card'] },
-            default_payment_method: paymentMethodId,
-            expand: ['latest_invoice.payment_intent'],
-        });
-
-        const paymentIntent = subscription.latest_invoice.payment_intent;
-
-        if (paymentIntent.status !== 'succeeded') {
-            console.error('Payment failed:', paymentIntent.last_payment_error?.message);
-            throw new Error(`Payment failed: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`);
-        }
-
-        const paymentMethod = await stripe.paymentMethods.retrieve(subscription.latest_invoice.payment_intent.payment_method);
-
-        const updatedDonor = await Donor.findOneAndUpdate(
-            { email },
-            {
-                stripeCustomerId: customer.id,
-                $push: {
-                    subscriptions: {
-                        orderId: order._id,
-                        subscriptionId: subscription.id,
-                        status: subscription.status,
-                        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-                        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-                        price: subscription.items.data[0].price.unit_amount,
-                        currency: subscription.items.data[0].price.currency,
-                        interval: subscription.items.data[0].price.recurring.interval,
-                        paymentIntentId: subscription.latest_invoice?.payment_intent?.id || null,
-                        paymentStatus: subscription.latest_invoice?.payment_intent?.status || null,
-                        paymentMethodId: subscription.latest_invoice?.payment_intent?.payment_method || null,
-                        paymentMethodType: paymentMethod.type,
-                    },
-                },
-            },
-            { new: true, lean: true },
-        );
+        const { updatedDonor, subscription } = await createSubscriptionModule(paymentMethodId, donor, order, amount, description);
 
         let checkCustomer = await Customer.findOne({ email }).lean();
 
@@ -266,41 +222,6 @@ exports.createSubscription = async (req, res) => {
     }
 };
 
-exports.createSetupIntent = async (req, res) => {
-    try {
-        const { email: emailProvided, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
-        const email = emailProvided.toLowerCase();
-
-        if (!isValidEmail(email)) throw new Error('Email provided is invalid');
-        const donor = await Donor.findOneAndUpdate(
-            { email },
-            {
-                $set: {
-                    firstName,
-                    lastName,
-                    tel,
-                    organization,
-                    anonymous,
-                    countryCode,
-                    status: 'active',
-                    role: 'donor',
-                },
-                $setOnInsert: { email },
-            },
-            { upsert: true, new: true },
-        ).lean();
-
-        const setupIntent = await stripe.setupIntents.create({
-            payment_method_types: ['card'],
-            metadata: { email: donor.email },
-        });
-        res.json({ clientSecret: setupIntent.client_secret });
-    } catch (error) {
-        console.error('Error creating SetupIntent:', error);
-        res.status(500).send(error.message || 'Server Error. Could not create setup intent.');
-    }
-};
-
 exports.createPaymentIntent = async (req, res) => {
     try {
         const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
@@ -313,44 +234,9 @@ exports.createPaymentIntent = async (req, res) => {
 
         const amount = Math.max(1, Math.round(order.total * 100));
 
-        let customers = await stripe.customers.list({ email: email });
-        let customer = customers.data.find((c) => c.metadata.currency === order.currency);
-
-        if (!customer) {
-            customer = await stripe.customers.create({
-                email: email,
-                name: `${firstName} ${lastName}`,
-                phone: tel,
-                metadata: {
-                    orderId: order._id.toString(),
-                    orderNo: order.orderNo,
-                    currency: order.currency,
-                },
-            });
-        }
-
-        await Donor.findOneAndUpdate(
-            { email },
-            {
-                $set: {
-                    stripeCustomerId: customer.id,
-                    firstName,
-                    lastName,
-                    tel,
-                    organization,
-                    anonymous,
-                    countryCode,
-                    status: 'active',
-                    role: 'donor',
-                },
-                $setOnInsert: { email },
-            },
-            { upsert: true, new: true },
-        ).lean();
-
         const description = `${slugToString(order.projectSlug)} # ${order.orderNo}`;
 
-        const { createStripeInvoice } = require('../modules/stripe');
+        const customer = await createPaymentIntentModule(order, firstName, lastName, tel, organization, anonymous, countryCode);
 
         const { paymentIntent, invoice } = await createStripeInvoice(order, amount, description, customer);
 
@@ -373,39 +259,7 @@ exports.createOneTime = async (req, res) => {
 
         if (!order) throw new Error('Order not found!');
 
-        if (!email) throw new Error('Email is required');
-
-        let paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-        if (!paymentIntent) {
-            throw new Error('PaymentIntent not found');
-        }
-
-        if (paymentIntent.status !== 'succeeded') {
-            throw new Error('Payment intent not completed successfully');
-        }
-
-        const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
-
-        const updatedDonor = await Donor.findOneAndUpdate(
-            { email },
-            {
-                $push: {
-                    payments: {
-                        orderId: order._id,
-                        paymentIntentId: paymentIntent.id,
-                        status: paymentIntent.status,
-                        amount: paymentIntent.amount / 100,
-                        currency: paymentIntent.currency,
-                        paymentMethodId: paymentMethodId,
-                        paymentMethodType: paymentMethod.type,
-                        created: new Date(paymentIntent.created * 1000),
-                        invoiceId,
-                    },
-                },
-            },
-            { new: true, lean: true },
-        );
+        const updatedDonor = await createOneTimeModule(order, paymentMethodId, paymentIntentId, invoiceId, email);
 
         const checkCustomer = await Customer.findOne({ email }).lean();
 

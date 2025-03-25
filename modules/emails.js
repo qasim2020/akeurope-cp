@@ -16,6 +16,7 @@ const { getPaymentByOrderId, getLatestSubscriptionByOrderId } = require('../modu
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { slugToString } = require('./helpers');
+const { sendTelegramMessage, sendErrorToTelegram } = require('./telegramBot');
 
 async function getFileWithToken(orderId, category) {
     let file = await File.findOne({ 'links.entityId': orderId, category }).sort({ createdAt: -1 });
@@ -32,23 +33,20 @@ const getStripeReceiptUrl = async (order) => {
     const stripeInfo = await getPaymentByOrderId(order._id);
     const invoice = await stripe.invoices.retrieve(stripeInfo.invoiceId);
     return {
-        url: invoice.hosted_invoice_url
+        url: invoice.hosted_invoice_url,
     };
 };
 
 const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     const invoice = await getFileWithToken(order._id, 'invoice');
-    const receipt = await getFileWithToken(order._id, 'receipt') || await getStripeReceiptUrl(order);
-    let portalUrl = '', newUser = false;
+    const receipt = (await getFileWithToken(order._id, 'receipt')) || (await getStripeReceiptUrl(order));
+    let portalUrl = '',
+        newUser = false;
 
     if (!customer.password) {
         const inviteToken = crypto.randomBytes(32).toString('hex');
         const inviteExpires = moment().add(24, 'hours').toDate();
-        await Customer.findOneAndUpdate(
-            { _id: customer._id },
-            { $set: { inviteToken, inviteExpires } },
-            { new: true }
-        );
+        await Customer.findOneAndUpdate({ _id: customer._id }, { $set: { inviteToken, inviteExpires } }, { new: true });
         portalUrl = `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`;
         newUser = true;
     } else {
@@ -109,28 +107,41 @@ function formatPhoneNumber(phone) {
 const sendThankYouMessage = async (phone, url) => {
     try {
         phone = formatPhoneNumber(phone);
-        
+
         if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
             throw new Error('Invalid phone number format');
         }
-        
-        const message = `Jazak Allah for your donation to Alkhidmat Europe! View your payments here: ${url}`;
+
+        const lookup = await client.lookups.v2.phoneNumbers(phone).fetch({ type: ['carrier'] });
+
+        if (!lookup || !lookup.valid) {
+            throw new Error(`Invalid phone number: \\${phone}`);
+        }
+
+        const message =
+            `Thank you for your trust in Alkhidmat Europe.\n\n` +
+            `You can view and manage your payments here:\n` +
+            `${process.env.CUSTOMER_PORTAL_URL}/login\n\n` +
+            `We sincerely appreciate your support.`;
 
         const response = await client.messages.create({
             body: message,
             from: process.env.TWILIO_MESSAGING_SERVICE_SID,
-            to: phone
+            to: phone,
         });
-        
+
         if (response.errorCode) {
             console.error(`Failed to send message to ${phone}: ${response.errorMessage}`);
+            await sendErrorToTelegram(response.errorMessage);
         } else {
             console.log('Thank you message sent to', phone);
+            await sendTelegramMessage(`✅ *Text Message Sent!*\n\n` + `🆔 *To:* ${phone}\n` + `📅 *Message:* ${message}`);
         }
     } catch (error) {
         console.error('Error sending message:', error);
+        await sendErrorToTelegram(error.message || error);
     }
-}
+};
 
 const sendInvoiceToCustomer = async (order, customer) => {
     throw new Error('not required ? ');
@@ -187,16 +198,13 @@ const sendInvoiceToCustomer = async (order, customer) => {
 const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
     const invoice = await getFileWithToken(order._id, 'invoice');
     const receipt = await getFileWithToken(order._id, 'receipt');
-    let portalUrl = '', newUser = false;
+    let portalUrl = '',
+        newUser = false;
 
     if (!customer.password) {
         const inviteToken = crypto.randomBytes(32).toString('hex');
         const inviteExpires = moment().add(24, 'hours').toDate();
-        await Customer.findOneAndUpdate(
-            { _id: customer._id },
-            { $set: { inviteToken, inviteExpires } },
-            { new: true }
-        );
+        await Customer.findOneAndUpdate({ _id: customer._id }, { $set: { inviteToken, inviteExpires } }, { new: true });
         portalUrl = `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`;
         newUser = true;
     } else {
@@ -225,7 +233,9 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: customer.email,
-        subject: `Subscription Renewed Alkhidmat Europe - ${order.totalCostSingleMonth || order.total} ${order.currency} ${slugToString(order.projectSlug)}`,
+        subject: `Subscription Renewed Alkhidmat Europe - ${order.totalCostSingleMonth || order.total} ${
+            order.currency
+        } ${slugToString(order.projectSlug)}`,
         html: compiledTemplate({
             name: customer.name,
             invoiceNreceipt: true,
@@ -246,19 +256,16 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
     }
 };
 
-const sendReceiptToCustomer = async(order, customer) => {
+const sendReceiptToCustomer = async (order, customer) => {
     const receipt = await getFileWithToken(order._id, 'receipt');
 
-    let portalUrl = '', newUser = false;
+    let portalUrl = '',
+        newUser = false;
 
     if (!customer.password) {
         const inviteToken = crypto.randomBytes(32).toString('hex');
         const inviteExpires = moment().add(24, 'hours').toDate();
-        await Customer.findOneAndUpdate(
-            { _id: customer._id },
-            { $set: { inviteToken, inviteExpires } },
-            { new: true }
-        );
+        await Customer.findOneAndUpdate({ _id: customer._id }, { $set: { inviteToken, inviteExpires } }, { new: true });
         portalUrl = `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`;
         newUser = true;
     } else {
@@ -304,8 +311,8 @@ const sendReceiptToCustomer = async(order, customer) => {
         return true;
     } catch (err) {
         throw new Error(`Failed to send email: ${err.message}`);
-    } 
-}
+    }
+};
 
 const sendCustomerInvite = async (customer) => {
     const inviteToken = crypto.randomBytes(32).toString('hex');
@@ -338,7 +345,7 @@ const sendCustomerInvite = async (customer) => {
     };
 
     await transporter.sendMail(mailOptions);
-    
+
     await Customer.findOneAndUpdate({ _id: customer._id }, { status: 'Email invite sent' });
 
     await saveLog(
@@ -348,7 +355,6 @@ const sendCustomerInvite = async (customer) => {
             actor: customer,
         }),
     );
-    
 };
 
 module.exports = {

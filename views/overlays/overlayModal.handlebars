@@ -734,9 +734,14 @@
                                     <div class="text-dark fw-strong">Total</div>
                                     <div class="text-dark fw-strong" id="stripe-total">300 NOK / month</div>
                                 </div>
-                                <div class="w-100 d-none" id="express-checkout-element">
-
+                                <div class="w-100 d-none" id="express-checkout-wrapper">
+                                    <button id="processing-btn" class="btn btn-primary w-100 py-3 fw-bold fs-3 d-none">
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        Processing
+                                    </button>
+                                    <div id="express-checkout-element"> </div>
                                 </div>
+
                                 <button id="stripe-submit" class="btn btn-primary w-100 py-3 fw-bold fs-3">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -912,13 +917,8 @@
         }
 
         const chargeOneTime = async function (stripe, clientSecret, cardNumber, elements, invoiceId) {
-            const elem = $('#stripe-submit');
-            const currentBtnHtml = $('#stripe-submit').html();
-            $(elem).html(`
-                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                    Processing
-                `);
-            $('#payment-error').addClass('d-none');
+
+            const { elem, currentBtnHtml } = initializePaymentSlide(elements);
 
             try {
 
@@ -951,7 +951,7 @@
                     }));
                     if (error) {
                         console.error("Payment Intent Error:", error);
-                        alert('Payment failed. Try using a different payment method.');
+                        showCardError(elem, error.message, currentBtnHtml);
                         return;
                     }
                 }
@@ -972,15 +972,14 @@
 
                 if (paymentData.success) {
                     await orderCompleted(elem, paymentData, currentBtnHtml);
-                    console.log('one time payment completed');
                 } else {
-                    console.log(paymentData);
                     showCardError(elem, paymentData.responseText, currentBtnHtml);
                 }
 
             } catch (error) {
                 console.log(error);
-                showCardError(elem, error.responseText, currentBtnHtml);
+                showCardError(elem, error.message || error.responseText || error, currentBtnHtml);
+
             }
         }
 
@@ -1017,15 +1016,35 @@
 
         }
 
-        const startMonthlySubscription = async function (stripe, clientSecret, cardNumber, elements) {
+        const initializePaymentSlide = (elements) => {
 
-            const elem = $('#stripe-submit');
-            const currentBtnHtml = $('#stripe-submit').html();
-            $(elem).html(`
+            let elem, currentBtnHtml;
+            if (elements) {
+                elem = $('#processing-btn');
+                $('#processing-btn').removeClass('d-none');
+                $('#express-checkout-element').addClass('d-none');
+                currentBtnHtml = $('#processing-btn').html();
+                $(elem).html(`
                     <span class="spinner-border spinner-border-sm me-2" role="status"></span>
                     Processing
                 `);
-            $('#payment-error').addClass('d-none');
+                $('#payment-error').addClass('d-none');
+            } else {
+                elem = $('#stripe-submit');
+                currentBtnHtml = $('#stripe-submit').html();
+                $(elem).html(`
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Processing
+                `);
+                $('#payment-error').addClass('d-none');
+            }
+            return { elem, currentBtnHtml };
+
+        }
+
+        const startMonthlySubscription = async function (stripe, clientSecret, cardNumber, elements) {
+
+            const { elem, currentBtnHtml } = initializePaymentSlide(elements);
 
             try {
 
@@ -1059,7 +1078,7 @@
                     }));
                     if (error) {
                         console.error("Payment Intent Error:", error);
-                        alert('Payment failed. Try using a different payment method.');
+                        showCardError(elem, error.message, currentBtnHtml);
                         return;
                     }
                 }
@@ -1086,7 +1105,7 @@
 
             } catch (error) {
                 console.log(error);
-                showCardError(elem, error.responseText, currentBtnHtml);
+                showCardError(elem, error.message || error.responseText || error, currentBtnHtml);
             }
         }
 
@@ -1221,8 +1240,6 @@
 
                 paymentRequest.canMakePayment().then((result) => {
 
-                    console.log(result);
-
                     if (!result) {
                         $('#expressPaySelector').siblings('label').addClass('rounded-bottom-3');
                         $('#expressPaySelector').remove();
@@ -1352,7 +1369,7 @@
             const currentBtnHtml = $('#save-user-btn').html();
             try {
                 if (isValid) {
-                    
+
                     $('#save-user-btn').html(`<span class="spinner-border spinner-border-sm mx-2" role="status"></span> Processing ...`);
                     const monthly = $('#project-card').attr('monthly');
                     if (monthly == 'true') {
@@ -1390,9 +1407,17 @@
                 })
                 .popover('show');
             setTimeout(function () {
+                const isProcessingBtn = $(elem).attr('id') === 'processing-btn';
                 $(elem).popover('hide');
-                $(elem).removeClass('bg-danger').html(currentBtnHtml);
-            }, 6000);
+                if (isProcessingBtn) {
+                    $(elem).addClass('d-none');
+                    $(elem).removeClass('bg-danger').html(currentBtnHtml);
+                    $('#express-checkout-element').removeClass('d-none');
+                } else {
+                    $(elem).removeClass('bg-danger').html(currentBtnHtml);
+                }
+
+            }, 10000);
             return;
         }
 
@@ -1866,12 +1891,12 @@
             const value = $(elem).data('value');
 
             if (value === 'creditCard') {
-                $('#express-checkout-element').addClass('d-none');
+                $('#express-checkout-wrapper').addClass('d-none');
                 $('#credit-checkout').addClass('d-none');
                 $('#payment-form').removeClass('d-none');
                 $('#stripe-submit').removeClass('d-none');
             } else if (value === 'expressPay') {
-                $('#express-checkout-element').removeClass('d-none');
+                $('#express-checkout-wrapper').removeClass('d-none');
                 $('#credit-checkout').removeClass('d-none');
                 $('#stripe-submit').addClass('d-none');
                 $('#payment-form').addClass('d-none');

@@ -26,8 +26,15 @@ async function initOverlay() {
     }
 
     if (countryCode === 'NO') {
-        $('.donate').on('click', function (e) {
-            $('#donation-overlay-no').css({ display: 'flex' });
+        $('.donate, .donate-specific').on('click', function (e) {
+            const projectSlug = $('body').attr('projectSlug');
+            if (projectSlug) {
+                $('#donation-overlay-no').css({ display: 'flex' });
+                $('.projects-container').css({display: 'none'});
+                $('.frequency-container').css({display: 'flex'});
+            } else {
+                $('#donation-overlay-no').css({ display: 'flex' });
+            }
         });
 
         let updateNextButtonURL = function () {
@@ -78,6 +85,14 @@ async function initOverlay() {
         $('.donate').on('click', function (e) {
             $('.donation-overlay').css({ display: 'flex' });
         });
+
+        const projectSlug = $('body').attr('projectSlug');
+        if (projectSlug) {
+            $('.donate-specific').on('click', function (e) {
+                const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
+                showOverlay(elem);
+            });
+        } 
 
         const processedSlugs = new Set();
 

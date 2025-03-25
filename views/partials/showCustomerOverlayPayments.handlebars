@@ -30,7 +30,6 @@
             <td>{{formatDate this.createdAt}}</td>
             <td>
               {{#unless this.stripeInfo}} <i class="ti ti-home"></i> {{/unless}}
-              <span>
                 {{#if this.monthlySubscription}}
                   {{#each this.stripeInfo}}
                   {{#if (eq this.paymentMethodType 'card')}} <i class="ti ti-credit-card"></i> {{/if}}
@@ -45,7 +44,6 @@
                   {{#if (eq this.stripeInfo.paymentMethodType 'google_pay')}} <i class="ti ti-brand-google"></i> {{/if}}
                   {{this.total}} {{this.currency}}
                 {{/if}}
-              </span>
             </td>
             <td>
               <span class="badge bg-red-lt">{{slugToString this.projectSlug}}</span>

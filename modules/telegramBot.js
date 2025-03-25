@@ -79,4 +79,19 @@ const notifyTelegramStripe = async (req, res, next) => {
     }
 };
 
-module.exports = { sendErrorToTelegram, notifyTelegram, notifyTelegramStripe };
+const sendTelegramMessage = async (message) => {
+    try {
+        const formattedMessage = `📢 *Notification*\n\n${message}`;
+
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: formattedMessage,
+            parse_mode: 'Markdown'
+        });
+    } catch (err) {
+        console.error('Error sending Telegram message:', err);
+    }
+};
+
+
+module.exports = { sendErrorToTelegram, notifyTelegram, notifyTelegramStripe, sendTelegramMessage };

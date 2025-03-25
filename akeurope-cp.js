@@ -17,6 +17,7 @@ const entryRoutes = require('./routes/entryRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const filesRoutes = require('./routes/filesRoutes');
 const widgetRoutes = require('./routes/widgetRoutes');
+const overlayRoutes = require('./routes/overlayRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const { sendThankYouMessage } = require('./modules/emails');
 const { downloadStripeInvoiceAndReceipt } = require('./modules/invoice');
@@ -102,6 +103,7 @@ app.use(orderRoutes);
 app.use(customerRoutes);
 app.use(filesRoutes);
 app.use(widgetRoutes);
+app.use(overlayRoutes);
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
     res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));
