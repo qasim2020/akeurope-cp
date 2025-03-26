@@ -63,10 +63,8 @@ const updateLog = async ({ logId, updates }) => {
 const entryLogs = async (req, res, customerId) => {
     try {
         const query = {
-            $or: [
-                { entityId: req.params.entryId, actorType: 'user' },
-                { entityId: req.params.entryId, actorId: customerId }
-            ]
+                    entityId: req.params.entryId,
+                    entityType: { $ne: 'order' },
         };
 
         const page = parseInt(req.query.page) || 1;

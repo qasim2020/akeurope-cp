@@ -1,6 +1,6 @@
 <div class="card" id="logs-container">
   <div class="card-header">
-    <h3 class="card-title">Updates</h3>
+    <h3 class="card-title">History</h3>
   </div>
   {{#with data.entryLogs as |log|}}
   <div class="card-header d-flex align-items-center">
@@ -42,7 +42,11 @@
     {{#if data.entryLogs}}
     <ul class="steps steps-vertical">
       {{#each data.entryLogs.logs as |log|}}
-      {{> components/showLogSteps log=log showActor=true showEntity=false}}
+      {{#if log.changes}}
+      {{> components/showLogSteps log=log removeLinks=../removeLinks hideUpdates=true}}
+      {{else}}
+      {{> components/showLogSteps log=log removeLinks=../removeLinks hideUpdates=false}}
+      {{/if}}
       {{/each}}
     </ul>
     {{else}}

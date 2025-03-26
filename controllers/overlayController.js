@@ -224,7 +224,9 @@ exports.createSubscription = async (req, res) => {
 
 exports.createPaymentIntent = async (req, res) => {
     try {
-        const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        const { email: emailProvided, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+
+        const email = emailProvided.toLowerCase();
 
         if (!isValidEmail(email)) throw new Error('Email provided is invalid');
 
@@ -236,7 +238,16 @@ exports.createPaymentIntent = async (req, res) => {
 
         const description = `${slugToString(order.projectSlug)} # ${order.orderNo}`;
 
-        const customer = await createPaymentIntentModule(order, firstName, lastName, tel, organization, anonymous, countryCode);
+        const customer = await createPaymentIntentModule(
+            order,
+            email,
+            firstName,
+            lastName,
+            tel,
+            organization,
+            anonymous,
+            countryCode,
+        );
 
         const { paymentIntent, invoice } = await createStripeInvoice(order, amount, description, customer);
 
@@ -259,7 +270,13 @@ exports.createOneTime = async (req, res) => {
 
         if (!order) throw new Error('Order not found!');
 
-        const updatedDonor = await createOneTimeModule(order, paymentMethodId, paymentIntentId, invoiceId, email);
+        const { updatedDonor, paymentIntent } = await createOneTimeModule(
+            order,
+            paymentMethodId,
+            paymentIntentId,
+            invoiceId,
+            email,
+        );
 
         const checkCustomer = await Customer.findOne({ email }).lean();
 

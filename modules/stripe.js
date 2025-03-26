@@ -4,7 +4,7 @@ const Donor = require('../models/Donor');
 
 const createStripeInvoice = async (order, amount, description, customer) => {
     const invoice = await stripe.invoices.create({
-        number: order.orderNo,
+        number: `${Date.now()} - ${order.orderNo}`,
         customer: customer.id,
         collection_method: 'charge_automatically',
         auto_advance: false,
@@ -136,7 +136,7 @@ const createSubscriptionModule = async (paymentMethodId, donor, order, amount, d
     return { updatedDonor, subscription };
 };
 
-const createPaymentIntentModule = async (order, firstName, lastName, tel, organization, anonymous, countryCode) => {
+const createPaymentIntentModule = async (order, email, firstName, lastName, tel, organization, anonymous, countryCode) => {
     let customers = await stripe.customers.list({ email: email });
     let customer = customers.data.find((c) => c.currency === order.currency.toLowerCase());
 
@@ -208,7 +208,10 @@ const createOneTimeModule = async (order, paymentMethodId, paymentIntentId, invo
         { new: true, lean: true },
     );
 
-    return updatedDonor;
+    return {
+        updatedDonor,
+        paymentIntent
+    }
 };
 
 module.exports = {

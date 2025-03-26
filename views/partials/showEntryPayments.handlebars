@@ -28,7 +28,7 @@
         {{#if (eq monthlySubscription false)}}
         <td>Expires after {{project.months}} month(s) on {{expiresOn createdAt project.months}}</td>
         {{else}}
-        <td>Renews on {{expiresOn createdAt 1}}</td>
+        <td>Renews on {{expiresOn createdAt project.months}}</td>
         {{/if}}
         <td><a href='/customer/{{customer._id}}'>{{customer.name}}</a></td>
       </tr>

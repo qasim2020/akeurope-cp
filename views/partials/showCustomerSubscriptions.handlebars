@@ -1,0 +1,75 @@
+<div id="subscriptions-container">
+    {{#with data.activeSubscriptions as |list|}}
+
+    <div class="card-header border-0 flex-column align-items-start">
+        {{#if (gt list.totalEntries 1)}}
+        <h3 class="card-title">Active Beneficiaries</h3>
+        <div class="text-secondary">Below are the beneficiaries that are sponsored by you. Click on an image to
+            view their live reports.</div>
+        {{else}}
+        <h3 class="card-title">Active Beneficiary</h3>
+        <div class="text-secondary">Below is your active beneficiary. Click on child's image to view their reports.
+        </div>
+        {{/if}}
+    </div>
+
+    {{#if (gt list.totalPages 1)}}
+    <div class="card-header border-top bg-light d-flex align-items-center">
+        <p class="m-0 text-secondary">Page <span>{{list.currentPage}}</span> of <span>{{list.totalPages}}</span></p>
+        <ul class="pagination m-0 ms-auto">
+            <li class="page-item {{#if (eq list.hasPrevPage false)}}disabled{{/if}}">
+                <a class="page-link cursor-pointer" tabindex="-1" aria-disabled="true"
+                    my-href="/get-active-subscriptions/{{../data.customer._id}}?page={{dec list.currentPage}}"
+                    onclick="getActiveSubscriptions(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M15 6l-6 6l6 6"></path>
+                    </svg>
+                </a>
+            </li>
+            {{#each list.pagesArray}}
+            <li class="page-item {{#if (eq list.currentPage this)}}active{{/if}}">
+                <a class="page-link cursor-pointer" my-href="/get-active-subscriptions/{{../../data.customer._id}}?page={{this}}"
+                    onclick="getActiveSubscriptions(this)">{{this}}</a>
+            </li>
+            {{/each}}
+            <li class="page-item {{#if (eq list.hasNextPage false)}}disabled{{/if}}">
+                <a class="page-link cursor-pointer" tabindex="-1" aria-disabled="true"
+                    my-href="/get-active-subscriptions/{{../data.customer._id}}?page={{inc list.currentPage}}"
+                    onclick="getActiveSubscriptions(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M9 6l6 6l-6 6"></path>
+                    </svg>
+                </a>
+            </li>
+        </ul>
+    </div>
+    {{/if}}
+
+    <div class="p-3 {{#if (eq list.totalEntries 1)}}pt-0{{/if}}">
+        {{#each list.subscriptions}}
+        <div project-slug="{{this.project.slug}}" class="fs-5 text-uppercase mb-4 badge">{{this.project.name}}</div>
+        <div class="row">
+            {{#each this.entries as |ben|}}
+            <a data-bs-toggle="popover" data-bs-placement="top" data-bs-trigger="hover focus" title="{{ben.entry.name}}"
+                {{#if ben.expiry}} data-bs-html="true"
+                data-bs-content="Paid one-time in Order-{{ben.orderNo}} on {{formatDate ben.createdAt}}. <br> Order expires on <span class='text-red'>{{formatDate ben.expiry}}</span>."
+                {{else}} data-bs-html="true"
+                data-bs-content="Monthly subscribed in Order-{{ben.orderNo}} on {{formatDate ben.createdAt}}. <br> Subscription renews on <span class='text-red'>{{formatDate ben.renewalDate}}</span>."
+                {{/if}} class="cursor-pointer col-md-3 col-6 mb-3 text-center position-relative"
+                href="/entry/{{ben.entry._id}}/project/{{../this.project.slug}}">
+                <span class="position-absolute top-0 left-0 ti ti-check" style="padding-top: 3px"></span>
+                <img class="img-fluid rounded-circle border border-1" alt="{{ben.entry.name}}"
+                    src="{{circleCloudinaryUrl (or ben.entry.photo (or ben.entry.photoOfChild ben.entry.photoOfOrphan))}}">
+            </a>
+            {{/each}}
+        </div>
+        {{/each}}
+    </div>
+    {{/with}}
+</div>

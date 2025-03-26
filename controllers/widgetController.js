@@ -439,7 +439,8 @@ exports.renderNoOrderTotal = async (req, res) => {
 
 exports.createPaymentIntent = async (req, res) => {
     try {
-        const { email, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        const { email: emailProvided, firstName, lastName, tel, organization, anonymous, countryCode } = req.body;
+        const email = emailProvided.toLowerCase();
         if (!isValidEmail(email)) throw new Error('Email provided is invalid');
 
         const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
@@ -451,7 +452,16 @@ exports.createPaymentIntent = async (req, res) => {
 
         const description = `Order # ${order.orderNo} in ${projects}`;
 
-        const customer = await createPaymentIntentModule(order, firstName, lastName, tel, organization, anonymous, countryCode);
+        const customer = await createPaymentIntentModule(
+            order,
+            email,
+            firstName,
+            lastName,
+            tel,
+            organization,
+            anonymous,
+            countryCode,
+        );
 
         const { paymentIntent, invoice } = await createStripeInvoice(order, amount, description, customer);
 
@@ -474,7 +484,13 @@ exports.createOneTime = async (req, res) => {
 
         if (!email) throw new Error('Email is required');
 
-        const updatedDonor = await createOneTimeModule(order, paymentMethodId, paymentIntentId, invoiceId, email);
+        const { updatedDonor, paymentIntent } = await createOneTimeModule(
+            order,
+            paymentMethodId,
+            paymentIntentId,
+            invoiceId,
+            email,
+        );
 
         const checkCustomer = await Customer.findOne({ email }).lean();
 

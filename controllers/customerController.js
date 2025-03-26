@@ -18,7 +18,7 @@ const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
 const { getLatestSubscriptionByOrderId, getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
-const { getEntriesByCustomerId } = require('../modules/ordersFetchEntries');
+const { getEntriesByCustomerId, paginateActiveSubscriptions } = require('../modules/ordersFetchEntries');
 const Donor = require('../models/Donor');
 
 exports.getCustomerData = async (req, res) => {
@@ -127,6 +127,31 @@ exports.getLogs = async (req, res) => {
     });
 };
 
+exports.activeSubscriptions = async (req,res) => {
+    try {
+        if (req.params.customerId != req.session.user._id.toString()) {
+            res.status(401).render('error', {
+                heading: 'Unauthorized',
+                error: 'You are not authorized to view this page',
+            });
+            return;
+        }
+        const activeSubscriptions = await getEntriesByCustomerId(req, req.params.customerId);
+        const customer = await Customer.findById(req.session.user._id).lean();
+        res.render('partials/showCustomerSubscriptions',{
+            layout: false,
+            data: {
+                activeSubscriptions,
+                customer,
+            }
+        })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Could not fetch subscriptions', error });
+    }
+}
+
 exports.customer = async (req, res) => {
     try {
         if (req.params.customerId != req.session.user._id.toString()) {
@@ -158,7 +183,7 @@ exports.customer = async (req, res) => {
             order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionsByOrderId(order._id);
         };
 
-        const activeSubscriptions = await getEntriesByCustomerId(customer._id);
+        const activeSubscriptions = await getEntriesByCustomerId(req, customer._id);
 
         const subscriptions = await Subscription.find({customerId: customer._id}).sort({orderNo: -1}).lean();
 

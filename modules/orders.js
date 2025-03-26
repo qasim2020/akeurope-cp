@@ -16,6 +16,7 @@ const { capitalizeFirstLetter } = require('./helpers');
 const getSubscriptionsByOrderId = async (orderId) => {
     try {
         const donor = await Donor.findOne({'subscriptions.orderId': orderId}).lean();
+        if (!donor) return [];
         const subscriptions = donor.subscriptions.filter(sub => sub.orderId.toString() === orderId.toString());
         return subscriptions;
     } catch (error) {

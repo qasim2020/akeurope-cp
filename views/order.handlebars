@@ -1,43 +1,70 @@
 <div class="page-header d-print-none">
   <div class="container-xl">
     <div class="row g-2 align-items-center">
-      <div class="col">
-        <div class="page-pretitle"> Overview </div>
-        <h2 class="page-title"> {{#if data.order.projectSlug}}
-          {{slugToString data.order.projectSlug}} in 
-          {{/if}}
-          Order {{data.order.orderNo}} 
+      <div class="col col-md-auto">
+        {{#if data.order.projectSlug}}
+        {{#if data.order.monthlySubscription}}
+        <h2 class="page-title">
+          <span class="badge">
+            Order # {{data.order.orderNo}} | {{data.order.total}} {{data.order.currency}} | {{slugToString
+            data.order.projectSlug}}
+          </span>
+        </h2>
+        {{else}}
+        <h2 class="page-title">
+          <span class="badge me-1">
+            Order # {{data.order.orderNo}} | {{data.order.total}} {{data.order.currency}} | {{slugToString
+            data.order.projectSlug}} | Paid
+          </span>
+          {{{getOrderIcon
+          data.order.status}}}
+        </h2>
+        {{/if}}
+        {{else}}
+        <h2 class="page-title">
+          Order # {{data.order.orderNo}}
           <span class="d-flex ms-1">{{{getOrderIcon
             data.order.status}}}</span>
         </h2>
+        {{/if}}
+        </h2>
       </div>
       {{#if data.order.customer}}
-      <div class="col-auto ms-auto d-print-none">
+      <div class="col-md-auto col-12 ms-auto d-print-none">
         <div class="btn-list">
           {{#if (and data.order.stripeInfo data.order.monthlySubscription)}}
           <a class="btn btn-primary-outline d-md-inline-block"
             href="/manage-subscription-from-order/{{data.order._id}}?subscriptionId={{data.order.stripeInfo.subscriptionId}}&paymentIntentId={{data.order.stripeInfo.paymentIntentId}}">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2">
-              <path
-                d="M11.453 8.056c0 -.623 .518 -.979 1.442 -.979c1.69 0 3.41 .343 4.605 .923l.5 -4c-.948 -.449 -2.82 -1 -5.5 -1c-1.895 0 -3.373 .087 -4.5 1c-1.172 .956 -2 2.33 -2 4c0 3.03 1.958 4.906 5 6c1.961 .69 3 .743 3 1.5c0 .735 -.851 1.5 -2 1.5c-1.423 0 -3.963 -.609 -5.5 -1.5l-.5 4c1.321 .734 3.474 1.5 6 1.5c2 0 3.957 -.468 5.084 -1.36c1.263 -.979 1.916 -2.268 1.916 -4.14c0 -3.096 -1.915 -4.547 -5 -5.637c-1.646 -.605 -2.544 -1.07 -2.544 -1.807z">
-              </path>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-credit-card-pay">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
+              <path d="M3 10h18" />
+              <path d="M16 19h6" />
+              <path d="M19 16l3 3l-3 3" />
+              <path d="M7.005 15h.005" />
+              <path d="M11 15h2" />
             </svg>
-            Stripe Dashboard
+            Manaage Credit Card
           </a>
           {{/if}}
+
           {{#if data.order.stripeInfo.invoiceId}}
-          <a class="btn btn-primary-outline d-md-inline-block"
+          <a class="btn btn-primary-outline d-md-inline-block w-100 w-md-auto"
             href="/show-stripe-receipt/{{data.order.stripeInfo.invoiceId}}">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2">
-              <path
-                d="M11.453 8.056c0 -.623 .518 -.979 1.442 -.979c1.69 0 3.41 .343 4.605 .923l.5 -4c-.948 -.449 -2.82 -1 -5.5 -1c-1.895 0 -3.373 .087 -4.5 1c-1.172 .956 -2 2.33 -2 4c0 3.03 1.958 4.906 5 6c1.961 .69 3 .743 3 1.5c0 .735 -.851 1.5 -2 1.5c-1.423 0 -3.963 -.609 -5.5 -1.5l-.5 4c1.321 .734 3.474 1.5 6 1.5c2 0 3.957 -.468 5.084 -1.36c1.263 -.979 1.916 -2.268 1.916 -4.14c0 -3.096 -1.915 -4.547 -5 -5.637c-1.646 -.605 -2.544 -1.07 -2.544 -1.807z">
-              </path>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-external-link">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6" />
+              <path d="M11 13l9 -9" />
+              <path d="M15 4h5v5" />
             </svg>
-            Receipt Page
+            Receipt
           </a>
           {{/if}}
+
           {{#if (eq data.order.status 'draft')}}
           <a href="#" class="btn btn-primary d-none d-md-inline-block" id="#editOrder" data-bs-toggle="modal"
             data-bs-target="#modal-{{data.order._id}}">
@@ -71,10 +98,12 @@
     </div>
   </div>
 </div>
-<div class="m-3 pt-4 mx-auto mb-auto container-xl" id="data-container">
+<div class="m-3 mx-auto mb-auto container-xl" id="data-container">
+
   {{#if data.order.projects}}
   {{> showOrderEntries}}
   {{/if}}
+
   {{#unless data.order.stripeInfo}}
   <div class="card mb-3">
     <div class="card-body">
@@ -82,14 +111,18 @@
     </div>
   </div>
   {{/unless}}
+
   <div class="row row-deck row-cards">
-    <div class="d-block col-12">
+    <div class="d-block col-md-6 col-12">
       <div class="card mb-3" id="files-container">
         {{> showEntityFiles data=data order=true}}
       </div>
+    </div>
+    <div class="d-block col-md-6 col-12">
       {{> showOrderLogs}}
     </div>
   </div>
+
 </div>
 
 {{#if data.order.customer}}

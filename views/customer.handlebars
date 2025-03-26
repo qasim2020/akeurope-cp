@@ -33,10 +33,14 @@
 </div>
 <div class="container-xl pt-4">
   <div class="row row-cards">
-    {{#if data.orders}} {{> showCustomerPayments}} {{/if}}
-    {{#if data.subscriptions}} {{> showCustomerOverlayPayments}} {{/if}}
-    {{> showCustomer}}
-    {{> showCustomerLogs}}
+    <div class="col-md-6 col-12 pt-2 pt-md-0">
+      {{#if data.orders}} {{> showCustomerPayments}} {{/if}}
+      {{#if data.subscriptions}} {{> showCustomerOverlayPayments}} {{/if}}
+    </div>
+    <div class="col-md-6 col-12 pt-2 pt-md-0">
+      {{> showCustomer}}
+      {{> showCustomerLogs}}
+    </div>
   </div>
 </div>
 
@@ -201,6 +205,20 @@
       },
       error: function (error) {
         $('#logs-container').html(error.responseText);
+      }
+    })
+  }
+
+  const getActiveSubscriptions = function (elem, href) {
+    href = href || $(elem).attr("my-href");
+    $.ajax({
+      url: href,
+      method: 'GET',
+      success: function (response) {
+        $('#subscriptions-container').replaceWith(response);
+      },
+      error: function (error) {
+        $('#subscriptions-container').html(error.responseText);
       }
     })
   }

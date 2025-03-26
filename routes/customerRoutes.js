@@ -11,6 +11,7 @@ router.post("/customer/update", authenticate, authorize("editSelf"), customersCo
 router.get("/customer/:customerId", authenticate, authorize("viewSelf"), allProjects, customersController.customer);
 router.get("/getCustomerData/:customerId", authenticate, authorize("viewSelf"), customersController.getCustomerData);
 router.get("/getCustomerLogs/:customerId", authenticate, authorize("viewSelf"), customersController.getLogs);
+router.get('/get-active-subscriptions/:customerId', authenticate, authorize('viewSelf'), customersController.activeSubscriptions);
 
 router.get('/manage-subscription', authenticate, authorize("viewSelf"), stripeController.customerPortal);
 router.get('/manage-subscription-from-order/:orderId', authenticate, authorize("viewSelf"), stripeController.customerPortal);
