@@ -18,10 +18,10 @@
         </div>
     </div>
     <div class="">
-        {{#if hideUpdates}}
-        
+        {{#if removeLinks}}
+        {{#unless hideUpdates}}{{{removeLinks log.action}}}<br>{{/unless}}
         {{else}}
-        {{{removeLinks log.action}}} <br> 
+        {{#unless hideUpdates}}{{{log.action}}}<br>{{/unless}}
         {{/if}}
         {{#if log.changes}}
         {{#each log.changes}}

@@ -9,7 +9,14 @@ const { sendCustomerInvite } = require('../modules/emails');
 exports.login = async (req, res) => {
     try {
         const { email, password, rememberMe } = req.body;
-        const customer = await Customer.findOne({ email: email.toLowerCase() });
+        let customer = await Customer.findOne({ email: email.toLowerCase() });
+
+        if (!customer) throw new Error('User not found. Please register yourself by clicking on Register Now button.')
+
+        customer = await Customer.findOne({ email: email.toLowerCase(), password: {$exists: true} });
+
+        if (!customer) throw new Error('You have not yet registered yourself. Please use Register Now button to see your payments. Your payments are safely linked with your email address.')
+
         const loginCondition = process.env.ENV === 'test'? 
             customer :
             customer && (await customer.comparePassword(password));
@@ -25,21 +32,16 @@ exports.login = async (req, res) => {
             }
             res.status(200).send('login successful');
         } else {
-            res.status(400).send('User not found or credentials are wrong!');
+            res.status(400).send('Your credentials are wrong! Please use forget password page to reset your password.');
         }
     } catch (error) {
         console.log(error);
-        res.status(400).send(error);
+        res.status(400).send(error.message || 'Server Error');
     }
 };
 
 exports.register = async (req, res) => {
     try {
-
-        // return res.render('register', {
-        //     name: 'Qasim Ali',
-        //     email: 'qasimali24@gmail.com'
-        // });
 
         const customer = await Customer.findOne({
             inviteToken: req.params.token,

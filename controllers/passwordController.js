@@ -5,24 +5,33 @@ const fs = require('fs').promises;
 const path = require('path');
 const Customer = require('../models/Customer');
 const { isValidEmail } = require('../modules/checkValidForm');
+const { validateExpressRequest } = require('twilio/lib/webhooks/webhooks');
+const authController = require('../controllers/authController');
 
 exports.forgotPassword = async (req, res) => {
-    const { email } = req.body;
+    const { email: emailProvided } = req.body;
+
+    const email = emailProvided.toLowerCase();
 
     if (!isValidEmail(email)) {
         res.status(400).send('Invalid email');
         return false;
     }
 
-    // Find the user by email
-    const customer = await Customer.findOne({ email });
+    let customer = await Customer.findOne({ email });
 
     if (!customer) {
         res.status(400).send('User not found');
         return false;
     }
 
-    // Generate a reset token
+    customer = await Customer.findOne({ email: email, password: {$exists: true}});
+    
+    if (!customer) {
+        await authController.sendRegistrationLink(req,res);
+        return;
+    }
+
     const token = crypto.randomBytes(20).toString('hex');
     customer.resetPasswordToken = token;
     customer.resetPasswordExpires = Date.now() + 3600000; // 1-hour expiration
