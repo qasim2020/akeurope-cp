@@ -17,6 +17,7 @@ const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { slugToString } = require('./helpers');
 const { sendTelegramMessage, sendErrorToTelegram } = require('./telegramBot');
+const { formatPhoneNumber } = require('../modules/twilio');
 
 async function getFileWithToken(orderId, category) {
     let file = await File.findOne({ 'links.entityId': orderId, category }).sort({ createdAt: -1 });
@@ -96,14 +97,6 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     }
 };
 
-function formatPhoneNumber(phone) {
-    phone = phone.replace(/[^\d+]/g, '');
-    if (!phone.startsWith('+')) {
-        phone = `+${phone}`;
-    }
-    return phone;
-}
-
 const sendThankYouMessage = async (phone, url) => {
     try {
         phone = formatPhoneNumber(phone);
@@ -111,13 +104,7 @@ const sendThankYouMessage = async (phone, url) => {
         if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
             throw new Error('Invalid phone number format');
         }
-
-        const lookup = await client.lookups.v2.phoneNumbers(phone).fetch({ type: ['carrier'] });
-
-        if (!lookup || !lookup.valid) {
-            throw new Error(`Invalid phone number: \\${phone}`);
-        }
-
+        
         const message =
             `Thank you for your trust in Alkhidmat Europe.\n\n` +
             `You can view and manage your payments here:\n` +

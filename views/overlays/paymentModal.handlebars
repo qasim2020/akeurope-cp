@@ -895,7 +895,7 @@
 
             const { cardNumber, elements } = await mountStripeElems(stripe, data.clientSecret);
 
-            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false, elements);
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, false, elements, data.invoiceId);
 
             return true;
         }
@@ -1419,7 +1419,7 @@
                     $(elem).removeClass('bg-danger').html(currentBtnHtml);
                 }
 
-            }, 10000);
+            }, 7000);
             return;
         }
 

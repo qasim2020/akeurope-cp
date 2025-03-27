@@ -1,6 +1,7 @@
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 const Donor = require('../models/Donor');
+const { validatePhoneNumber } = require('../modules/twilio');
 
 const createStripeInvoice = async (order, amount, description, customer) => {
     const invoice = await stripe.invoices.create({
@@ -29,7 +30,12 @@ const createStripeInvoice = async (order, amount, description, customer) => {
     };
 };
 
-const createSetupIntentModule = async (order, email, firstName, lastName, tel, organization, anonymous, countryCode) => {
+const createSetupIntentModule = async (order, email, firstName, lastName, phoneNumber, organization, anonymous, countryCode) => {
+
+    const tel = await validatePhoneNumber(phoneNumber);
+
+    console.log('it should not show');
+
     const donor = await Donor.findOneAndUpdate(
         { email },
         {
@@ -136,7 +142,10 @@ const createSubscriptionModule = async (paymentMethodId, donor, order, amount, d
     return { updatedDonor, subscription };
 };
 
-const createPaymentIntentModule = async (order, email, firstName, lastName, tel, organization, anonymous, countryCode) => {
+const createPaymentIntentModule = async (order, email, firstName, lastName, phoneNumber, organization, anonymous, countryCode) => {
+
+    const tel = await validatePhoneNumber(phoneNumber);
+    
     let customers = await stripe.customers.list({ email: email });
     let customer = customers.data.find((c) => c.currency === order.currency.toLowerCase());
 

@@ -468,7 +468,7 @@ exports.createPaymentIntent = async (req, res) => {
         res.json({ clientSecret: paymentIntent.client_secret, invoiceId: invoice.id });
     } catch (error) {
         console.log(error);
-        res.status(500).send('Server error. Error creating payment intent.');
+        res.status(400).send(error.message || error || 'Server Error')
     }
 };
 
@@ -513,7 +513,6 @@ exports.createOneTime = async (req, res) => {
     } catch (error) {
         console.error('Payment Error:', error);
         res.status(400).send(error.message || error || 'Server Error');
-        res.status(400).json('Server error. Could not create one-time!');
     }
 };
 
@@ -543,13 +542,15 @@ exports.createSetupIntent = async (req, res) => {
         res.json({ clientSecret: setupIntent.client_secret });
     } catch (error) {
         console.error('Error creating SetupIntent:', error);
-        res.status(500).send('Server error. Error creating setup intent.');
+        res.status(400).send(error.message || error || 'Server Error');
     }
 };
 
 exports.createSubscription = async (req, res) => {
     try {
-        const { paymentMethodId, email } = req.body;
+        const { paymentMethodId, email: emailProvided } = req.body;
+
+        const email = emailProvided.toLowerCase();
 
         const donor = await Donor.findOne({ email }).lean();
         if (!donor) throw new Error('Donor not found.');
