@@ -20,8 +20,6 @@ async function validatePhoneNumber(tel) {
         throw new Error(`Invalid phone number: ${phoneNumber}`);
     }
 
-    console.log('twilio - response', response);
-
     return response.phoneNumber;
 }
 

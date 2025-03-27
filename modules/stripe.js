@@ -34,8 +34,6 @@ const createSetupIntentModule = async (order, email, firstName, lastName, phoneN
 
     const tel = await validatePhoneNumber(phoneNumber);
 
-    console.log('it should not show');
-
     const donor = await Donor.findOneAndUpdate(
         { email },
         {
