@@ -11,8 +11,10 @@ const sendErrorToTelegram = async function (errorObj) {
     if (typeof errorObj === 'object' && errorObj !== null) {
         errorMessage = JSON.stringify(errorObj, null, 2);
 
+        const maxLength = 4000;
         if (errorMessage.length > 4000) {
-            errorMessage = errorMessage.substring(0, 4000) + '... (truncated)';
+            const half = Math.floor(maxLength / 2);
+            errorMessage = errorMessage.substring(0, half) + '... (truncated) ...' + errorMessage.substring(errorMessage.length - half);
         }
 
         // Apply Markdown formatting if it's an object

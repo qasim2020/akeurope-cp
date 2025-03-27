@@ -211,8 +211,10 @@ exports.createSubscription = async (req, res) => {
             subscriptionId: subscription.id,
             customerId,
             dashboardLink,
-            amount: `${order.total} ${order.currency}`,
             monthly: true,
+            amount: order.total,
+            currency: order.currency,
+            orderNo: order.orderNo,
         });
 
         successfulSubscriptionPaymentOverlay(order._id, freshCustomer);
@@ -290,7 +292,9 @@ exports.createOneTime = async (req, res) => {
             customerId,
             dashboardLink,
             monthly: false,
-            amount: `${order.total} ${order.currency}`,
+            amount: order.total,
+            currency: order.currency,
+            orderNo: order.orderNo,
         });
 
         successfulOneTimePaymentOverlay(order._id, freshCustomer);

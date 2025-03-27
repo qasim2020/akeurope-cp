@@ -862,8 +862,10 @@
                 target: '_blank'
             });
             triggerEvent('paymentSuccessful', {
-                project: '{{ data.project.name }}',
+                project: '{{ data.project.name }}', 
+                transaction_id: data.orderNo,
                 amount: data.amount,
+                currency: data.currency,
                 orderType: data.monthly ? 'Monthly Subscription' : 'One Time Payment',
                 date: Date.now()
             });

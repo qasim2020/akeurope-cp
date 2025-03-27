@@ -506,7 +506,9 @@ exports.createOneTime = async (req, res) => {
             customerId,
             dashboardLink,
             monthly: false,
-            amount: `${order.totalCost} ${order.currency}`,
+            amount: order.totalCost,
+            currency: order.currency,
+            orderNo: order.orderNo,
         });
 
         successfulOneTimePayment(order._id, freshCustomer);
@@ -577,8 +579,10 @@ exports.createSubscription = async (req, res) => {
             subscriptionId: subscription.id,
             customerId,
             dashboardLink,
-            amount: `${order.totalCostSingleMonth} ${order.currency}`,
             monthly: true,
+            amount: order.totalCostSingleMonth,
+            currency: order.currency,
+            orderNo: order.orderNo,
         });
 
         successfulSubscriptionPayment(order._id, freshCustomer);
