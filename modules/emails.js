@@ -93,7 +93,9 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
         console.log('Invoice & receipt sent!');
         return true;
     } catch (err) {
-        throw new Error(`Failed to send email: ${err.message}`);
+        console.log(`Failed to send email: ${err.message}`);
+        sendErrorToTelegram(err.message);
+        return true;
     }
 };
 

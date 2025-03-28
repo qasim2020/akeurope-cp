@@ -87,7 +87,6 @@ const successfulOneTimePayment = async (orderId, customer) => {
         order.customer = customer;
         const invoicePath = await generateInvoice(order);
         await saveFileRecord(order, invoicePath, 'invoice', uploadedBy);
-        await sendInvoiceAndReceiptToCustomer(order, customer);
         await saveLog(
             logTemplates({
                 type: 'successfulOneTimePayment',
@@ -95,6 +94,8 @@ const successfulOneTimePayment = async (orderId, customer) => {
                 actor: customer,
             }),
         );
+        await sendInvoiceAndReceiptToCustomer(order, customer);
+       
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message);
@@ -117,7 +118,6 @@ const successfulSubscriptionPayment = async (orderId, customer) => {
         };
         order.customer = customer;
         await downloadStripeInvoiceAndReceipt(order, uploadedBy);
-        await sendInvoiceAndReceiptToCustomer(order, customer);
         await saveLog(
             logTemplates({
                 type: 'successfulSubscriptionPayment',
@@ -125,6 +125,8 @@ const successfulSubscriptionPayment = async (orderId, customer) => {
                 actor: customer,
             }),
         );
+        await sendInvoiceAndReceiptToCustomer(order, customer);
+       
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(JSON.stringify(error));
@@ -148,7 +150,6 @@ const successfulOneTimePaymentOverlay = async (orderId, customer) => {
         };
         order.customer = customer;
         await downloadStripeInvoice(order, uploadedBy);
-        await sendInvoiceAndReceiptToCustomer(order, customer);
         await saveLog(
             logTemplates({
                 type: 'successfulOneTimePaymentOverlay',
@@ -156,6 +157,8 @@ const successfulOneTimePaymentOverlay = async (orderId, customer) => {
                 actor: customer,
             }),
         );
+        await sendInvoiceAndReceiptToCustomer(order, customer);
+        
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message);
@@ -178,7 +181,6 @@ const successfulSubscriptionPaymentOverlay = async (orderId, customer) => {
         };
         order.customer = customer;
         await downloadStripeInvoiceAndReceipt(order, uploadedBy);
-        await sendInvoiceAndReceiptToCustomer(order, customer);
         await saveLog(
             logTemplates({
                 type: 'successfulSubscriptionPaymentOverlay',
@@ -186,6 +188,8 @@ const successfulSubscriptionPaymentOverlay = async (orderId, customer) => {
                 actor: customer,
             }),
         );
+        await sendInvoiceAndReceiptToCustomer(order, customer);
+        
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(JSON.stringify(error));
