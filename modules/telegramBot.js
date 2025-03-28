@@ -24,6 +24,12 @@ const sendErrorToTelegram = async function (errorObj) {
         errorMessage = `🚨 *Error Alert* 🚨\n\n*${String(errorObj)}*`;
     }
 
+    const escapeMarkdownV2 = (text) => {
+        return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
+    };
+
+    errorMessage = `🚨 *Error Alert* 🚨\n\n\`\`\`${escapeMarkdownV2(errorMessage)}\`\`\``;
+
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
     return axios

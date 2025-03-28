@@ -14,6 +14,31 @@ const allProjects = async (req, res, next) => {
     next();
 };
 
+const checkEntryForPaidOrder = async (customerId, entryId) => {
+    const order = await Order.findOne({
+        customerId,
+        'projects.entries.entryId': entryId,
+        status: 'paid',
+    });
+
+    if (!order) {
+        throw new Error ('Entry does not exist in any paid order');
+    };
+
+    for (const project of order.projects) {
+        for (const entry of project.entries) {
+            if (entry.entryId.toString() === entryId.toString()) {
+                const projectExpirationDate = moment(order.createdAt).add(project.months, 'months');
+                if (moment().isAfter(projectExpirationDate)) {
+                    throw new Error ('Order has expired to view linked beneficiaries!');
+                }
+            }
+        }
+    }
+
+    return order.customerId;
+}
+
 const entryExistsInPaidOrder = async (req, res, next) => {
     try {
         const entryId = req.params.entryId;
@@ -22,26 +47,7 @@ const entryExistsInPaidOrder = async (req, res, next) => {
             throw new Error ('No entry id provided in request');
         }
 
-        const order = await Order.findOne({
-            customerId: req.session.user._id,
-            'projects.entries.entryId': entryId,
-            status: 'paid',
-        });
-
-        if (!order) {
-            throw new Error ('Entry does not exist in any paid order');
-        };
-
-        for (const project of order.projects) {
-            for (const entry of project.entries) {
-                if (entry.entryId.toString() === entryId.toString()) {
-                    const projectExpirationDate = moment(order.createdAt).add(project.months, 'months');
-                    if (moment().isAfter(projectExpirationDate)) {
-                        throw new Error ('Invoice has expired to view linked beneficiaries!');
-                    }
-                }
-            }
-        }
+        await checkEntryForPaidOrder(req.session.user._id, entryId);
 
         next();
     } catch (error) {
@@ -50,4 +56,4 @@ const entryExistsInPaidOrder = async (req, res, next) => {
     }
 };
 
-module.exports = { allProjects, oneProject, entryExistsInPaidOrder };
+module.exports = { allProjects, oneProject, entryExistsInPaidOrder, checkEntryForPaidOrder };

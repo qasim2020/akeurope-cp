@@ -26,7 +26,11 @@
         {{#if log.changes}}
         {{#each log.changes}}
         {{#unless (eq @index 0)}}<br>{{/unless}}
-        <span class="badge bg-green-lt mt-1"></b3>{{camelCaseToNormalString this.key}}</span>
+        {{#if (eq this.key 'status')}}
+        <span class="badge bg-red-lt mt-1">{{camelCaseToNormalString this.key}}</span>
+        {{else}}
+        <span class="badge bg-green-lt mt-1">{{camelCaseToNormalString this.key}}</span>
+        {{/if}}
         {{#if this.oldValue}}
         <span class="text-decoration-line-through">{{{removeLinks this.oldValue}}}</span>
         {{/if}}

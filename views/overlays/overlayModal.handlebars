@@ -467,10 +467,8 @@
 
 <body>
 
-    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PXFJLX2J" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
 
     <div id="payment-overlay">
         <div class="row justify-content-center">
@@ -555,6 +553,45 @@
                                 </div>
                             </div>
 
+                            {{#if (eq data.countryCode 'NO')}}
+                            <div class="footer border-0" style="margin-bottom: -7px">
+                                <div id="monthly-save-donation">
+                                    <button class="btn w-100 px-3 fw-bold fs-3 py-2" style="background-color: #ff5b24;"
+                                        onclick="handleMonthlyVipps(this)">
+                                        <span style="color: white; font-size: 16px; font-weight: bold;">Subscribe with
+                                        </span>
+                                        <span style="margin-left:-19px;margin-right: -27px;">
+                                            {{{getOrderIcon 'vipps'}}}
+                                        </span>
+                                    </button>
+                                    <div class="hover:bg-gray-100 cursor-pointer text-dark w-100 d-flex justify-content-center pt-3 text-small fw-bold"
+                                        onclick="saveDonationAmount(this)">
+                                        <div style="margin-right: -21px;" class="d-flex align-items-center">
+                                            <span>Use Credit Card</span>
+                                            <i class="ti ti-arrow-narrow-right-dashed fs-3"
+                                                style="margin-top: -1px;margin-left: 8px;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-none" id="one-time-save-donation">
+                                    <button class="btn w-100 px-3 fw-bold fs-3 py-2" style="background-color: #ff5b24;"
+                                        onclick="handleOneTimeVipps(this)">
+                                        <span style="color: white; font-size: 16px; font-weight: bold;">Pay with</span>
+                                        <span style="margin-left:-19px; margin-right: -38px">
+                                            {{{getOrderIcon 'vipps'}}}
+                                        </span>
+                                    </button>
+                                    <div class="hover:bg-gray-100 cursor-pointer text-dark w-100 d-flex justify-content-center pt-3 text-small fw-bold"
+                                        onclick="saveDonationAmount(this)">
+                                        <div style="margin-right: -29px;" class="d-flex align-items-center">
+                                            <span>Use Credit Card</span>
+                                            <i class="ti ti-arrow-narrow-right-dashed fs-3"
+                                                style="margin-top: -1px;margin-left: 8px;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{else}}
                             <div class="footer border-0">
                                 <button id="donate-btn" class="btn btn-primary w-100 py-3 fw-bold fs-3"
                                     onclick="saveDonationAmount(this)">
@@ -562,6 +599,7 @@
                                     <span>Donate Once</span>
                                 </button>
                             </div>
+                            {{/if}}
 
                         </div>
 
@@ -860,6 +898,7 @@
     <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/static/maskList.js"></script>
+    <script src="/static/commonScripts.js"></script>
 
     <script>
 
@@ -1852,19 +1891,8 @@
 
         const saveDonationAmount = async function (elem) {
             try {
+                validateDonationForm(elem);
                 const total = $('.donation-amount.active').val();
-
-                $('.shake').removeClass('shake');
-
-                if (!total || total == 0) {
-                    $('.donation-amount.active').addClass('is-invalid');
-                    $('.donation-amount').closest('.body').addClass('shake');
-                    $('.shake').one('animationend', function () {
-                        $('.donation-amount.active').closest('.body').removeClass('shake');
-                    });
-                    return;
-                }
-
                 const countryCode = localStorage.getItem('countryCode');
                 const monthly = $('[freq].active').attr('freq') === 'once' ? false : true;
                 const order = await $.ajax({

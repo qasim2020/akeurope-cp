@@ -26,88 +26,96 @@ async function initOverlay() {
     }
 
     if (countryCode === 'NO') {
-        $('.donate, .donate-specific').on('click', function (e) {
-            const projectSlug = $('body').attr('projectSlug');
-            if (projectSlug) {
-                $('#donation-overlay-no').css({ display: 'flex' });
-                $('.projects-container').css({display: 'none'});
-                $('.frequency-container').css({display: 'flex'});
-            } else {
-                $('#donation-overlay-no').css({ display: 'flex' });
-            }
-        });
-
-        let updateNextButtonURL = function () {
-            $('.button-selector').text('...');
-            let currencySelected = 'NOK';
-            let freqSelected = $('.selected.freq-selector').text();
-            let connectedURL = '';
-            if (freqSelected == 'one time') {
-                connectedURL = $('.selected.project-selector-no').attr(currencySelected);
-            } else {
-                connectedURL = $('.selected.project-selector-no').attr(`${currencySelected}MONTHLY`);
-            }
-            $('.button-selector').attr({ myURL: connectedURL });
-        };
-
-        let currentProj = $('body').attr('projectSlug');
-
-        if (currentProj) {
-            const projectSelector = $(`.project-selector-no[projectSlug=${currentProj}]`);
-            projectSelector.addClass('selected');
-            const projectName = projectSelector.attr('projectName');
-            $('.project-label').html(projectName);
-            updateNextButtonURL();
-        } 
-
-        $('.project-selector-no').on('click', function (e) {
-            $('.project-selector-no').removeClass('selected');
-            $(this).addClass('selected');
-            const projectName = $(this).attr('projectName');
-            $('.project-label').html(projectName);
-            updateNextButtonURL();
-        });
-
-        $('.freq-selector').on('click', function (e) {
-            $('.freq-selector').removeClass('selected');
-            $(this).addClass('selected');
-            updateNextButtonURL();
-            $('.button-selector').click();
-            $(this).removeClass('selected');
-        });
-
-        $('.button-selector').on('click', function (e) {
-            let url = $(this).attr('myURL');
-            window.open(url, '_blank');
-        });
-
+        runNorway(countryCode);
+        // runGlobal(countryCode);
     } else {
-        $('.donate').on('click', function (e) {
-            $('.donation-overlay').css({ display: 'flex' });
-        });
+        runGlobal(countryCode);
+    }
+}
 
+function runGlobal(countryCode) {
+    $('.donate').on('click', function (e) {
+        $('.donation-overlay').css({ display: 'flex' });
+    });
+
+    const projectSlug = $('body').attr('projectSlug');
+    if (projectSlug) {
+        $('.donate-specific').on('click', function (e) {
+            const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
+            showOverlay(elem);
+        });
+    } 
+
+    const processedSlugs = new Set();
+
+    $('.project-selector').each((index, element) => {
+        const projectSlug = $(element).attr('projectSlug');
+        if (projectSlug && !processedSlugs.has(projectSlug)) {
+            processedSlugs.add(projectSlug);
+            attachIframe(element, countryCode);
+        }
+    });
+
+    $('.project-selector').on('click', function (e) {
+        showOverlay($(this));
+    });
+}
+
+function runNorway(countryCode) {
+    $('.donate, .donate-specific').on('click', function (e) {
         const projectSlug = $('body').attr('projectSlug');
         if (projectSlug) {
-            $('.donate-specific').on('click', function (e) {
-                const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
-                showOverlay(elem);
-            });
-        } 
+            $('#donation-overlay-no').css({ display: 'flex' });
+            $('.projects-container').css({display: 'none'});
+            $('.frequency-container').css({display: 'flex'});
+        } else {
+            $('#donation-overlay-no').css({ display: 'flex' });
+        }
+    });
 
-        const processedSlugs = new Set();
+    let updateNextButtonURL = function () {
+        $('.button-selector').text('...');
+        let currencySelected = 'NOK';
+        let freqSelected = $('.selected.freq-selector').text();
+        let connectedURL = '';
+        if (freqSelected == 'one time') {
+            connectedURL = $('.selected.project-selector-no').attr(currencySelected);
+        } else {
+            connectedURL = $('.selected.project-selector-no').attr(`${currencySelected}MONTHLY`);
+        }
+        $('.button-selector').attr({ myURL: connectedURL });
+    };
 
-        $('.project-selector').each((index, element) => {
-            const projectSlug = $(element).attr('projectSlug');
-            if (projectSlug && !processedSlugs.has(projectSlug)) {
-                processedSlugs.add(projectSlug);
-                attachIframe(element, countryCode);
-            }
-        });
+    let currentProj = $('body').attr('projectSlug');
 
-        $('.project-selector').on('click', function (e) {
-            showOverlay($(this));
-        });
-    }
+    if (currentProj) {
+        const projectSelector = $(`.project-selector-no[projectSlug=${currentProj}]`);
+        projectSelector.addClass('selected');
+        const projectName = projectSelector.attr('projectName');
+        $('.project-label').html(projectName);
+        updateNextButtonURL();
+    } 
+
+    $('.project-selector-no').on('click', function (e) {
+        $('.project-selector-no').removeClass('selected');
+        $(this).addClass('selected');
+        const projectName = $(this).attr('projectName');
+        $('.project-label').html(projectName);
+        updateNextButtonURL();
+    });
+
+    $('.freq-selector').on('click', function (e) {
+        $('.freq-selector').removeClass('selected');
+        $(this).addClass('selected');
+        updateNextButtonURL();
+        $('.button-selector').click();
+        $(this).removeClass('selected');
+    });
+
+    $('.button-selector').on('click', function (e) {
+        let url = $(this).attr('myURL');
+        window.open(url, '_blank');
+    });
 }
 
 function attachIframe(elem, code) {
