@@ -1891,7 +1891,8 @@
 
         const saveDonationAmount = async function (elem) {
             try {
-                validateDonationForm(elem);
+                const isValid = validateDonationForm(elem);
+                if (!isValid) return;
                 const total = $('.donation-amount.active').val();
                 const countryCode = localStorage.getItem('countryCode');
                 const monthly = $('[freq].active').attr('freq') === 'once' ? false : true;

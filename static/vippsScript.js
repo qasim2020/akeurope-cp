@@ -9,10 +9,17 @@ const validateDonationForm = function (elem) {
         $('.shake').one('animationend', function () {
             $('.donation-amount.active').closest('.body').removeClass('shake');
         });
-        return;
+        return false;
     }
+    return true;
 }
 
 const handleOneTimeVipps = async function(elem) {
-    validateDonationForm(elem);
+    const isValid = validateDonationForm(elem);
+    if (!isValid) return;
+}
+
+const handleMonthlyVipps = async function(elem) {
+    const isValid = validateDonationForm(elem);
+    if (!isValid) return;
 }
