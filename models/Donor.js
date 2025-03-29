@@ -12,6 +12,7 @@ const DonorSchema = new mongoose.Schema(
         tel: { type: String },
         anonymous: { type: Boolean, default: false },
         countryCode: { type: String },
+        vippsToken: { type: String },
         stripeCustomerId: { type: String },
         stripePaymentMethodId: { type: String },
         subscriptions: [

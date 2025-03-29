@@ -21,6 +21,7 @@ const overlayRoutes = require('./routes/overlayRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const { sendThankYouMessage } = require('./modules/emails');
 const { downloadStripeInvoiceAndReceipt } = require('./modules/invoice');
+const vippsRoutes = require('./routes/vippsRoutes');
 
 require('dotenv').config();
 mongoose();
@@ -104,43 +105,56 @@ app.use(customerRoutes);
 app.use(filesRoutes);
 app.use(widgetRoutes);
 app.use(overlayRoutes);
+app.use(vippsRoutes);
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
     res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));
 });
 
-app.get('/preview-email', async (req, res) => {
-    const templateName = 'invoiceRenewel';
+// app.get('/preview-email', async (req, res) => {
+//     const templateName = 'invoiceRenewel';
+//     const data = {
+//         name: 'Hassam Bukhari',
+//         invoiceNreceipt: true,
+//         newUser: false,
+//         invoiceUrl: '123',
+//         receiptUrl: '123',
+//         portalUrl: '123'
+//     };
+//     res.render(`emails/${templateName}`, data);
+// });
 
-    const data = {
-        name: 'Hassam Bukhari',
-        invoiceNreceipt: true,
-        newUser: false,
-        invoiceUrl: '123',
-        receiptUrl: '123',
-        portalUrl: '123',
-    };
+// app.get('/testing', async (req, res) => {
+//     try {
+//         const Order = require('./models/Subscription');
+//         const order = await Order.findOne({orderNo: 4888}).lean();
+//         const uploadedBy = {
+//             actorType: 'customer',
+//             actorId: '67c97fc0a71f7cc36dee2f37',
+//             actorUrl: '/customer/67c97fc0a71f7cc36dee2f37',
+//         };
 
-    res.render(`emails/${templateName}`, data);
-});
-
-app.get('/testing', async (req, res) => {
-    try {
-        const Order = require('./models/Subscription');
-        const order = await Order.findOne({orderNo: 4888}).lean();
-        const uploadedBy = {
-            actorType: 'customer',
-            actorId: '67c97fc0a71f7cc36dee2f37',
-            actorUrl: '/customer/67c97fc0a71f7cc36dee2f37',
-        };
-
-        await downloadStripeInvoiceAndReceipt(order, uploadedBy);
-        res.status(200).send('Done');
-    } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message);
-    }
-});
+//         await downloadStripeInvoiceAndReceipt(order, uploadedBy);
+//         res.status(200).send('Done');
+//     } catch (error) {
+//         console.log(error);
+//         res.status(400).send(error.message);
+//     }
+// });
+// app.get('/testing', async (req, res) => {
+//     try {
+//         const { successfulOneTimePaymentOverlay } = require('./modules/orderPostActions');
+//         const Subscription = require('./models/Subscription');
+//         const Customer = require('./models/Customer');
+//         const order = await Subscription.findById('67d184cd1ffa59566f463801').lean();
+//         const checkCustomer = await Customer.findById(order.customerId).lean();
+//         await successfulOneTimePaymentOverlay(order, checkCustomer);
+//         res.status(200).send('Done');
+//     } catch (error) {
+//         console.log(error);
+//         res.status(400).send(error.message);
+//     }
+// });
 
 // app.get('/testing/:tel', async (req, res) => {
 //     try {
