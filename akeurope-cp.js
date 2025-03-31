@@ -124,47 +124,16 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 //     res.render(`emails/${templateName}`, data);
 // });
 
-// app.get('/testing', async (req, res) => {
-//     try {
-//         const Order = require('./models/Subscription');
-//         const order = await Order.findOne({orderNo: 4888}).lean();
-//         const uploadedBy = {
-//             actorType: 'customer',
-//             actorId: '67c97fc0a71f7cc36dee2f37',
-//             actorUrl: '/customer/67c97fc0a71f7cc36dee2f37',
-//         };
-
-//         await downloadStripeInvoiceAndReceipt(order, uploadedBy);
-//         res.status(200).send('Done');
-//     } catch (error) {
-//         console.log(error);
-//         res.status(400).send(error.message);
-//     }
-// });
-// app.get('/testing', async (req, res) => {
-//     try {
-//         const { successfulOneTimePaymentOverlay } = require('./modules/orderPostActions');
-//         const Subscription = require('./models/Subscription');
-//         const Customer = require('./models/Customer');
-//         const order = await Subscription.findById('67d184cd1ffa59566f463801').lean();
-//         const checkCustomer = await Customer.findById(order.customerId).lean();
-//         await successfulOneTimePaymentOverlay(order, checkCustomer);
-//         res.status(200).send('Done');
-//     } catch (error) {
-//         console.log(error);
-//         res.status(400).send(error.message);
-//     }
-// });
-
-// app.get('/testing/:tel', async (req, res) => {
-//     try {
-//         await sendThankYouMessage(req.params.tel, 'https://akeurope.org');
-//         res.status(200).send('Done');
-//     } catch (error) {
-//         console.log(error);
-//         res.status(400).send(error.message);
-//     }
-// });
+app.get('/testing', async (req, res) => {
+    try {
+        const { getUserInfo } = require('./modules/vipps');
+        await getUserInfo('ef9e7599-2fd7-4747-9d05-ce4cd8bac61c');
+        res.status(200).send('Done');
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error);
+    }
+});
 
 app.get('/', (req, res) => {
     if (req.session.user) {

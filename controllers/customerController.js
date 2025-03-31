@@ -19,8 +19,6 @@ const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
 const { getLatestSubscriptionByOrderId, getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
 const { getEntriesByCustomerId, paginateActiveSubscriptions } = require('../modules/ordersFetchEntries');
-const { getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
-const { getEntriesByCustomerId } = require('../modules/ordersFetchEntries');
 const Donor = require('../models/Donor');
 
 exports.getCustomerData = async (req, res) => {

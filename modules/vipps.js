@@ -1,5 +1,54 @@
 require('dotenv').config();
 const crypto = require('crypto');
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
+const Order = require('../models/Order');
+const Subscription = require('../models/Subscription');
+
+function generateRandomString(length = 32) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
+    return Array.from(crypto.randomFillSync(new Uint8Array(length)))
+        .map((byte) => chars[byte % chars.length])
+        .join('');
+}
+
+async function getVippsToken() {
+    try {
+        const response = await axios.post(
+            `${process.env.VIPPS_API_URL}/accesstoken/get`,
+            {},
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    client_id: process.env.VIPPS_CLIENT_ID,
+                    client_secret: process.env.VIPPS_CLIENT_SECRET,
+                    'Ocp-Apim-Subscription-Key': process.env.VIPPS_SUBSCRIPTION_KEY_PRIMARY,
+                    'Merchant-Serial-Number': process.env.VIPPS_MSN,
+                },
+            },
+        );
+        return response.data.access_token;
+    } catch (error) {
+        console.log(error);
+        throw new Error('Could not get vipps token');
+    }
+}
+
+function validateAndFormatVippsNumber(input) {
+    let cleaned = input.replace(/\D+/g, ''); // Remove all non-numeric characters
+
+    if (input.startsWith('+47') || input.startsWith('47')) {
+        cleaned = cleaned.replace(/^47/, ''); // Remove leading 47 if already present
+    }
+
+    if (cleaned.length === 8 && /^[49]/.test(cleaned)) {
+        cleaned = '47' + cleaned; // Ensure it starts with 47
+    }
+
+    let regex = /^47[49]\d{7}$/; // Must start with 47, followed by 4 or 9, then 7 more digits
+
+    return regex.test(cleaned) ? cleaned : false;
+}
 
 const authVippsWebhook = (req, res, next) => {
     const headers = req.headers;
@@ -32,43 +81,112 @@ const authVippsWebhook = (req, res, next) => {
     }
 };
 
-const vippsPaymentCreated = async (paymentId) => {
-    console.log(`Payment created: ${paymentId}`);
+const getConfig = async (url, payload, token) => {
+    const idempotencyKey = uuidv4();
+
+    let config = {
+        method: 'post',
+        maxBodyLength: Infinity,
+        url,
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            'Ocp-Apim-Subscription-Key': process.env.VIPPS_SUBSCRIPTION_KEY_PRIMARY,
+            'Merchant-Serial-Number': process.env.VIPPS_MSN,
+            'Idempotency-Key': idempotencyKey,
+            'Vipps-System-Name': 'partner',
+            'Vipps-System-Version': '1.0.0',
+            'Vipps-System-Plugin-Name': 'partner-portal',
+            'Vipps-System-Plugin-Version': '1.0.0',
+            Cookie: 'fpc=AjRCPJ45oFNNilsI1xXCSK9_jNOOAwAAAPNiaN8OAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd',
+        },
+        data: payload,
+    };
+
+    return config;
+};
+const vippsGetHeader = (token) => {
+    return {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Ocp-Apim-Subscription-Key': process.env.VIPPS_SUBSCRIPTION_KEY_PRIMARY,
+            'Merchant-Serial-Number': process.env.VIPPS_MSN,
+        },
+    };
+};
+
+const getVippsOneTimePaymentDetails = async (reference) => {
+    
+    return response.data;
+};
+
+const getVippsUserDetails = async (sub) => {
+    return response.data;
+};
+
+const getUserInfo = async (sub) => {
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const user = await axios.get(`${process.env.VIPPS_API_URL}/vipps-userinfo-api/userinfo/${sub}`, headers);
+    console.log(user); 
+}
+
+const saveUserInfo = async (body) => {
+    console.log('save user info now');
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const order = await axios.get(`${process.env.VIPPS_API_URL}/epayment/v1/payments/${body.reference}`, headers);
+    const sub = order?.data?.profile?.sub;
+    console.log(sub);
+    // const user = await axios.get(`${process.env.VIPPS_API_URL}/vipps-userinfo-api/${sub}`, headers);
+    // console.log(user);
+};
+
+const vippsPaymentCreated = async (req, res) => {
+    console.log(`Payment created: ${JSON.stringify(req.body, 0, 2)}`);
     // Implement your logic, e.g., update database
 };
 
-const vippsPaymentAborted = async (paymentId) => {
-    console.log(`Payment aborted: ${paymentId}`);
+const deleteVippsOrder = async (orderId) => {
+    const sub = await Subscription.deleteOne({ _id: orderId });
+    const order = await Order.deleteOne({ _id: orderId });
+    console.log(sub, order);
+};
+
+const vippsPaymentAborted = async (req, res) => {
+    console.log(`Payment aborted: ${req.body.reference}`);
+    deleteVippsOrder(req.body.reference);
+};
+
+const vippsPaymentExpired = async (req, res) => {
+    console.log(`Payment expired: ${JSON.stringify(req.body, 0, 2)}`);
+    // Implement logic
+    deleteVippsOrder(req.body.reference);
+};
+
+const vippsPaymentCancelled = async (req, res) => {
+    console.log(`Payment cancelled: ${JSON.stringify(req.body, 0, 2)}`);
+    deleteVippsOrder(req.body.reference);
+};
+
+const vippsPaymentCaptured = async (req, res) => {
+    console.log(`Payment captured: ${JSON.stringify(req.body, 0, 2)}`);
     // Implement logic
 };
 
-const vippsPaymentExpired = async (paymentId) => {
-    console.log(`Payment expired: ${paymentId}`);
+const vippsPaymentRefunded = async (req, res) => {
+    console.log(`Payment refunded: ${JSON.stringify(req.body, 0, 2)}`);
     // Implement logic
 };
 
-const vippsPaymentCancelled = async (paymentId) => {
-    console.log(`Payment cancelled: ${paymentId}`);
+const vippsPaymentAuthorized = async (req, res) => {
+    console.log(`Payment authorized: ${JSON.stringify(req.body, 0, 2)}`);
+    await saveUserInfo(req.body);
     // Implement logic
 };
 
-const vippsPaymentCaptured = async (paymentId) => {
-    console.log(`Payment captured: ${paymentId}`);
-    // Implement logic
-};
-
-const vippsPaymentRefunded = async (paymentId) => {
-    console.log(`Payment refunded: ${paymentId}`);
-    // Implement logic
-};
-
-const vippsPaymentAuthorized = async (paymentId) => {
-    console.log(`Payment authorized: ${paymentId}`);
-    // Implement logic
-};
-
-const vippsPaymentTerminated = async (paymentId) => {
-    console.log(`Payment terminated: ${paymentId}`);
+const vippsPaymentTerminated = async (req, res) => {
+    console.log(`Payment terminated: ${JSON.stringify(req.body, 0, 2)}`);
     // Implement logic
 };
 
@@ -88,8 +206,7 @@ const vippsAgreementExpired = async (agreementId) => {
     console.log(`Agreement expired: ${agreementId}`);
 };
 
-
-module.exports = { 
+module.exports = {
     authVippsWebhook,
     vippsPaymentCreated,
     vippsPaymentAborted,
@@ -103,4 +220,8 @@ module.exports = {
     vippsAgreementRejected,
     vippsAgreementStopped,
     vippsAgreementExpired,
+    validateAndFormatVippsNumber,
+    getVippsToken,
+    getConfig,
+    getUserInfo,
 };

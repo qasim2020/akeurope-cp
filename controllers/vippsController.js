@@ -1,12 +1,14 @@
 const axios = require('axios');
 require('dotenv').config();
 
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const Order = require('../models/Order');
 const Subscription = require('../models/Subscription');
 const Donor = require('../models/Donor');
 const Customer = require('../models/Customer');
 const crypto = require('crypto');
+const { slugToString } = require('../modules/helpers');
 
 const {
     vippsPaymentCreated,
@@ -20,94 +22,50 @@ const {
     vippsAgreementActivated,
     vippsAgreementRejected,
     vippsAgreementStopped,
-    vippsAgreementExpired
-} = require("../modules/vipps");
-
-
-function generateRandomString(length = 32) {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-';
-    return Array.from(crypto.randomFillSync(new Uint8Array(length)))
-        .map((byte) => chars[byte % chars.length])
-        .join('');
-}
-
-async function getVippsToken() {
-    try {
-        const response = await axios.post(
-            `${process.env.VIPPS_API_URL}/accesstoken/get`,
-            {},
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    client_id: process.env.VIPPS_CLIENT_ID,
-                    client_secret: process.env.VIPPS_CLIENT_SECRET,
-                    'Ocp-Apim-Subscription-Key': process.env.VIPPS_SUBSCRIPTION_KEY_PRIMARY,
-                    'Merchant-Serial-Number': process.env.VIPPS_MSN,
-                },
-            },
-        );
-        return response.data.access_token;
-    } catch (error) {
-        console.log(error);
-        throw new Error('Could not get vipps token');
-    }
-}
-
-function validateAndFormatVippsNumber(input) {
-    let cleaned = input.replace(/\D+/g, ''); // Remove all non-numeric characters
-
-    if (input.startsWith('+47') || input.startsWith('47')) {
-        cleaned = cleaned.replace(/^47/, ''); // Remove leading 47 if already present
-    }
-
-    if (cleaned.length === 8 && /^[49]/.test(cleaned)) {
-        cleaned = '47' + cleaned; // Ensure it starts with 47
-    }
-
-    let regex = /^47[49]\d{7}$/; // Must start with 47, followed by 4 or 9, then 7 more digits
-
-    return regex.test(cleaned) ? cleaned : false;
-}
+    vippsAgreementExpired,
+    getVippsToken,
+    validateAndFormatVippsNumber,
+    getConfig,
+} = require('../modules/vipps');
+const { sendErrorToTelegram } = require('../modules/telegramBot');
 
 exports.vippsWebhook = async (req, res) => {
     try {
         const event = req.body.name || req.body.eventType;
-        const paymentId = 123;
+        const paymentId = req.body.reference;
         const agreementId = 123;
 
-        console.log({event});
-        
         switch (event) {
             case 'CREATED':
-                await vippsPaymentCreated(paymentId);
+                await vippsPaymentCreated(req,res);
                 break;
 
             case 'ABORTED':
-                await vippsPaymentAborted(paymentId);
+                await vippsPaymentAborted(req,res);
                 break;
 
             case 'EXPIRED':
-                await vippsPaymentExpired(paymentId);
+                await vippsPaymentExpired(req,res);
                 break;
 
             case 'CANCELLED':
-                await vippsPaymentCancelled(paymentId);
+                await vippsPaymentCancelled(req,res);
                 break;
 
             case 'CAPTURED':
-                await vippsPaymentCaptured(paymentId);
+                await vippsPaymentCaptured(req,res);
                 break;
 
             case 'REFUNDED':
-                await vippsPaymentRefunded(paymentId);
+                await vippsPaymentRefunded(req,res);
                 break;
 
             case 'AUTHORIZED':
-                await vippsPaymentAuthorized(paymentId);
+                await vippsPaymentAuthorized(req,res);
                 break;
 
             case 'TERMINATED':
-                await vippsPaymentTerminated(paymentId);
+                await vippsPaymentTerminated(req,res);
                 break;
 
             case 'ACTIVATED':
@@ -132,7 +90,8 @@ exports.vippsWebhook = async (req, res) => {
 
         res.status(200).send('Webhook received');
     } catch (error) {
-        console.log(error);
+        console.log(error.message || error.data || error || 'Unknown error - check server logs');
+        sendErrorToTelegram(error.message || error.data || error || 'Unknown error - check server logs');
         res.status(200).send('Webhook received, but with errors');
     }
 };
@@ -141,97 +100,106 @@ exports.vippsPaymentSuccessful = async (req, res) => {
     res.status(200).send('Payment received, thank you!');
 };
 
+const projects = [
+    'gaza-orphans',
+    'alfalah-student-scholarship-2025',
+    'fidya-kaffarah',
+    'zakat',
+    'street-child',
+    'palestinian-students-scholarship-program',
+    'gaza-relief-fund',
+];
+
 exports.createVippsPaymentIntent = async (req, res) => {
     try {
-        const { orderId, email } = req.params;
-        const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
-        if (!order) throw new Error('Order/ Record Not Found!');
-        const donor = (await Donor.findOne({ email }).lean()) || (await Customer.findOne({ email }).lean());
-        if (!donor) throw new Error('Donor not found');
-        const amount = order.total || order.totalCost;
+
+        const { total, currency, project: slug } = req.body;
+        if (!(process.env.ENV === 'test') && total < 10) throw new Error('Order cost can not be lower than 10 NOK.');
+        if (currency != 'NOK') throw new Error('Vipps works for Norway only.');
+        if (!projects.includes(slug)) throw new Error('Project is not listed.');
+
+        let order = new Subscription({
+            customerId: process.env.TEMP_CUSTOMER_ID,
+            currency: 'NOK',
+            total,
+            totalAllTime: total,
+            monthlySubscription: false,
+            countryCode: 'NO',
+            projectSlug: slug,
+            status: 'draft',
+        });
+
+        await order.save();
 
         let data = JSON.stringify({
             amount: {
                 currency: 'NOK',
-                value: amount * 100,
+                value: total * 100,
             },
             paymentMethod: {
                 type: 'WALLET',
             },
-            customer: {
-                phoneNumber: validateAndFormatVippsNumber(donor.tel),
-            },
-            reference: generateRandomString(32), // order._id.toString(),
-            returnUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-payment-successful`,
+            reference: order._id.toString(),
+            returnUrl: `${process.env.CUSTOMER_PORTAL_URL}/login?token=1234`,
             userFlow: 'WEB_REDIRECT',
-            paymentDescription: `Order - ${order.orderNo}` || `${slugToString(order.projectSlug)} # ${order.orderNo}`,
+            profile: {
+                scope: 'name phoneNumber email address',
+            },
+            paymentDescription: `${slugToString(order.projectSlug)} # ${order.orderNo}` || `Order - ${order.orderNo}`,
         });
-
-        console.log(data);
 
         const token = await getVippsToken();
         const config = await getConfig(`${process.env.VIPPS_API_URL}/epayment/v1/payments`, data, token);
         const response = await axios.request(config);
 
-        res.status(200).send({
-            token,
-            url: response.data.redirectUrl,
-        });
+        res.status(200).send(response.data.redirectUrl);
+
+        // required for POSTMAN
+        // res.status(200).send({
+        //     token,
+        //     url: response.data.redirectUrl,
+        // });
     } catch (error) {
         console.log(error);
         res.status(400).send(error.message);
     }
 };
 
-const getConfig = async (url, payload, token) => {
-    const idempotencyKey = uuidv4();
-
-    let config = {
-        method: 'post',
-        maxBodyLength: Infinity,
-        url,
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-            'Ocp-Apim-Subscription-Key': process.env.VIPPS_SUBSCRIPTION_KEY_PRIMARY,
-            'Merchant-Serial-Number': process.env.VIPPS_MSN,
-            'Idempotency-Key': idempotencyKey,
-            'Vipps-System-Name': 'partner',
-            'Vipps-System-Version': '1.0.0',
-            'Vipps-System-Plugin-Name': 'partner-portal',
-            'Vipps-System-Plugin-Version': '1.0.0',
-            Cookie: 'fpc=AjRCPJ45oFNNilsI1xXCSK9_jNOOAwAAAPNiaN8OAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd',
-        },
-        data: payload,
-    };
-
-    return config;
-};
-
 exports.createVippsSetupIntent = async (req, res) => {
     try {
-        const { orderId, email } = req.params;
-        const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
-        if (!order) throw new Error('Order/ Record Not Found!');
-        const donor = (await Donor.findOne({ email }).lean()) || (await Customer.findOne({ email }).lean());
-        if (!donor) throw new Error('Donor not found');
-        const amount = order.total || order.totalCost;
+        const { total, currency, project: slug } = req.body;
+        if (!(process.env.ENV === 'test') && total < 10) throw new Error('Order cost can not be lower than 10 NOK.');
+        if (currency != 'NOK') throw new Error('Vipps works for Norway only.');
+        if (!projects.includes(slug)) throw new Error('Project is not listed.');
+
+        let order = new Subscription({
+            customerId: process.env.TEMP_CUSTOMER_ID,
+            currency: 'NOK',
+            total,
+            totalAllTime: total,
+            monthlySubscription: true,
+            countryCode: 'NO',
+            projectSlug: slug,
+            status: 'draft',
+        });
+
+        await order.save();
 
         const payload = {
             pricing: {
                 type: 'LEGACY',
-                amount: amount * 100,
-                currency: order.currency,
+                amount: order.total * 100,
+                currency: 'NOK',
             },
             interval: {
                 unit: 'MONTH',
                 count: 1,
             },
-            merchantRedirectUrl: 'https://local.akeurope.org',
-            merchantAgreementUrl: 'https://local.akeurope.org',
-            phoneNumber: validateAndFormatVippsNumber(donor.tel),
-            productName: `Order # ${order.orderNo}`,
-            scope: 'name phoneNumber email',
+            merchantRedirectUrl: process.env.CUSTOMER_PORTAL_URL,
+            merchantAgreementUrl: process.env.CUSTOMER_PORTAL_URL,
+            productName: `${slugToString(slug)} # ${order.orderNo}`,
+            phoneNumber: process.env.ENV === 'test' ? validateAndFormatVippsNumber(process.env.VIPPS_TEST_NO) : null,
+            scope: 'name phoneNumber email address',
             externalId: order._id.toString(),
         };
 
