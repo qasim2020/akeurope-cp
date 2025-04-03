@@ -38,12 +38,9 @@ const getStripeReceiptUrl = async (order) => {
     };
 };
 
-const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
-    const invoice = await getFileWithToken(order._id, 'invoice');
-    const receipt = (await getFileWithToken(order._id, 'receipt')) || (await getStripeReceiptUrl(order));
+const getPortalUrl = async (customer) => {
     let portalUrl = '',
         newUser = false;
-
     if (!customer.password) {
         const inviteToken = crypto.randomBytes(32).toString('hex');
         const inviteExpires = moment().add(24, 'hours').toDate();
@@ -54,6 +51,16 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
         portalUrl = `${process.env.CUSTOMER_PORTAL_URL}/login`;
         newUser = false;
     }
+    return {
+        portalUrl,
+        newUser,
+    };
+};
+
+const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
+    const invoice = await getFileWithToken(order._id, 'invoice');
+    const receipt = (await getFileWithToken(order._id, 'receipt')) || (await getStripeReceiptUrl(order));
+    const { portalUrl, newUser } = await getPortalUrl(customer);
 
     if (!invoice && !receipt) {
         throw new Error('Invoice and receipt both not found');
@@ -90,6 +97,7 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     try {
         await transporter.sendMail(mailOptions);
         await sendThankYouMessage(customer.tel, portalUrl);
+        await sendTelegramMessage(`✅ *Invoice & Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
         console.log('Invoice & receipt sent!');
         return true;
     } catch (err) {
@@ -99,14 +107,14 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     }
 };
 
-const sendThankYouMessage = async (phone, url) => {
+const sendThankYouMessage = async (phone) => {
     try {
         phone = formatPhoneNumber(phone);
 
         if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
             throw new Error('Invalid phone number format');
         }
-        
+
         const message =
             `Thank you for your trust in Alkhidmat Europe.\n\n` +
             `You can view and manage your payments here:\n` +
@@ -130,6 +138,46 @@ const sendThankYouMessage = async (phone, url) => {
         console.error('Error sending message:', error);
         await sendErrorToTelegram(error.message || error);
     }
+};
+
+const sendThankYouEmail = async (order, customer) => {
+    const { portalUrl, newUser } = await getPortalUrl(customer);
+
+    let transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    const templatePath = path.join(__dirname, '../views/emails/thankYouEmail.handlebars');
+    const templateSource = await fs.readFile(templatePath, 'utf8');
+    const compiledTemplate = handlebars.compile(templateSource);
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: customer.email,
+        subject: `Payment Received - ${order.totalCost || order.total} ${order.currency}`,
+        html: compiledTemplate({
+            name: customer.name,
+            portalUrl,
+            newUser,
+        }),
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        await sendTelegramMessage(`✅ *Email Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* thankYouEmail.handlebars`);
+        console.log('Thank you email sent!');
+        return true;
+    } catch (err) {
+        console.log(`Failed to send email: ${err.message}`);
+        sendErrorToTelegram(err.message);
+        return true;
+    } 
 };
 
 const sendInvoiceToCustomer = async (order, customer) => {
@@ -238,7 +286,7 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
     try {
         await transporter.sendMail(mailOptions);
         await sendThankYouMessage(customer.tel, portalUrl);
-        console.log('Invoice & receipt sent!');
+        await sendTelegramMessage(`✅ *Invoice || Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
         return true;
     } catch (err) {
         throw new Error(`Failed to send email: ${err.message}`);
@@ -296,7 +344,7 @@ const sendReceiptToCustomer = async (order, customer) => {
     try {
         await transporter.sendMail(mailOptions);
         await sendThankYouMessage(customer.tel, portalUrl);
-        console.log('Invoice & receipt sent!');
+        await sendTelegramMessage(`✅ *Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
         return true;
     } catch (err) {
         throw new Error(`Failed to send email: ${err.message}`);
@@ -353,4 +401,5 @@ module.exports = {
     sendCustomerInvite,
     sendStripeRenewelInvoiceToCustomer,
     sendThankYouMessage,
+    sendThankYouEmail,
 };

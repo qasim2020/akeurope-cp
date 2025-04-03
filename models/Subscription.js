@@ -12,7 +12,7 @@ const SubscriptionRecordSchema = new mongoose.Schema(
         monthlySubscription: { type: Boolean, default: false },
         countryCode: { type: String, required: true },
         projectSlug: { type: String, required: true },
-        status: { type: String, enum: ['draft', 'pending payment', 'processing', 'paid'], default: 'draft' },
+        status: { type: String, enum: ['draft', 'aborted', 'cancelled', 'authorized', 'pending payment', 'processing', 'paid', 'refunded'], default: 'draft' },
     },
     {
         timestamps: true,

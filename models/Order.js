@@ -13,7 +13,7 @@ const OrderSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['draft', 'pending payment', 'processing', 'paid'],
+            status: { type: String, enum: ['draft', 'aborted', 'cancelled', 'authorized', 'pending payment', 'processing', 'paid', 'refunded'], default: 'draft' },
             default: 'draft',
         },
         currency: {

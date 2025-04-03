@@ -22,6 +22,7 @@ const stripeRoutes = require('./routes/stripeRoutes');
 const { sendThankYouMessage } = require('./modules/emails');
 const { downloadStripeInvoiceAndReceipt } = require('./modules/invoice');
 const vippsRoutes = require('./routes/vippsRoutes');
+const { captureVippsPayment } = require('./modules/vippsModules');
 
 require('dotenv').config();
 mongoose();
@@ -126,8 +127,9 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 
 app.get('/testing', async (req, res) => {
     try {
-        const { getUserInfo } = require('./modules/vipps');
-        await getUserInfo('ef9e7599-2fd7-4747-9d05-ce4cd8bac61c');
+        const { successfulOneTimePaymentOverlay } = require('./modules/vippsPostActions');
+        const orderId = '67ede5d96b455646e4f6299a';
+        await successfulOneTimePaymentOverlay(orderId);
         res.status(200).send('Done');
     } catch (error) {
         console.log(error);

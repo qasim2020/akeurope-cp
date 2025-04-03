@@ -23,6 +23,8 @@
             <a href="/order/{{this._id}}">{{this.orderNo}}</a>
             {{else}}
             <a href="/order/{{this._id}}">{{this.orderNo}}</a>
+            {{/if}}
+            {{#if this.monthlySubscription}}
             <i class="ti ti-refresh ms-1"></i>
             {{/if}}
           </td>

@@ -13,8 +13,10 @@ const DonorSchema = new mongoose.Schema(
         anonymous: { type: Boolean, default: false },
         countryCode: { type: String },
         vippsToken: { type: String },
-        stripeCustomerId: { type: String },
-        stripePaymentMethodId: { type: String },
+        vippsCustomerId: { type: String, index: false },
+        vippsCustomerSub: { type: String, index: false },
+        stripeCustomerId: { type: String, index: false },
+        stripePaymentMethodId: { type: String, index: false },
         subscriptions: [
             {
                 orderId: { type: mongoose.Schema.Types.ObjectId },
