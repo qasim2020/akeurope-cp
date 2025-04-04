@@ -237,7 +237,8 @@ exports.updateOrder = async (req, res) => {
             }
         }
 
-        if (order.status !== 'draft') return res.status(404).send(`Order can not be edited in ${order.status} mode`);
+        if (!['draft', 'cancelled', 'aborted', 'created', 'expired', 'rejected'].includes(order.status)) 
+            throw new Error(`Order can not be edited in ${order.status} mode`);
 
         const checkProject = await Project.findOne({ slug: req.params.slug }).lean();
 
@@ -560,7 +561,7 @@ exports.createSubscription = async (req, res) => {
         const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
         if (!order) throw new Error('Order not found!');
 
-        const amount = Math.max(1, Math.round(order.totalCostSingleMonth * 100));
+        const amount = Math.max(100, Math.round(order.totalCostSingleMonth * 100));
 
         const description = `Order - ${order.orderNo}`;
 

@@ -107,6 +107,79 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     }
 };
 
+const sendThankYouForSponsoringBeneficiaryMessage = async (phone) => {
+    try {
+        phone = formatPhoneNumber(phone);
+
+        if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
+            throw new Error('Invalid phone number format');
+        }
+        
+        const message =
+            `Thank you for supporting Alkhidmat Europe in sponsoring these beneficiaries.\n\n` +
+            `You can stay updated on your beneficiaries by logging into our donor portal:\n\n` +
+            `${process.env.CUSTOMER_PORTAL_URL}/login\n\n` +
+            `Your generosity is making a lasting difference. We truly appreciate your continued support.`;
+
+        const response = await client.messages.create({
+            body: message,
+            from: process.env.TWILIO_MESSAGING_SERVICE_SID,
+            to: phone,
+        });
+
+        if (response.errorCode) {
+            console.error(`Failed to send message to ${phone}: ${response.errorMessage}`);
+            await sendErrorToTelegram(response.errorMessage);
+        } else {
+            console.log('Thank you message sent to', phone);
+            await sendTelegramMessage(`✅ *Text Message Sent!*\n\n` + `🆔 *To:* ${phone}\n` + `📅 *Message:* ${message}`);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        await sendErrorToTelegram(error.message || error);
+    }
+};
+
+const sendThankYouForSponsoringBeneficiaryEmail = async (order, customer) => {
+    const { portalUrl, newUser } = await getPortalUrl(customer);
+
+    let transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: true,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    const templatePath = path.join(__dirname, '../views/emails/thankYouBeneficiary.handlebars');
+    const templateSource = await fs.readFile(templatePath, 'utf8');
+    const compiledTemplate = handlebars.compile(templateSource);
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: customer.email,
+        subject: `Payment Received - ${order.totalCost || order.total} ${order.currency}`,
+        html: compiledTemplate({
+            name: customer.name,
+            portalUrl,
+            newUser,
+        }),
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        await sendTelegramMessage(`✅ *Email Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* thankYouBeneficiary.handlebars`);
+        console.log('Thank you email sent!');
+        return true;
+    } catch (err) {
+        console.log(`Failed to send email: ${err.message}`);
+        sendErrorToTelegram(err.message);
+        return true;
+    } 
+};
+
 const sendThankYouMessage = async (phone) => {
     try {
         phone = formatPhoneNumber(phone);
@@ -400,6 +473,8 @@ module.exports = {
     sendReceiptToCustomer,
     sendCustomerInvite,
     sendStripeRenewelInvoiceToCustomer,
+    sendThankYouForSponsoringBeneficiaryEmail,
+    sendThankYouForSponsoringBeneficiaryMessage,
     sendThankYouMessage,
     sendThankYouEmail,
 };

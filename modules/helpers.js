@@ -363,7 +363,16 @@ const dynamicRound = (value) => {
     return Math.ceil(value / magnitude) * magnitude;
 };
 
+const vippsStatusMap = {
+    draft: ['PENDING', 'CREATED'],
+    aborted: ['ABORTED', 'EXPIRED', 'CANCELLED', 'STOPPED', 'FAILED'],
+    authorized: ['AUTHORIZED', 'ACTIVE'],
+    paid: ['CAPTURED', 'CHARGED'],
+    refunded: 'REFUNDED',
+};
+
 module.exports = {
+    vippsStatusMap,
     dynamicRound,
     divide,
     slugToString,

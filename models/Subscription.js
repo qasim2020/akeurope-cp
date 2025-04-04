@@ -6,13 +6,19 @@ const SubscriptionRecordSchema = new mongoose.Schema(
     {
         orderNo: { type: String },
         customerId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Customer' },
+        vippsAgreementId: { type: String, required: false, index: false },
+        vippsReference: { type: String, required: false, index: false },
         currency: { type: String, required: true },
         total: { type: Number, required: true },
         totalAllTime: { type: Number, required: true },
         monthlySubscription: { type: Boolean, default: false },
         countryCode: { type: String, required: true },
         projectSlug: { type: String, required: true },
-        status: { type: String, enum: ['draft', 'aborted', 'cancelled', 'authorized', 'pending payment', 'processing', 'paid', 'refunded'], default: 'draft' },
+        status: {
+            type: String,
+            enum: ['draft', 'aborted', 'cancelled', 'rejected', 'terminated', 'stopped', 'expired', 'authorized', 'pending payment', 'processing', 'paid', 'refunded'],
+            default: 'draft',
+        },
     },
     {
         timestamps: true,

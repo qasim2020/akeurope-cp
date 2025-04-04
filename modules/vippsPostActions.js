@@ -6,9 +6,20 @@ const Subscription = require('../models/Subscription');
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { generateInvoice, saveFileRecord } = require('../modules/invoice');
-const { sendThankYouMessage, sendThankYouEmail } = require('../modules/emails');
+const {
+    sendThankYouMessage,
+    sendThankYouEmail,
+    sendThankYouForSponsoringBeneficiaryEmail,
+    sendThankYouForSponsoringBeneficiaryMessage,
+} = require('../modules/emails');
 const { sendErrorToTelegram } = require('../modules/telegramBot');
-const { getVippsUserInfo, updateDonorProfile } = require('../modules/vippsModules');
+const {
+    getVippsOrderNUserInfo,
+    updateDonorWithPayment,
+    updateDonorWithCharge,
+    getVippsChargeNUserInfo,
+} = require('../modules/vippsModules');
+const { vippsStatusMap } = require('../modules/helpers');
 
 const connectDonorInCustomer = async (donor, checkCustomer) => {
     let dashboardLink;
@@ -21,7 +32,7 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
             {
                 $set: {
                     name: donor.name,
-                    tel: donor.phoneNumber,
+                    tel: donor.tel,
                     anonymous: 'false',
                     countryCode: 'NO',
                     address: donor.address,
@@ -40,8 +51,8 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
         const updateFields = {
             $set: {
                 name: donor.name,
-                organization: 'N/A',
-                tel: donor.phoneNumber,
+                organization: 'Not Listed',
+                tel: donor.tel,
                 anonymous: 'false',
                 countryCode: 'NO',
             },
@@ -54,7 +65,7 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
             updateFields.address = donor.address;
         }
 
-        const newCustomer = await Customer.findOneAndUpdate({ email: donor.email }, updateFields, {
+        const newCustomer = await Customer.findOneAndUpdate({ email: donor.email?.toLowerCase() }, updateFields, {
             upsert: true,
             new: true,
             lean: true,
@@ -70,21 +81,28 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
 
 const successfulOneTimePayment = async (orderId, customer) => {
     try {
-        const order = await Order.findById(orderId).lean();
+        let order = await Order.findById(orderId).lean();
         if (!order) {
-            throw new Error('Order not found, it might be a subscription');
+            throw new Error('Order not found = strange');
+        }
+        if (order.status === 'paid') {
+            throw new Error('Order already paid');
         }
         if (order.monthlySubscription) {
             throw new Error('This is a subscription payment, not a one-time payment');
         }
-        const uploadedBy = {
-            actorType: 'customer',
-            actorId: customer._id,
-            actorUrl: `/customer/${customer._id}`,
-        };
-        order.customer = customer;
-        const invoicePath = await generateInvoice(order);
-        await saveFileRecord(order, invoicePath, 'invoice', uploadedBy);
+        const info = await getVippsOrderNUserInfo(orderId);
+        const updatedDonor = await updateDonorWithPayment(info);
+        let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
+        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
+        order = await Order.findOneAndUpdate(
+            { _id: order._id },
+            {
+                customerId: customer._id,
+                status: 'paid',
+            },
+            { lean: true, new: true },
+        );
         await saveLog(
             logTemplates({
                 type: 'successfulOneTimePayment',
@@ -92,7 +110,8 @@ const successfulOneTimePayment = async (orderId, customer) => {
                 actor: customer,
             }),
         );
-        await sendInvoiceAndReceiptToCustomer(order, customer);
+        await sendThankYouForSponsoringBeneficiaryEmail(order, customer);
+        await sendThankYouForSponsoringBeneficiaryMessage(updatedDonor.tel);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message);
@@ -135,13 +154,16 @@ const successfulOneTimePaymentOverlay = async (orderId) => {
         if (!order) {
             throw new Error('Order not found = strange');
         }
+        if (order.status === 'paid') {
+            throw new Error('Order already paid');
+        }
         if (order.monthlySubscription) {
             throw new Error('This is a subscription payment, not a one-time payment');
         }
-        const donor = await getVippsUserInfo(orderId);
-        const updatedDonor = await updateDonorProfile(donor);
+        const info = await getVippsOrderNUserInfo(orderId);
+        const updatedDonor = await updateDonorWithPayment(info);
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
-        const customer = await connectDonorInCustomer(donor, existingCustomer);
+        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
         order = await Subscription.findOneAndUpdate(
             { _id: order._id },
             {
@@ -158,29 +180,38 @@ const successfulOneTimePaymentOverlay = async (orderId) => {
             }),
         );
         await sendThankYouEmail(order, customer);
-        await sendThankYouMessage(updatedDonor.tel)
+        await sendThankYouMessage(updatedDonor.tel);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message);
     }
 };
 
-const successfulSubscriptionPaymentOverlay = async (orderId, customer) => {
+const successfulSubscriptionPaymentOverlay = async (orderId) => {
     try {
-        const order = await Subscription.findById(orderId).lean();
+        let order = await Subscription.findById(orderId).lean();
         if (!order) {
             throw new Error('Subscription Record not found');
         }
         if (!order.monthlySubscription) {
             throw new Error('This is a one-time payment, not a monthly subscription');
         }
-        const uploadedBy = {
-            actorType: 'customer',
-            actorId: customer._id,
-            actorUrl: `/customer/${customer._id}`,
-        };
+        const info = await getVippsChargeNUserInfo(orderId);
+        const { isNewPayment, donor: updatedDonor } = await updateDonorWithCharge(info);
+        if (!isNewPayment) {
+            throw new Error('Payment is already captured');
+        }
+        let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
+        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
+        order = await Subscription.findOneAndUpdate(
+            { _id: order._id },
+            {
+                customerId: customer._id,
+                status: 'paid',
+            },
+            { lean: true, new: true },
+        );
         order.customer = customer;
-        await downloadStripeInvoiceAndReceipt(order, uploadedBy);
         await saveLog(
             logTemplates({
                 type: 'successfulSubscriptionPaymentOverlay',
@@ -188,7 +219,8 @@ const successfulSubscriptionPaymentOverlay = async (orderId, customer) => {
                 actor: customer,
             }),
         );
-        await sendInvoiceAndReceiptToCustomer(order, customer);
+        await sendThankYouEmail(order, customer);
+        await sendThankYouMessage(updatedDonor.tel);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(JSON.stringify(error));

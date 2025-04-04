@@ -38,6 +38,9 @@
         method: 'GET',
         success: function (data) {
           updateStepStatus(data.status);
+          if (data.status === 'paid' || data.status === 'refunded' || data.status === 'aborted') {
+            clearInterval(intervalOwn);
+          }
         },
         error: function (xhr, status, error) {
           alert(error.message || 'Server Error - please refresh window');

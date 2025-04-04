@@ -11,7 +11,8 @@ const { saveLog } = require('./logAction');
 const { logTemplates } = require('./logTemplates');
 const { generateInvoice, saveFileRecord } = require('./invoice');
 const { sendThankYouMailToCustomer } = require('./emails');
-const { sendErrorToTelegram } = require('./telegramBot');
+const { sendErrorToTelegram, sendTelegramMessage } = require('./telegramBot');
+const { vippsStatusMap } = require('../modules/helpers');
 
 async function getVippsToken() {
     try {
@@ -45,16 +46,170 @@ const vippsGetHeader = (token) => {
     };
 };
 
-async function getVippsPaymentStatus(orderId) {
+async function getVippsSetupStatus(agreementId) {
     const token = await getVippsToken();
     const config = await vippsGetHeader(token);
-    const url = `${process.env.VIPPS_API_URL}/epayment/v1/payments/${orderId}`;
+    const url = `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${agreementId}`;
+    const response = await axios.get(url, config);
+    if (response.status !== 200) {
+        throw new Error('Error fetching setup status');
+    }
+    return response.data;
+}
+
+async function getVippsPaymentStatus(reference) {
+    const token = await getVippsToken();
+    const config = await vippsGetHeader(token);
+    const url = `${process.env.VIPPS_API_URL}/epayment/v1/payments/${reference}`;
     const response = await axios.get(url, config);
     if (response.status !== 200) {
         throw new Error('Error fetching payment status');
-    };
+    }
     return response.data;
 }
+
+const getVippsLatestCharge = async (orderId) => {
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const dbOrder = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+    const responseAgreement = await axios.get(
+        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}`,
+        headers,
+    );
+
+    const responseCharges = await axios.get(
+        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}/charges`,
+        headers,
+    );
+    const charges = responseCharges.data;
+
+    if (!Array.isArray(charges) || charges.length === 0) {
+        throw new Error('No charges found for this agreement.');
+    }
+
+    charges.sort((a, b) => new Date(b.due) - new Date(a.due));
+
+    return charges[0];
+};
+
+const getVippsChargeNUserInfo = async (orderId) => {
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const dbOrder = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+    const responseAgreement = await axios.get(
+        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}`,
+        headers,
+    );
+
+    const responseCharges = await axios.get(
+        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}/charges`,
+        headers,
+    );
+    const charges = responseCharges.data;
+
+    if (!Array.isArray(charges) || charges.length === 0) {
+        throw new Error('No charges found for this agreement.');
+    }
+
+    charges.sort((a, b) => new Date(b.due) - new Date(a.due));
+
+    const latestCharge = charges[0];
+
+    if (!responseAgreement.data?.userinfoUrl) {
+        console.log(charges);
+        throw new Error('No donor found! - should not happen.');
+    } else {
+        const responseUserInfo = await axios.get(responseAgreement.data.userinfoUrl, headers);
+        const user = responseUserInfo.data;
+        const address = user.address;
+        const donor = {
+            firstName: user.given_name,
+            lastName: user.family_name,
+            email: user.email,
+            tel: user.phone_number,
+            address: `${address.street_address}, ${address.postal_code}, ${address.region}, ${address.country}`,
+            sub: user.sub,
+            sid: user.sid,
+        };
+        return {
+            order: latestCharge,
+            donor,
+        };
+    }
+};
+
+const getOrderChargesInVipps = async (orderId) => {
+    const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+    const donor = await Donor.findOne({ 'vippsCharges.externalId': order._id.toString() }).lean();
+
+    const matchedCharges = donor?.vippsCharges?.filter((charge) => charge.externalId === order._id.toString()) || [];
+
+    return matchedCharges;
+};
+
+const updateOrderWithCharge = async (orderId) => {
+    const prevChargesTillDate = await getOrderChargesInVipps(orderId);
+    const latestCharge = await getVippsLatestCharge(orderId);
+    existingCharge = prevChargesTillDate.find((charge) => {
+        return JSON.stringify(charge.history) === JSON.stringify(latestCharge.history);
+    });
+
+    if (existingCharge) {
+        throw new Error('Charge already exists in the database - should not happen');
+    }
+
+    const statusFromVipps = latestCharge?.status?.toUpperCase();
+
+    if (!statusFromVipps) {
+        throw new Error('Status not found in Vipps response = this is important');
+    }
+
+    const resolveStatus = (status) => {
+        for (const [appStatus, vippsStatuses] of Object.entries(vippsStatusMap)) {
+            if (Array.isArray(vippsStatuses) && vippsStatuses.includes(status)) return appStatus;
+            if (vippsStatuses === status) return appStatus;
+        }
+        throw new Error(`Unknown status from Vipps: ${status}`);
+    };
+
+    const resolvedStatus = resolveStatus(statusFromVipps);
+    let finalStatus = resolvedStatus;
+
+    if (prevChargesTillDate.length > 0) {
+        if (resolvedStatus === 'aborted' || resolvedStatus === 'draft') {
+            finalStatus = 'expired';
+        }
+    }
+
+    await Order.updateOne({ _id: orderId }, { status: finalStatus });
+    await Subscription.updateOne({ _id: orderId }, { status: finalStatus });
+
+    sendTelegramMessage(`Got from Vipps: ${statusFromVipps} → Order status set to: ${finalStatus}`);
+};
+
+const getVippsOrderNUserInfo = async (orderId) => {
+    const dbOrder = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const order = await axios.get(`${process.env.VIPPS_API_URL}/epayment/v1/payments/${dbOrder.vippsReference}`, headers);
+    const sub = order?.data?.profile?.sub;
+    const response = await axios.get(`${process.env.VIPPS_API_URL}/vipps-userinfo-api/userinfo/${sub}`, headers);
+    const user = response.data;
+    const address = user.address;
+    const donor = {
+        firstName: user.given_name,
+        lastName: user.family_name,
+        email: user.email,
+        tel: user.phone_number,
+        address: `${address.street_address}, ${address.postal_code}, ${address.region}, ${address.country}`,
+        sub: user.sub,
+        sid: user.sid,
+    };
+    return {
+        order: order.data,
+        donor,
+    };
+};
 
 const getVippsUserInfo = async (orderId) => {
     const token = await getVippsToken();
@@ -64,7 +219,6 @@ const getVippsUserInfo = async (orderId) => {
     const response = await axios.get(`${process.env.VIPPS_API_URL}/vipps-userinfo-api/userinfo/${sub}`, headers);
     const user = response.data;
     const address = user.address;
-    console.log(user);
     return {
         firstName: user.given_name,
         lastName: user.family_name,
@@ -76,35 +230,86 @@ const getVippsUserInfo = async (orderId) => {
     };
 };
 
-const updateDonorProfile = async (donor) => {
-    const updatedDonor = await Donor.findOneAndUpdate(
-        { email: donor.email?.toLowerCase() },
-        {
-            $set: {
-                vippsCustomerId: donor.sid,
-                vippsCustomerSub: donor.sub,
-                firstName: donor.firstName,
-                lastName: donor.lastName,
-                tel: donor.tel,
-                organization: 'Not Listed',
-                anonymous: false,
-                countryCode: 'NO',
-                status: 'active',
-                role: 'donor',
-            },
-            $setOnInsert: { email: donor.email?.toLowerCase() },
-        },
-        { upsert: true, new: true },
+const updateDonorWithCharge = async (info) => {
+    const donor = info.donor;
+    const payment = info.order;
+    let newPayment = false;
+    let updatedDonor = await Donor.findOneAndUpdate(
+        { email: donor.email?.toLowerCase(), 'vippsCharges.transactionId': payment.transactionId },
+        { $set: { 'vippsCharges.$': payment } },
+        { new: true },
     ).lean();
 
+    if (!updatedDonor) {
+        newPayment = true;
+        updatedDonor = await Donor.findOneAndUpdate(
+            { email: donor.email?.toLowerCase() },
+            {
+                $set: {
+                    vippsCustomerId: donor.sid,
+                    vippsCustomerSub: donor.sub,
+                    firstName: donor.firstName,
+                    lastName: donor.lastName,
+                    tel: donor.tel,
+                    organization: 'Not Listed',
+                    anonymous: false,
+                    countryCode: 'NO',
+                    status: 'active',
+                    role: 'donor',
+                },
+                $setOnInsert: { email: donor.email?.toLowerCase() },
+                $push: { vippsCharges: payment },
+            },
+            { upsert: true, new: true },
+        ).lean();
+    }
+
+    return {
+        donor: updatedDonor,
+        isNewPayment: newPayment,
+    };
+};
+
+const updateDonorWithPayment = async (info) => {
+    const donor = info.donor;
+    const payment = info.order;
+    let updatedDonor = await Donor.findOneAndUpdate(
+        { email: donor.email?.toLowerCase(), 'vippsPayments.reference': payment.reference },
+        { $set: { 'vippsPayments.$': payment } },
+        { new: true },
+    ).lean();
+
+    if (!updatedDonor) {
+        updatedDonor = await Donor.findOneAndUpdate(
+            { email: donor.email?.toLowerCase() },
+            {
+                $set: {
+                    vippsCustomerId: donor.sid,
+                    vippsCustomerSub: donor.sub,
+                    firstName: donor.firstName,
+                    lastName: donor.lastName,
+                    tel: donor.tel,
+                    organization: 'Not Listed',
+                    anonymous: false,
+                    countryCode: 'NO',
+                    status: 'active',
+                    role: 'donor',
+                },
+                $setOnInsert: { email: donor.email?.toLowerCase() },
+                $push: { vippsPayments: payment },
+            },
+            { upsert: true, new: true },
+        ).lean();
+    }
+
     return updatedDonor;
-}
+};
 
 const captureVippsPayment = async (orderId) => {
     const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
     const amount = order.total || order.totalCostSingleMonth;
     const token = await getVippsToken();
-    const url = `https://api.vipps.no/epayment/v1/payments/${orderId}/capture`;
+    const url = `https://api.vipps.no/epayment/v1/payments/${order.vippsReference}/capture`;
     const payload = {
         modificationAmount: {
             currency: order.currency,
@@ -217,6 +422,28 @@ const getConfig = async (url, payload, token) => {
     return config;
 };
 
+const updateDonorAgreement = async (orderId) => {
+    const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+    const customerId = order.customerId;
+    const customer = await Customer.findById(customerId).lean();
+    const donor = await Donor.findOne({ email: customer.email?.toLowerCase() });
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const agreement = await axios.get(`${process.env.VIPPS_API_URL}/recurring/v3/agreements/${order.vippsAgreementId}`, headers);
+    donor.vippsAgreements = donor.vippsAgreements || [];
+    const index = donor.vippsAgreements.findIndex((a) => a.id === agreement.data.id);
+    if (index !== -1) {
+        donor.vippsAgreements[index] = agreement.data;
+    } else {
+        donor.vippsAgreements.push(agreement.data);
+    }
+    await donor.save();
+    sendTelegramMessage(
+        `Donor agreement updated: \n\n ${customer.name} \n ${donor.tel} \n ${customer.email} \n Status: ${agreement.data.status}`,
+    );
+    return 'Agreement updated';
+};
+
 module.exports = {
     getVippsToken,
     getVippsUserInfo,
@@ -225,6 +452,12 @@ module.exports = {
     validateAndFormatVippsNumber,
     generateRandomString,
     captureVippsPayment,
-    updateDonorProfile,
+    updateDonorWithPayment,
+    updateDonorWithCharge,
     getVippsPaymentStatus,
+    getVippsSetupStatus,
+    getVippsOrderNUserInfo,
+    getVippsChargeNUserInfo,
+    updateDonorAgreement,
+    updateOrderWithCharge,
 };

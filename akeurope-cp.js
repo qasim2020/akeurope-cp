@@ -127,9 +127,9 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 
 app.get('/testing', async (req, res) => {
     try {
-        const { successfulOneTimePaymentOverlay } = require('./modules/vippsPostActions');
-        const orderId = '67ede5d96b455646e4f6299a';
-        await successfulOneTimePaymentOverlay(orderId);
+        const { updateOrderWithCharge } = require('./modules/vippsModules');
+        const orderId = '67f057f539cc56e7ca9d96fc';
+        await updateOrderWithCharge(orderId);
         res.status(200).send('Done');
     } catch (error) {
         console.log(error);

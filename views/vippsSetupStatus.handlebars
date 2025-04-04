@@ -1,0 +1,87 @@
+<div class="page page-center">
+  <div class="container container-tight py-4">
+    <div class="text-center mb-4">
+      <a href="." class="navbar-brand navbar-brand-autodark">
+        <img src="/static/images/logo.png" width="110" height="32" alt="Tabler" class="navbar-brand-image">
+      </a>
+    </div>
+    <div class="card card-md">
+      <div class="card-body">
+        <h2 class="h2 text-center ">Vipps Setup Status</h2>
+         <div class="text-secondary fs-5 text-center">Listening to Vipps server for update on this agreement. Should update as soon as we get information from vipps.</div>
+      </div>
+      <div class="card-body">
+        <ul class="steps steps-counter steps-vertical">
+          <li id="created" class="step-item {{#if (eq data.order.status 'draft')}}active{{/if}}">Created</li>
+          <li id="aborted"
+            class="step-item {{#if (eq data.order.status 'aborted')}}active{{/if}}">
+            Cancelled</li>
+          <li id="paid" class="step-item {{#if (eq data.order.status 'paid')}}active{{/if}}">Paid</li>
+        </ul>
+      </div>
+    </div>
+    <div class="text-center text-secondary mt-3">
+      <button class="btn btn-primary" onclick="closeOverlay()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  window.onload = function () {
+    const statusUrl = `/vipps-setup-status-data/{{data.order._id}}`;
+
+    function checkPaymentStatus() {
+      $.ajax({
+        url: statusUrl,
+        method: 'GET',
+        success: function (data) {
+          updateStepStatus(data.status);
+        },
+        error: function (xhr, status, error) {
+          alert(error.message || 'Server Error - please refresh window');
+          clearInterval(intervalOwn);
+        }
+      });
+    }
+
+    checkPaymentStatus();
+
+    const intervalOwn = setInterval(checkPaymentStatus, 1000);
+  };
+
+  function updateStepStatus(status) {
+    const stepIds = ['#created', '#aborted', '#authorized', '#paid', '#refunded'];
+
+    $(stepIds.join(', ')).removeClass('active');
+
+    switch (status) {
+      case 'draft':
+        $('#created').addClass('active');
+        break;
+      case 'aborted':
+        $('#aborted').addClass('active');
+        break;
+      case 'paid':
+        $('#aborted').addClass('d-none');
+        $('#paid').addClass('active');
+        break;
+      case 'refunded':
+        $('#aborted').addClass('d-none');
+        $('#refunded').addClass('active');
+        break;
+      default:
+        console.log(status);
+        alert('Invalid status: ', status);
+    }
+  }
+
+  function closeOverlay() {
+    window.parent.postMessage('close-vipps-overlay', '*');
+  }
+
+  function isMobileDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  }
+
+</script>

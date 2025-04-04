@@ -11,9 +11,28 @@ const OrderSchema = new mongoose.Schema(
         customerId: {
             type: mongoose.Schema.Types.ObjectId,
         },
+        vippsAgreementId: { type: String, required: false, index: false },
+        vippsReference: { type: String, required: false, index: false },
         status: {
             type: String,
-            status: { type: String, enum: ['draft', 'aborted', 'cancelled', 'authorized', 'pending payment', 'processing', 'paid', 'refunded'], default: 'draft' },
+            status: {
+                type: String,
+                enum: [
+                    'draft',
+                    'aborted',
+                    'cancelled',
+                    'rejected',
+                    'terminated',
+                    'stopped',
+                    'expired',
+                    'authorized',
+                    'pending payment',
+                    'processing',
+                    'paid',
+                    'refunded',
+                ],
+                default: 'draft',
+            },
             default: 'draft',
         },
         currency: {
@@ -58,7 +77,7 @@ const OrderSchema = new mongoose.Schema(
         },
         countryCode: {
             type: String,
-        }
+        },
     },
     {
         timestamps: true,
@@ -72,11 +91,7 @@ OrderSchema.pre('save', async function (next) {
     if (doc.counterId) return next();
 
     try {
-        const counter = await Counter.findOneAndUpdate(
-            { _id: 'Order' },
-            { $inc: { seq: 1 } },
-            { new: true, upsert: true },
-        );
+        const counter = await Counter.findOneAndUpdate({ _id: 'Order' }, { $inc: { seq: 1 } }, { new: true, upsert: true });
         doc.orderNo = counter.seq;
         next();
     } catch (error) {

@@ -7,7 +7,8 @@ const Subscription = require('../models/Subscription');
 const Donor = require('../models/Donor');
 const Customer = require('../models/Customer');
 const crypto = require('crypto');
-const { slugToString } = require('../modules/helpers');
+const { slugToString, vippsStatusMap: statusMap } = require('../modules/helpers');
+
 const {
     vippsPaymentCreated,
     vippsPaymentAborted,
@@ -21,13 +22,20 @@ const {
     vippsAgreementRejected,
     vippsAgreementStopped,
     vippsAgreementExpired,
+    vippsChargeCanceled,
+    vippsChargeCaptured,
+    vippsChargeFailed,
+    vippsChargeCreationFailed,
+    vippsChargeReserved,
 } = require('../modules/vippsWebhookHandler');
+
 const { sendErrorToTelegram, notifyTelegram, sendTelegramMessage } = require('../modules/telegramBot');
 const {
     getVippsToken,
     getConfig,
     validateAndFormatVippsNumber,
     getVippsPaymentStatus,
+    getVippsSetupStatus,
 } = require('../modules/vippsModules');
 
 const projects = [
@@ -42,39 +50,34 @@ const projects = [
 
 const handleVippsEvent = async (event, paymentId) => {
     const order = (await Subscription.findById(paymentId).lean()) || (await Order.findById(paymentId).lean());
+    const agreementId = paymentId;
     switch (event) {
+        // handle both payment hook and poll
         case 'CREATED':
-            if (order.status === 'draft') return;
+            if (order.status === 'draft') throw new Error(`Vipps Event: order already  ${order.status}`);
             await vippsPaymentCreated(paymentId);
             break;
 
         case 'ABORTED':
-            if (order.status === 'aborted') return;
+        case 'EXPIRED':
+        case 'CANCELLED':
+            if (order.status === 'aborted') throw new Error(`Vipps Event: order already  ${order.status}`);
             await vippsPaymentAborted(paymentId);
             break;
 
-        case 'EXPIRED':
-            if (order.status === 'aborted') return;
-            await vippsPaymentExpired(paymentId);
-            break;
-
-        case 'CANCELLED':
-            if (order.status === 'cancelled') return;
-            await vippsPaymentCancelled(paymentId);
-            break;
-
         case 'CAPTURED':
-            if (order.status === 'paid') return;
+            if (order.status === 'paid') throw new Error(`Vipps Event: order already  ${order.status}`);
             await vippsPaymentCaptured(paymentId);
             break;
 
         case 'REFUNDED':
-            if (order.status === 'refunded') return;
+            if (order.status === 'refunded') throw new Error(`Vipps Event: order already  ${order.status}`);
             await vippsPaymentRefunded(paymentId);
             break;
 
         case 'AUTHORIZED':
-            if (order.status === 'authorized' || order.status === 'paid') return;
+            if (order.status === 'authorized' || order.status === 'paid')
+                throw new Error(`Vipps Event: order already  ${order.status}`);
             await vippsPaymentAuthorized(paymentId);
             break;
 
@@ -82,20 +85,52 @@ const handleVippsEvent = async (event, paymentId) => {
             await vippsPaymentTerminated(paymentId);
             break;
 
+        // handle both agreement hook and poll
+        case 'PENDING':
+            if (order.status === 'draft') throw new Error(`Vipps Event: order already  ${order.status}`);
+            await vippsAgreementPending(agreementId);
+            break;
+
+        case 'recurring.agreement-activated.v1':
         case 'ACTIVATED':
+        case 'ACTIVE':
             await vippsAgreementActivated(agreementId);
             break;
 
         case 'recurring.agreement-rejected.v1':
+        case 'REJECTED':
             await vippsAgreementRejected(agreementId);
             break;
 
         case 'recurring.agreement-stopped.v1':
+        case 'STOPPED':
             await vippsAgreementStopped(agreementId);
             break;
 
         case 'recurring.agreement-expired.v1':
+        case 'EXPIRED':
             await vippsAgreementExpired(agreementId);
+            break;
+        // handle webhook CHARGE
+        case 'recurring.charge-reserved.v1':
+            await vippsChargeReserved(agreementId);
+            break;
+
+        case 'recurring.charge-captured.v1':
+            await vippsChargeCaptured(agreementId);
+            break;
+
+        case 'recurring.charge-canceled.v1':
+            await vippsChargeCanceled(agreementId);
+            break;
+
+        case 'recurring.charge-failed.v1':
+            await vippsChargeFailed(agreementId);
+            break;
+
+        case 'recurring.charge-creation-failed.v1':
+            if (order.status === 'failed') throw new Error(`Vipps Event: charge creation already failed`);
+            await vippsChargeCreationFailed(agreementId);
             break;
 
         default:
@@ -103,11 +138,30 @@ const handleVippsEvent = async (event, paymentId) => {
     }
 };
 
+exports.getVippsToken = async (req, res) => {
+    try {
+        const token = await getVippsToken();
+        res.status(200).send(token);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(error.message || 'Server error - could not get vipps token');
+    }
+};
+
 exports.vippsWebhook = async (req, res) => {
     try {
         const event = req.body.name || req.body.eventType;
-        const paymentId = req.body.reference;
-        const agreementId = 123;
+        let paymentId;
+        if (req.body.reference) {
+            const order =
+                (await Order.findOne({ vippsReference: req.body.reference }).lean()) ||
+                (await Subscription.findOne({ vippsReference: req.body.reference }).lean());
+            paymentId = order._id;
+        } else if (req.body.agreementExternalId) {
+            paymentId = req.body.agreementExternalId;
+        } else if (req.body.chargeExternalId) {
+            paymentId = req.body.chargeExternalId;
+        }
         await handleVippsEvent(event, paymentId);
         res.status(200).send('Webhook received');
     } catch (error) {
@@ -117,62 +171,52 @@ exports.vippsWebhook = async (req, res) => {
     }
 };
 
-exports.pollVippsPaymentIntent = async (req, res) => {
-    try {
-        const orderId = req.params.orderId;
-        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-        let order =
-        (await Order.findOne({
-            _id: orderId,
-            createdAt: { $gte: twoHoursAgo },
-        }).lean()) ||
-        (await Subscription.findOne({
-            _id: orderId,
-            createdAt: { $gte: twoHoursAgo },
-        }).lean()); 
-        if (!order) throw new Error('Order not found or too old');
-        order.dashboardLink = process.env.CUSTOMER_PORTAL_URL;
-        const payment = await getVippsPaymentStatus(orderId);
-        const event = payment.state;
-        await handleVippsEvent(event, orderId);
-        order =
-        (await Order.findOne({
-            _id: orderId,
-            createdAt: { $gte: twoHoursAgo },
-        }).lean()) ||
-        (await Subscription.findOne({
-            _id: orderId,
-            createdAt: { $gte: twoHoursAgo },
-        }).lean()); 
-        order.dashboardLink = process.env.CUSTOMER_PORTAL_URL;
-        res.status(200).send(order);
-    } catch (error) {
-        console.log(error);
-        res.status(500).send(error.message || 'Server error - could not get vipps polling status');
-    }
-};
-
-exports.vippsPaymentStatusData = async(req,res) => {
+exports.vippsPaymentStatusData = async (req, res) => {
     try {
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-
         const order =
-            (await Order.findOne({
-                _id: req.params.orderId,
-                createdAt: { $gte: twoHoursAgo },
-            }).lean()) ||
-            (await Subscription.findOne({
-                _id: req.params.orderId,
-                createdAt: { $gte: twoHoursAgo },
-            }).lean());
-
+            (await Order.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||
+            (await Subscription.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean());
         order.dashboardLink = process.env.CUSTOMER_PORTAL_URL;
         res.status(200).send(order);
     } catch (err) {
         console.log(err);
         res.status(500).send(err.message || 'Server error - could not get vipps order status');
     }
-}
+};
+
+exports.vippsSetupStatusData = async (req, res) => {
+    try {
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        const order =
+            (await Order.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||
+            (await Subscription.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean());
+        order.dashboardLink = process.env.CUSTOMER_PORTAL_URL;
+        res.status(200).send(order);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err.message || 'Server error - could not get vipps order status');
+    }
+};
+
+exports.vippsSetupStatus = async (req, res) => {
+    try {
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        const order =
+            (await Order.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||
+            (await Subscription.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean());
+        res.status(200).render('vippsSetupStatus', {
+            layout: 'main',
+            data: {
+                order,
+                darkMode: true,
+            },
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err.message || 'Server error - could not get vipps order status');
+    }
+};
 
 exports.vippsPaymentStatus = async (req, res) => {
     try {
@@ -186,7 +230,7 @@ exports.vippsPaymentStatus = async (req, res) => {
                 _id: req.params.orderId,
                 createdAt: { $gte: twoHoursAgo },
             }).lean());
-        res.status(200).render('vippsOrderStatus', {
+        res.status(200).render('vippsPaymentStatus', {
             layout: 'main',
             data: {
                 order,
@@ -216,6 +260,8 @@ exports.createVippsPaymentIntent = async (req, res) => {
             projectSlug: slug,
             status: 'draft',
         });
+        const reference = uuidv4();
+        order.vippsReference = reference;
         await order.save();
         let data = JSON.stringify({
             amount: {
@@ -225,20 +271,20 @@ exports.createVippsPaymentIntent = async (req, res) => {
             paymentMethod: {
                 type: 'WALLET',
             },
-            reference: order._id.toString(),
+            reference,
             returnUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-payment-status/${order._id}`,
             userFlow: 'WEB_REDIRECT',
             profile: {
                 scope: 'name phoneNumber email address',
             },
-            paymentDescription: `${slugToString(order.projectSlug)} # ${order.orderNo}` || `Order - ${order.orderNo}`,
+            paymentDescription: `${slugToString(order.projectSlug)} # ${order.orderNo}`,
         });
         const token = await getVippsToken();
         const config = await getConfig(`${process.env.VIPPS_API_URL}/epayment/v1/payments`, data, token);
         const response = await axios.request(config);
         res.status(200).send({
             redirectUrl: response.data.redirectUrl,
-            orderId: order._id,
+            reference,
         });
     } catch (error) {
         console.log(error);
@@ -252,7 +298,6 @@ exports.createVippsSetupIntent = async (req, res) => {
         if (!(process.env.ENV === 'test') && total < 10) throw new Error('Order cost can not be lower than 10 NOK.');
         if (currency != 'NOK') throw new Error('Vipps works for Norway only.');
         if (!projects.includes(slug)) throw new Error('Project is not listed.');
-
         let order = new Subscription({
             customerId: process.env.TEMP_CUSTOMER_ID,
             currency: 'NOK',
@@ -263,9 +308,7 @@ exports.createVippsSetupIntent = async (req, res) => {
             projectSlug: slug,
             status: 'draft',
         });
-
         await order.save();
-
         const payload = {
             pricing: {
                 type: 'LEGACY',
@@ -276,42 +319,211 @@ exports.createVippsSetupIntent = async (req, res) => {
                 unit: 'MONTH',
                 count: 1,
             },
-            merchantRedirectUrl: process.env.CUSTOMER_PORTAL_URL,
-            merchantAgreementUrl: process.env.CUSTOMER_PORTAL_URL,
+            merchantRedirectUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-setup-status/${order._id}`,
+            merchantAgreementUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-setup-status/${order._id}`,
             productName: `${slugToString(slug)} # ${order.orderNo}`,
-            phoneNumber: process.env.ENV === 'test' ? validateAndFormatVippsNumber(process.env.VIPPS_TEST_NO) : null,
+            phoneNumber: null,
             scope: 'name phoneNumber email address',
             externalId: order._id.toString(),
+            initialCharge: {
+                amount: order.total * 100,
+                description: `${slugToString(slug)} # ${order.orderNo}`,
+                transactionType: 'DIRECT_CAPTURE',
+                orderId: order._id.toString(),
+                externalId: order._id.toString(),
+            },
         };
-
         const token = await getVippsToken();
         const config = await getConfig(`${process.env.VIPPS_API_URL}/recurring/v3/agreements`, payload, token);
         const response = await axios.request(config);
-        res.status(200).send(response.data.vippsConfirmationUrl);
+        await Subscription.findByIdAndUpdate(order._id, {
+            vippsAgreementId: response.data.agreementId,
+            status: 'draft',
+        });
+        res.status(200).send({
+            redirectUrl: response.data.vippsConfirmationUrl,
+            orderId: order._id,
+            agreementId: response.data.agreementId,
+        });
     } catch (error) {
         console.log(error);
         res.status(400).send(error.message);
     }
 };
 
-async function chargeVippsSubscription(agreementId, amount) {
-    const token = await getVippsToken();
-    const payload = {
-        merchantSerialNumber: process.env.VIPPS_MSN,
-        charge: {
-            amount: amount * 100,
-            currency: 'NOK',
-            description: 'Monthly Donation',
-        },
-    };
+exports.createVippsPaymentIntentWidget = async (req, res) => {
+    try {
+        const { orderId } = req.body;
 
-    const response = await axios.post(`${process.env.VIPPS_API_URL}/recurring/v2/agreements/${agreementId}/charges`, payload, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Ocp-Apim-Subscription-Key': process.env.VIPPS_SUBSCRIPTION_KEY,
-            'Content-Type': 'application/json',
-        },
-    });
+        let order = await Order.findOne({ _id: orderId, customerId: process.env.TEMP_CUSTOMER_ID });
 
-    return response.data;
-}
+        if (!order) throw new Error('Order not found');
+
+        if (order.currency != 'NOK') throw new Error('Vipps works for Norway only.');
+
+        const amount = Math.max(100, Math.round(order.totalCost * 100));
+
+        const reference = uuidv4();
+        order.vippsReference = reference;
+        await order.save();
+
+        let data = JSON.stringify({
+            amount: {
+                currency: 'NOK',
+                value: amount,
+            },
+            paymentMethod: {
+                type: 'WALLET',
+            },
+            reference,
+            returnUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-payment-status/${order._id}`,
+            userFlow: 'WEB_REDIRECT',
+            profile: {
+                scope: 'name phoneNumber email address',
+            },
+            paymentDescription: `Order - ${order.orderNo}`,
+        });
+        const token = await getVippsToken();
+        const config = await getConfig(`${process.env.VIPPS_API_URL}/epayment/v1/payments`, data, token);
+        const response = await axios.request(config);
+
+        res.status(200).send({
+            redirectUrl: response.data.redirectUrl,
+            reference,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message);
+    }
+};
+
+exports.createVippsSetupIntentWidget = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        let order = await Order.findOne({ _id: orderId, customerId: process.env.TEMP_CUSTOMER_ID });
+
+        if (!order) throw new Error('Order not found');
+
+        if (order.currency != 'NOK') throw new Error('Vipps works for Norway only.');
+
+        const amount = Math.max(100, Math.round(order.totalCost * 100));
+ 
+        const payload = {
+            pricing: {
+                type: 'LEGACY',
+                amount,
+                currency: 'NOK',
+            },
+            interval: {
+                unit: 'MONTH',
+                count: 1,
+            },
+            merchantRedirectUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-setup-status/${order._id}`,
+            merchantAgreementUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-setup-status/${order._id}`,
+            productName: `${slugToString(order.projects?.[0]?.slug) || 'Order'} # ${order.orderNo}`,
+            phoneNumber: null,
+            scope: 'name phoneNumber email address',
+            externalId: order._id.toString(),
+            initialCharge: {
+                amount,
+                description: `${slugToString(order.projects?.[0]?.slug) || 'Order'} # ${order.orderNo}`,
+                transactionType: 'DIRECT_CAPTURE',
+                orderId: uuidv4(),
+                externalId: order._id.toString(),
+            },
+        };
+        const token = await getVippsToken();
+        const config = await getConfig(`${process.env.VIPPS_API_URL}/recurring/v3/agreements`, payload, token);
+        const response = await axios.request(config);
+        await Order.findByIdAndUpdate(order._id, {
+            vippsAgreementId: response.data.agreementId,
+            status: 'draft',
+        });
+        res.status(200).send({
+            redirectUrl: response.data.vippsConfirmationUrl,
+            orderId: order._id,
+            agreementId: response.data.agreementId,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message);
+    }
+};
+
+exports.pollVippsSetupIntent = async (req, res) => {
+    try {
+        const { orderId, agreementId } = req.params;
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        let order =
+            (await Order.findOne({ _id: orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||
+            (await Subscription.findOne({ _id: orderId, createdAt: { $gte: twoHoursAgo } }).lean());
+        if (!order) throw new Error('Order not found or too old');
+        const payment = await getVippsSetupStatus(agreementId);
+        const event = payment.status;
+        const mappedStatus = statusMap[order.status];
+        if (Array.isArray(mappedStatus) ? !mappedStatus.includes(event) : mappedStatus !== event) {
+            try {
+                await handleVippsEvent(event, orderId);
+            } catch (e) {
+                sendErrorToTelegram(e.message);
+            }
+        }
+        order =
+            (await Order.findOne({ _id: orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||
+            (await Subscription.findOne({ _id: orderId, createdAt: { $gte: twoHoursAgo } }).lean());
+        order.dashboardLink = process.env.CUSTOMER_PORTAL_URL;
+        res.status(200).send(order);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(error.message || 'Server error - could not get vipps polling status');
+    }
+};
+
+exports.pollVippsPaymentIntent = async (req, res) => {
+    try {
+        const reference = req.params.reference;
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        let order =
+            (await Order.findOne({ vippsReference: reference, createdAt: { $gte: twoHoursAgo } },{
+                status: 1,
+                orderNo: 1,
+                currency: 1,
+                totalCost: 1,
+                monthlySubscription: 1,
+                'projects.slug': 1,
+            }).lean()) ||
+            (await Subscription.findOne({ vippsReference: reference, createdAt: { $gte: twoHoursAgo } }).lean());
+        if (!order) throw new Error('Order not found or too old');
+        const payment = await getVippsPaymentStatus(reference);
+        const event = payment.state;
+
+        const mappedStatus = statusMap[order.status];
+
+        if (Array.isArray(mappedStatus) ? !mappedStatus.includes(event) : mappedStatus !== event) {
+            try {
+                await handleVippsEvent(event, order._id);
+            } catch (e) {
+                sendErrorToTelegram(e.message);
+            }
+        }
+
+        order =
+            (await Order.findOne( { vippsReference: reference, createdAt: { $gte: twoHoursAgo } },
+                {
+                    status: 1,
+                    orderNo: 1,
+                    currency: 1,
+                    totalCost: 1,
+                    monthlySubscription: 1,
+                    'projects.slug': 1,
+                }
+            ).lean()) ||
+            (await Subscription.findOne({ vippsReference: reference, createdAt: { $gte: twoHoursAgo } }).lean());
+        order.dashboardLink = process.env.CUSTOMER_PORTAL_URL;
+        res.status(200).send(order);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(error.message || 'Server error - could not get vipps polling status');
+    }
+};

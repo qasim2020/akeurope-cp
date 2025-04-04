@@ -47,6 +47,9 @@ const DonorSchema = new mongoose.Schema(
                 created: { type: Date, default: Date.now },
             },
         ],
+        vippsPayments: [{ type: Object }],
+        vippsAgreements: [{ type: Object }],
+        vippsCharges: [{ type: Object }],
     },
     {
         timestamps: true,

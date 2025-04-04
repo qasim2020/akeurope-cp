@@ -194,7 +194,7 @@ exports.createSubscription = async (req, res) => {
 
         if (!order) throw new Error('Order not found!');
 
-        const amount = Math.max(1, Math.round(order.total * 100));
+        const amount = Math.max(100, Math.round(order.total * 100));
 
         const description = `${slugToString(order.projectSlug)} # ${order.orderNo}`;
 
@@ -236,7 +236,7 @@ exports.createPaymentIntent = async (req, res) => {
 
         if (!order) throw new Error('Order not found');
 
-        const amount = Math.max(1, Math.round(order.total * 100));
+        const amount = Math.max(100, Math.round(order.total * 100));
 
         const description = `${slugToString(order.projectSlug)} # ${order.orderNo}`;
 
