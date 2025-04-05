@@ -23,6 +23,7 @@ const {
 const { getOrderInvoiceFromDir, deleteInvoice, saveFileRecord } = require('../modules/invoice');
 const { downloadStripeInvoiceAndReceipt } = require('../modules/invoice');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
+const { getVippsPaymentByOrderId, getVippsSubscriptionsByOrderId } = require('../modules/vippsPartner');
 
 exports.viewOrders = async (req, res) => {
     try {
@@ -40,6 +41,7 @@ exports.viewOrders = async (req, res) => {
 
         for (const order of orders) {
             order.stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+            order.vippsInfo = (await getVippsPaymentByOrderId(order.vippsReference)) || (await getVippsSubscriptionByOrderId(order.vippsAgreementId));
         }
 
         const customers = await Customer.find().lean();
@@ -91,6 +93,7 @@ exports.viewOrder = async (req, res) => {
         }
 
         order.stripeInfo = (await getPaymentByOrderId(order._id)) || (await getLatestSubscriptionByOrderId(order._id));
+        order.vippsInfo = (await getVippsPaymentByOrderId(order.vippsReference)) || (await getVippsSubscriptionsByOrderId(order.vippsAgreementId));
 
         let files = await File.find({
             'links.entityId': req.params.orderId,

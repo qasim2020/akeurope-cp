@@ -19,6 +19,8 @@ const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
 const { getLatestSubscriptionByOrderId, getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
 const { getEntriesByCustomerId, paginateActiveSubscriptions } = require('../modules/ordersFetchEntries');
+const { getVippsPaymentByOrderId, getVippsSubscriptionsByOrderId } = require('../modules/vippsPartner');
+
 const Donor = require('../models/Donor');
 
 exports.getCustomerData = async (req, res) => {
@@ -183,6 +185,8 @@ exports.customer = async (req, res) => {
 
         for (const order of orders) {
             order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionsByOrderId(order._id);
+            order.vippsInfo = (await getVippsPaymentByOrderId(order.vippsReference)) || 
+                (await getVippsSubscriptionsByOrderId(order.vippsAgreementId));
         };
 
         const activeSubscriptions = await getEntriesByCustomerId(req, customer._id);
@@ -191,6 +195,8 @@ exports.customer = async (req, res) => {
 
         for (const subscription of subscriptions) {
             subscription.stripeInfo = await getPaymentByOrderId(subscription._id) || await getSubscriptionsByOrderId(subscription._id);
+            subscription.vippsInfo = (await getVippsPaymentByOrderId(subscription.vippsReference)) || 
+                (await getVippsSubscriptionsByOrderId(subscription.vippsAgreementId));
         };
 
         res.render('customer', {

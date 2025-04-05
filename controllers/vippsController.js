@@ -129,7 +129,6 @@ const handleVippsEvent = async (event, paymentId) => {
             break;
 
         case 'recurring.charge-creation-failed.v1':
-            if (order.status === 'failed') throw new Error(`Vipps Event: charge creation already failed`);
             await vippsChargeCreationFailed(agreementId);
             break;
 
@@ -407,7 +406,7 @@ exports.createVippsSetupIntentWidget = async (req, res) => {
 
         if (order.currency != 'NOK') throw new Error('Vipps works for Norway only.');
 
-        const amount = Math.max(100, Math.round(order.totalCost * 100));
+        const amount = Math.max(100, Math.round(order.totalCostSingleMonth * 100));
  
         const payload = {
             pricing: {

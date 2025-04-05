@@ -104,13 +104,14 @@
   {{> showOrderEntries}}
   {{/if}}
 
-  {{#unless data.order.stripeInfo}}
+  {{#unless (hasAny data.order.stripeInfo data.order.vippsInfo)}}
   <div class="card mb-3">
     <div class="card-body">
       {{>components/invoice-status order=data.order body=true}}
     </div>
   </div>
   {{/unless}}
+  
 
   <div class="row row-deck row-cards">
     <div class="d-block col-md-6 col-12">
@@ -125,11 +126,11 @@
 
 </div>
 
-{{#if data.order.customer}}
+{{#unless (hasAny data.order.stripeInfo data.order.vippsInfo)}}
 {{#if (findInArray data.role 'bulk-select')}}
 {{> emptyOrderModal}}
 {{/if}}
-{{/if}}
+{{/unless}}
 
 <script src="/static/orders.js"></script>
 

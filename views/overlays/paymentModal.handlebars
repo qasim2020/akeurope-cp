@@ -1187,13 +1187,17 @@
                 const html = '<h3 class="fw-normal text-center mt-4">No beneficiary selected.</h3>';
                 $('#monthly-products-list').prepend(html);
                 $('#one-time-products-list').prepend(html);
-                $('#donate-btn').addClass('d-none');
+                $('#global-checkout').addClass('d-none');
                 $('#vipps-checkout').addClass('d-none');
                 return;
             }
 
-            $('#donate-btn').removeClass('d-none');
-            $('#vipps-checkout').removeClass('d-none');
+            const countryCode = localStorage.getItem('countryCode');
+            if (countryCode === 'NO') {
+                $('#vipps-checkout').removeClass('d-none');
+            } else {
+                $('#global-checkout').removeClass('d-none');
+            }
 
             const entryHeader = '<h4 class="fw-normal mt-2 mb-0">Select Beneficiaries</h4>';
 
@@ -1281,7 +1285,6 @@
             if (order.monthlySubscription) {
                 var tab = new bootstrap.Tab($('#monthly-tab')[0]);
                 tab.show();
-                $('#donate-btn').find('span').html('Donate Monthly');
                 $('.donation-amount').last().addClass('active');
             }
 

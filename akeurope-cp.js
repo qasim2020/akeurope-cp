@@ -127,9 +127,9 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 
 app.get('/testing', async (req, res) => {
     try {
-        const { updateOrderWithCharge } = require('./modules/vippsModules');
+        const { successfulSubscriptionPayment } = require('./modules/vippsPostActions');
         const orderId = '67f057f539cc56e7ca9d96fc';
-        await updateOrderWithCharge(orderId);
+        await successfulSubscriptionPayment(orderId);
         res.status(200).send('Done');
     } catch (error) {
         console.log(error);

@@ -19,11 +19,10 @@ const {
     updateDonorWithCharge,
     getVippsChargeNUserInfo,
 } = require('../modules/vippsModules');
+const { cleanOrder } = require('../modules/orders');
 const { vippsStatusMap } = require('../modules/helpers');
 
 const connectDonorInCustomer = async (donor, checkCustomer) => {
-    let dashboardLink;
-
     if (!checkCustomer || !(checkCustomer && checkCustomer.password)) {
         const newCustomer = await Customer.findOneAndUpdate(
             {
@@ -43,8 +42,6 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
             },
             { new: true, lean: true, upsert: true },
         );
-
-        dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}`;
 
         checkCustomer = newCustomer;
     } else {
@@ -71,8 +68,6 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
             lean: true,
         });
 
-        dashboardLink = `${process.env.CUSTOMER_PORTAL_URL}`;
-
         checkCustomer = newCustomer;
     }
 
@@ -91,6 +86,7 @@ const successfulOneTimePayment = async (orderId, customer) => {
         if (order.monthlySubscription) {
             throw new Error('This is a subscription payment, not a one-time payment');
         }
+        await cleanOrder(orderId);
         const info = await getVippsOrderNUserInfo(orderId);
         const updatedDonor = await updateDonorWithPayment(info);
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
@@ -120,20 +116,30 @@ const successfulOneTimePayment = async (orderId, customer) => {
 
 const successfulSubscriptionPayment = async (orderId, customer) => {
     try {
-        const order = await Order.findById(orderId).lean();
+        let order = await Order.findById(orderId).lean();
         if (!order) {
-            throw new Error('Order not found, it might be a subscription');
+            throw new Error('Order not found');
         }
         if (!order.monthlySubscription) {
             throw new Error('This is a one-time payment, not a monthly subscription');
         }
-        const uploadedBy = {
-            actorType: 'customer',
-            actorId: customer._id,
-            actorUrl: `/customer/${customer._id}`,
-        };
+        const info = await getVippsChargeNUserInfo(orderId);
+        const { isNewPayment, donor: updatedDonor } = await updateDonorWithCharge(info);
+        if (!isNewPayment) {
+            throw new Error('Payment is already captured = strange');
+        }
+        let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
+        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
+        await cleanOrder(orderId);
+        order = await Order.findOneAndUpdate(
+            { _id: order._id },
+            {
+                customerId: customer._id,
+                status: 'paid',
+            },
+            { lean: true, new: true },
+        );
         order.customer = customer;
-        await downloadStripeInvoiceAndReceipt(order, uploadedBy);
         await saveLog(
             logTemplates({
                 type: 'successfulSubscriptionPayment',
@@ -141,7 +147,8 @@ const successfulSubscriptionPayment = async (orderId, customer) => {
                 actor: customer,
             }),
         );
-        await sendInvoiceAndReceiptToCustomer(order, customer);
+        await sendThankYouForSponsoringBeneficiaryEmail(order, customer);
+        await sendThankYouForSponsoringBeneficiaryMessage(updatedDonor.tel); 
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(JSON.stringify(error));
@@ -199,7 +206,7 @@ const successfulSubscriptionPaymentOverlay = async (orderId) => {
         const info = await getVippsChargeNUserInfo(orderId);
         const { isNewPayment, donor: updatedDonor } = await updateDonorWithCharge(info);
         if (!isNewPayment) {
-            throw new Error('Payment is already captured');
+            throw new Error('Payment is already captured = strange');
         }
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
         const customer = await connectDonorInCustomer(info.donor, existingCustomer);

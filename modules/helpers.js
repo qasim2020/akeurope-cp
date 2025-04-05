@@ -15,6 +15,16 @@ const or = function (a, b) {
     return a || b;
 };
 
+const hasAny = function (a, b) {
+    const isTruthy = val => {
+        if (Array.isArray(val)) return val.length > 0;
+        if (val && typeof val === 'object') return Object.keys(val).length > 0;
+        return !!val;
+    };
+
+    return isTruthy(a) || isTruthy(b);
+};
+
 const and = function (a, b) {
     return a && b;
 };
@@ -87,6 +97,7 @@ function transformCloudinaryUrl(url) {
 }
 
 function circleCloudinaryUrl(url) {
+    console.log('url', url);
     if (!url) return '/static/images/no-photo-placement.png';
 
     const transformation = 'ar_1:1,c_fill,e_improve,g_auto,h_250,r_max,w_250,z_1.0';
@@ -382,6 +393,7 @@ module.exports = {
     gt,
     compareIds,
     or,
+    hasAny,
     and,
     inc,
     dec,

@@ -433,7 +433,13 @@ const updateDonorAgreement = async (orderId) => {
     donor.vippsAgreements = donor.vippsAgreements || [];
     const index = donor.vippsAgreements.findIndex((a) => a.id === agreement.data.id);
     if (index !== -1) {
-        donor.vippsAgreements[index] = agreement.data;
+        const existingAgreement = donor.vippsAgreements[index];
+        const newAgreement = agreement.data;
+        if (existingAgreement.status !== newAgreement.status) {
+            donor.vippsAgreements[index] = newAgreement;
+        } else {
+            throw new Error('Agreement already exists in the database.');
+        }
     } else {
         donor.vippsAgreements.push(agreement.data);
     }

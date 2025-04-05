@@ -8,8 +8,10 @@ const {
     successfulOneTimePayment,
     successfulOneTimePaymentOverlay,
     successfulSubscriptionPaymentOverlay,
+    successfulSubscriptionPayment
 } = require('./vippsPostActions');
 const { captureVippsPayment, updateOrderWithCharge, updateDonorAgreement } = require('./vippsModules');
+const { slugToString } = require('./helpers');
 
 const vippsPaymentCreated = async (orderId) => {
     console.log(`Payment created: ${orderId}`);
@@ -36,12 +38,13 @@ const vippsPaymentCancelled = async (orderId) => {
 };
 
 const vippsPaymentCaptured = async (orderId) => {
-    console.log(`Payment captured: ${orderId}`);
     const order = (await Subscription.findById(orderId).lean()) || (await Order.findById(orderId).lean());
     if (order.projects?.length > 0) {
         await successfulOneTimePayment(orderId);
+        await sendTelegramMessage(`One Time Payment captured: ${order.orderNo} | ${order.total || order.totalCost} NOK | ${slugToString(order.projects[0].slug)}`);
     } else {
         await successfulOneTimePaymentOverlay(orderId);
+        await sendTelegramMessage(`One Time Payment captured: ${order.orderNo} | ${order.total} NOK | ${slugToString(order.projectSlug)}`);
     }
 };
 
@@ -94,8 +97,10 @@ const vippsChargeCaptured = async (orderId) => {
     const order = (await Subscription.findById(orderId).lean()) || (await Order.findById(orderId).lean());
     if (order.projects?.length > 0) {
         await successfulSubscriptionPayment(orderId);
+        await sendTelegramMessage(`Monthly Charge captured: ${order.orderNo} | ${order.total || order.totalCost} NOK | ${slugToString(order.projects[0].slug)}`);
     } else {
         await successfulSubscriptionPaymentOverlay(orderId);
+        await sendTelegramMessage(`Monthly Charge captured: ${order.orderNo} | ${order.total} NOK | ${slugToString(order.projectSlug)}`);
     }
 };
 
