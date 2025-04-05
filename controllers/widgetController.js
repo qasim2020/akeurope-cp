@@ -475,9 +475,12 @@ exports.createPaymentIntent = async (req, res) => {
 
 exports.createOneTime = async (req, res) => {
     try {
-        const { paymentMethodId, paymentIntentId, invoiceId, email } = req.body;
+        const { paymentMethodId, paymentIntentId, invoiceId, email: emailProvided } = req.body;
 
-        const donor = await Donor.findOne({ email: email.toLowerCase() }).lean();
+        const email = emailProvided?.toLowerCase();
+
+        const donor = await Donor.findOne({ email }).lean();
+        
         if (!donor) throw new Error('Donor not found.');
 
         const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();

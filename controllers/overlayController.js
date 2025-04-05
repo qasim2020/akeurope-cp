@@ -105,7 +105,10 @@ exports.createNewOrder = async (req, res) => {
         const currencyRate = parseFloat(currencyRates.rates['NOK'].toFixed(2));
         const amount = total * currencyRate;
 
-        if (amount < 100) throw new Error('Total can not be lower than 100 NOK');
+        if (amount < 100) {
+            const minAmountInUserCurrency = (100 / currencyRate).toFixed(2);
+            throw new Error(`Total cannot be lower than ${minAmountInUserCurrency} ${country.currency.code}`);
+        }
 
         let order = new Subscription({
             customerId: customer._id,
