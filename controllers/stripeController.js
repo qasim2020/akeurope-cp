@@ -154,10 +154,15 @@ const renewOrderInDb = async (orderId, subscriptionId) => {
     const months = await countSubscriptions(orderId);
     const order = await Order.findOneAndUpdate(
         { _id: orderId, 'projects.slug': { $exists: true } },
-        { $set: { 'projects.$.months': months } },
+        {
+            $set: {
+                'projects.$.months': months,
+                status: 'paid',
+            },
+        },
         { new: true, lean: true },
     );
-    if (!order) throw new Error('Failed to update the order with months');
+    if (!order) throw new Error('Failed to update the order with months = should not happen');
     const calculatedOrder = await calculateOrder(order);
     await addPaymentsToOrder(calculatedOrder);
 };
@@ -263,7 +268,6 @@ async function renewWidgetOrder(req, event) {
 }
 
 exports.renewOrder = async (req, res) => {
-    console.log(req.originalUrl);
     const sig = req.headers['stripe-signature'];
     let event;
 
