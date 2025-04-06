@@ -1,4 +1,4 @@
-{{#if data.activeSubscriptions.length}}
+{{#if (gt data.activeSubscriptions.totalEntries 0)}}
 <div id="subscriptions-container">
     {{#with data.activeSubscriptions as |list|}}
 
