@@ -94,11 +94,17 @@ exports.sendRegistrationLink = async (req, res) => {
             }
         );
 
-        await sendCustomerInvite(customer);
+        const isNewToken = await sendCustomerInvite(customer);
 
-        res.status(200).send(
-            `Registration email has been sent to ${customer.email}. Check Spam folders if not found in Inbox.`,
-        );
+        if (isNewToken) {
+            res.status(200).send(
+                `Registration email has been sent to ${customer.email}. Check Spam folders if not found in Inbox.`,
+            );
+        } else {
+            res.status(200).send(
+                `A fresh registration email has been sent to ${customer.email}. Check Spam folders if not found the previous email.`,
+            ); 
+        }
 
     } catch (err) {
         console.log(err);

@@ -425,10 +425,30 @@ const sendReceiptToCustomer = async (order, customer) => {
 };
 
 const sendCustomerInvite = async (customer) => {
-    const inviteToken = crypto.randomBytes(32).toString('hex');
-    const inviteExpires = moment().add(24, 'hours').toDate();
 
-    await Customer.findOneAndUpdate({ _id: customer._id }, { inviteToken, inviteExpires });
+    let inviteToken = customer.inviteToken;
+    let inviteExpires = customer.inviteExpires;
+    let isNewToken = false;
+
+    if (!inviteToken || !inviteExpires || inviteExpires < new Date()) {
+        inviteToken = crypto.randomBytes(32).toString('hex');
+        inviteExpires = moment().add(24, 'hours').toDate();
+        isNewToken = true;
+
+        await Customer.findOneAndUpdate(
+            { _id: customer._id },
+            { inviteToken, inviteExpires }
+        );
+    }
+
+    const now = moment();
+    const expiryTime = moment(inviteExpires);
+    const duration = moment.duration(expiryTime.diff(now));
+
+    const hours = Math.floor(duration.asHours());
+    const minutes = Math.floor(duration.minutes());
+
+    const expiry = `${hours} hour(s) and ${minutes} minute(s)`;
 
     let transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
@@ -450,6 +470,7 @@ const sendCustomerInvite = async (customer) => {
         subject: 'Registration Link for Akeurope Partner Portal',
         html: compiledTemplate({
             name: customer.name,
+            expiry,
             inviteLink: `${process.env.CUSTOMER_PORTAL_URL}/register/${inviteToken}`,
         }),
     };
@@ -465,6 +486,8 @@ const sendCustomerInvite = async (customer) => {
             actor: customer,
         }),
     );
+
+    return isNewToken;
 };
 
 module.exports = {

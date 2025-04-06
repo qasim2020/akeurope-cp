@@ -513,26 +513,42 @@ const getEntriesByCustomerId = async (req, customerId) => {
 
     const now = new Date();
 
-    const orders = await Order.find({
-        customerId: customerId,
-        $or: [
-            {
+    const orders = await Order.aggregate([
+        {
+            $match: {
+                customerId: customerId,
                 status: 'paid',
-                $expr: {
-                    $gt: [
-                        {
-                            $add: [
-                                { $toDate: '$createdAt' },
-                                { $multiply: [{ $max: '$projects.months' }, 30 * 24 * 60 * 60 * 1000] },
-                                30 * 24 * 60 * 60 * 1000,
-                            ],
+            },
+        },
+        {
+            $addFields: {
+                maxMonths: { $max: '$projects.months' },
+            },
+        },
+        {
+            $addFields: {
+                expirationDate: {
+                    $dateAdd: {
+                        startDate: {
+                            $dateAdd: {
+                                startDate: '$createdAt',
+                                unit: 'month',
+                                amount: '$maxMonths',
+                            },
                         },
-                        now,
-                    ],
+                        unit: 'day',
+                        amount: 2, 
+                    },
                 },
-            }
-        ],
-    }).lean();
+            },
+        },
+
+        {
+            $match: {
+                expirationDate: { $gt: new Date() },
+            },
+        },
+    ]);
 
     const validEntriesByProject = orders.flatMap((order) =>
         order.projects.flatMap((project) =>

@@ -42,16 +42,6 @@
                   {{#if ../this.vippsInfo}} {{{getOrderIcon 'vipps_smiley'}}} {{/if}}
                   {{#unless (hasAny ../this.stripeInfo ../this.vippsInfo)}} {{{getOrderIcon 'phone'}}} {{/unless}}
 
-                  {{#if ../this.stripeInfo}}
-                    <span class="me-2">
-                      {{divide this.price 100}} {{capitalizeAll ../this.currency}} in {{getMonth this.currentPeriodStart}}
-                    </span> <br>
-                  {{/if}}
-
-                  {{#if ../this.monthlySubscription}}
-                    <i class="ti ti-refresh ms-1 fs-5"></i>
-                  {{/if}}
-
                   <span class="me-2">
                     {{this.totalCostSingleMonth}} {{../this.currency}}
                     <i class="ti ti-x fs-5"></i>
