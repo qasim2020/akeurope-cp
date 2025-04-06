@@ -424,6 +424,9 @@ const getConfig = async (url, payload, token) => {
 
 const updateDonorAgreement = async (orderId) => {
     const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+    if (!order) {
+        throw new Error('Order not found - likely deleted being too old');
+    }
     const customerId = order.customerId;
     const customer = await Customer.findById(customerId).lean();
     const donor = await Donor.findOne({ email: customer.email?.toLowerCase() });

@@ -52,7 +52,6 @@ const handleVippsEvent = async (event, paymentId) => {
     const order = (await Subscription.findById(paymentId).lean()) || (await Order.findById(paymentId).lean());
     const agreementId = paymentId;
     switch (event) {
-        // handle both payment hook and poll
         case 'CREATED':
             if (order.status === 'draft') throw new Error(`Vipps Event: order already  ${order.status}`);
             await vippsPaymentCreated(paymentId);
@@ -85,7 +84,6 @@ const handleVippsEvent = async (event, paymentId) => {
             await vippsPaymentTerminated(paymentId);
             break;
 
-        // handle both agreement hook and poll
         case 'PENDING':
             if (order.status === 'draft') throw new Error(`Vipps Event: order already  ${order.status}`);
             await vippsAgreementPending(agreementId);
@@ -111,7 +109,7 @@ const handleVippsEvent = async (event, paymentId) => {
         case 'EXPIRED':
             await vippsAgreementExpired(agreementId);
             break;
-        // handle webhook CHARGE
+
         case 'recurring.charge-reserved.v1':
             await vippsChargeReserved(agreementId);
             break;
@@ -155,6 +153,7 @@ exports.vippsWebhook = async (req, res) => {
             const order =
                 (await Order.findOne({ vippsReference: req.body.reference }).lean()) ||
                 (await Subscription.findOne({ vippsReference: req.body.reference }).lean());
+            if (!order) throw new Error('Order not found - likely deleted being too old!');
             paymentId = order._id;
         } else if (req.body.agreementExternalId) {
             paymentId = req.body.agreementExternalId;
