@@ -102,7 +102,7 @@ exports.sendRegistrationLink = async (req, res) => {
             );
         } else {
             res.status(200).send(
-                `A fresh registration email has been sent to ${customer.email}. Check Spam folders if not found the previous email.`,
+                `An email was sent previously with the registration link. But to be safe, same link has been re-sent to ${customer.email}. Please check in spam folders if not found in inbox folder of your mailbox.`,
             ); 
         }
 
