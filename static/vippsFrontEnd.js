@@ -236,13 +236,13 @@ const showVippsOrderStatus = (orderId) => {
 const handleMonthlyVipps = async (elem, type) => {
     let currentBtnHtml;
     try {
-        $(elem).html(`
-            <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
-            <span class="text-white fs-3 py-2">Processing</span>
-        `);
         if (type === 'overlay') {
             const isValid = validateDonationForm();
             if (!isValid) return;
+            $(elem).html(`
+                <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
+                <span class="text-white fs-3 py-2">Processing</span>
+            `);
             currentBtnHtml = vippsBtnMonthly;
             const url = `/create-vipps-setup-intent`;
             const body = {
@@ -273,6 +273,10 @@ const handleMonthlyVipps = async (elem, type) => {
             });
         }
         if (type === 'widget') {
+            $(elem).html(`
+                <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
+                <span class="text-white fs-3 py-2">Processing</span>
+            `);
             currentBtnHtml = vippsBtnMonthly;
             const url = `/create-vipps-setup-intent-widget`;
             const body = {

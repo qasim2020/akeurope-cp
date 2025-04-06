@@ -1388,27 +1388,22 @@
 
             const countryCode = localStorage.getItem('countryCode');
             const freq = $(this).attr('freq');
-            if (countryCode === 'NO') {
-                if (freq === 'once') {
-                    $('#one-time-save-donation').removeClass('d-none');
-                    $('#monthly-save-donation').addClass('d-none');
-                } else {
-                    $('#one-time-save-donation').addClass('d-none');
-                    $('#monthly-save-donation').removeClass('d-none');
-                }
+
+            $('.donation-amount').removeClass('active');
+            if (freq === 'once') {
+                $('#one-time-save-donation').removeClass('d-none');
+                $('#monthly-save-donation').addClass('d-none');
+                $('#global-one-time-donation').removeClass('d-none');
+                $('#global-monthly-donation').addClass('d-none');
+                $('.donation-amount').first().addClass('active');
+                $('#project-card').attr({ monthly: false });
             } else {
-                $('.donation-amount').removeClass('active');
-                if (freq === 'once') {
-                    $('#global-one-time-donation').removeClass('d-none');
-                    $('#global-monthly-donation').addClass('d-none');
-                    $('.donation-amount').first().addClass('active');
-                    $('#project-card').attr({ monthly: false });
-                } else {
-                    $('#global-one-time-donation').addClass('d-none');
-                    $('#global-monthly-donation').removeClass('d-none');
-                    $('.donation-amount').last().addClass('active');
-                    $('#project-card').attr({ monthly: true });
-                }
+                $('#one-time-save-donation').addClass('d-none');
+                $('#monthly-save-donation').removeClass('d-none');
+                $('#global-one-time-donation').addClass('d-none');
+                $('#global-monthly-donation').removeClass('d-none');
+                $('.donation-amount').last().addClass('active');
+                $('#project-card').attr({ monthly: true });
             }
 
             const orderId = $('#project-entries').attr('order-id');

@@ -76,7 +76,8 @@
                                 class="footer border-0 {{#if (neq data.countryCode 'NO')}}d-none{{/if}}"
                                 style="margin-bottom: -7px">
                                 <div id="monthly-save-donation">
-                                    <button id="vipps-btn-monthly" class="btn donation-btn w-100 px-3 fw-bold fs-3 btn-vipps"
+                                    <button id="vipps-btn-monthly"
+                                        class="btn donation-btn w-100 px-3 fw-bold fs-3 btn-vipps"
                                         onclick="handleMonthlyVipps(this, 'overlay')">
                                         <span style="color: white; font-size: 16px; font-weight: bold;">Subscribe with
                                         </span>
@@ -94,7 +95,8 @@
                                     </div>
                                 </div>
                                 <div class="d-none" id="one-time-save-donation">
-                                    <button id="vipps-btn-one-time" class="btn donation-btn w-100 px-3 fw-bold fs-3 py-2 btn-vipps"
+                                    <button id="vipps-btn-one-time"
+                                        class="btn donation-btn w-100 px-3 fw-bold fs-3 py-2 btn-vipps"
                                         onclick="handleOneTimeVipps(this, 'overlay')">
                                         <span style="color: white; font-size: 16px; font-weight: bold;">Pay with</span>
                                         <span style="margin-left:-19px; margin-right: -38px">
@@ -113,12 +115,14 @@
                             </div>
                             <div id="global-checkout"
                                 class="{{#if (eq data.countryCode 'NO')}}d-none{{/if}} footer border-0">
-                                <button id="global-one-time-donation" class="d-none btn donation-btn btn-primary w-100 py-3 fw-bold fs-3"
+                                <button id="global-one-time-donation"
+                                    class="d-none btn donation-btn btn-primary w-100 py-3 fw-bold fs-3"
                                     onclick="saveDonationAmount(this)">
                                     <i class="ti ti-credit-card-pay me-2"></i>
                                     <span>Donate Once</span>
                                 </button>
-                                <button id="global-monthly-donation" class="btn donation-btn btn-primary w-100 py-3 fw-bold fs-3"
+                                <button id="global-monthly-donation"
+                                    class="btn donation-btn btn-primary w-100 py-3 fw-bold fs-3"
                                     onclick="saveDonationAmount(this)">
                                     <i class="ti ti-credit-card-pay me-2"></i>
                                     <span>Give Monthly</span>
@@ -859,7 +863,7 @@
         const startWidget = async function () {
             let countryCode = '{{data.countryCode}}' || 'NO';
             localStorage.setItem('countryCode', countryCode);
-            localStorage.setItem('projectName', '{{data.project.name}}' )
+            localStorage.setItem('projectName', '{{data.project.name}}')
             await drawTotalCosts();
             await refreshDropdowns();
             initializePopovers();
@@ -1372,27 +1376,21 @@
         $('[freq]').on('click', async function (e) {
             const countryCode = localStorage.getItem('countryCode');
             const freq = $(this).attr('freq');
-            if (countryCode === 'NO') {
-                if (freq === 'once') {
-                    $('#one-time-save-donation').removeClass('d-none');
-                    $('#monthly-save-donation').addClass('d-none');
-                } else {
-                    $('#one-time-save-donation').addClass('d-none');
-                    $('#monthly-save-donation').removeClass('d-none');
-                }
+            $('.donation-amount').removeClass('active');
+            if (freq === 'once') {
+                $('#one-time-save-donation').removeClass('d-none');
+                $('#monthly-save-donation').addClass('d-none');
+                $('#global-one-time-donation').removeClass('d-none');
+                $('#global-monthly-donation').addClass('d-none');
+                $('.donation-amount').first().addClass('active');
+                $('#project-card').attr({ monthly: false });
             } else {
-                $('.donation-amount').removeClass('active');
-                if (freq === 'once') {
-                    $('#global-one-time-donation').removeClass('d-none');
-                    $('#global-monthly-donation').addClass('d-none');
-                    $('.donation-amount').first().addClass('active');
-                    $('#project-card').attr({ monthly: false });
-                } else {
-                    $('#global-one-time-donation').addClass('d-none');
-                    $('#global-monthly-donation').removeClass('d-none');
-                    $('.donation-amount').last().addClass('active');
-                    $('#project-card').attr({ monthly: true });
-                }
+                $('#one-time-save-donation').addClass('d-none');
+                $('#monthly-save-donation').removeClass('d-none');
+                $('#global-one-time-donation').addClass('d-none');
+                $('#global-monthly-donation').removeClass('d-none');
+                $('.donation-amount').last().addClass('active');
+                $('#project-card').attr({ monthly: true });
             }
         });
 
@@ -1420,7 +1418,6 @@
             } catch (error) {
                 const visiblebtn = getVisibleBtnFirstSlide();
                 const currentBtnHtml = $(visiblebtn).html();
-                console.log(visiblebtn);
                 showCardError(visiblebtn, error.responseText || error.toString, currentBtnHtml);
             }
 
