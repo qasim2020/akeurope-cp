@@ -189,6 +189,7 @@ exports.vippsSetupStatusData = async (req, res) => {
         const order =
             (await Order.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||
             (await Subscription.findOne({ _id: req.params.orderId, createdAt: { $gte: twoHoursAgo } }).lean());
+        if (!order) throw new Error('Order not found or too old - refresh browser and try again.');
         order.dashboardLink = process.env.CUSTOMER_PORTAL_URL;
         res.status(200).send(order);
     } catch (err) {

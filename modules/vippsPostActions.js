@@ -21,6 +21,8 @@ const {
 } = require('../modules/vippsModules');
 const { cleanOrder } = require('../modules/orders');
 const { vippsStatusMap } = require('../modules/helpers');
+const { updateOrderMonthsVsVippsCharges } = require('../modules/orders');
+
 
 const connectDonorInCustomer = async (donor, checkCustomer) => {
     if (!checkCustomer || !(checkCustomer && checkCustomer.password)) {
@@ -130,7 +132,9 @@ const successfulSubscriptionPayment = async (orderId, customer) => {
         }
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
         const customer = await connectDonorInCustomer(info.donor, existingCustomer);
-        await cleanOrder(orderId);
+
+        await updateOrderMonthsVsVippsCharges(order._id);
+
         order = await Order.findOneAndUpdate(
             { _id: order._id },
             {
@@ -139,6 +143,7 @@ const successfulSubscriptionPayment = async (orderId, customer) => {
             },
             { lean: true, new: true },
         );
+        
         order.customer = customer;
         await saveLog(
             logTemplates({

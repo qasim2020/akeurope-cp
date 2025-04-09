@@ -107,9 +107,6 @@ const createSubscriptionModule = async (paymentMethodId, donor, order, amount, d
 
     const paymentIntent = subscription.latest_invoice.payment_intent;
 
-    console.log(subscription.latest_invoice);
-    console.log(paymentIntent);
-
     if (paymentIntent.status !== 'succeeded') {
         console.error('Payment failed:', paymentIntent.last_payment_error?.message);
         throw new Error(`Payment failed: ${paymentIntent.last_payment_error?.message || 'Unknown error'}`);

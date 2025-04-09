@@ -11,7 +11,7 @@ const { getOldestPaidEntries, makeProjectForOrder, getPreviousOrdersForEntry } =
 const { saveLog } = require('./logAction');
 const { logTemplates } = require('./logTemplates');
 const { capitalizeFirstLetter } = require('./helpers');
-
+const { getVippsSubscriptionsByOrderId } = require('../modules/vippsPartner');
 
 const getSubscriptionsByOrderId = async (orderId) => {
     try {
@@ -696,7 +696,28 @@ const getPaymentByOrderId = async (orderId) => {
     }
 };
 
+const updateOrderMonthsVsVippsCharges = async (orderId) => {
+    await cleanOrder(orderId);
+    
+    let order = await Order.findById(orderId).lean();
+    const vippsCharges = await getVippsSubscriptionsByOrderId(order.vippsAgreementId);
+
+    for (const minOrder of order.projects) {
+        const projectSlug = minOrder.slug;
+        order = await Order.findOneAndUpdate(
+            { _id: orderId, 'projects.slug': projectSlug },
+            { $set: { 'projects.$.months': vippsCharges.length } },
+            { new: true, lean: true },
+        );
+    }
+
+    const calculatedOrder = await calculateOrder(order);
+    await addPaymentsToOrder(calculatedOrder);
+    return true;
+}
+
 module.exports = {
+    updateOrderMonthsVsVippsCharges,
     createDraftOrder,
     updateDraftOrder,
     getPaginatedOrders,

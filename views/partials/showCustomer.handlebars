@@ -40,14 +40,7 @@
             <span>{{customer.organization}}</span>
           </div>
         </div>
-        
-        <div class="datagrid-item">
-          <div class="datagrid-title">Organization Address</div>
-          <div class="datagrid-content">
-            <span>{{customer.address}}</span>
-          </div>
-        </div>
-        {{else}}
+        {{/if}}
 
         <div class="datagrid-item">
           <div class="datagrid-title">Address</div>
@@ -55,7 +48,6 @@
             <span>{{customer.address}}</span>
           </div>
         </div>
-        {{/if}}
 
       </div>
     </div>
