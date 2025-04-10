@@ -18,6 +18,7 @@ const {
     updateDonorWithPayment,
     updateDonorWithCharge,
     getVippsChargeNUserInfo,
+    updateDonorAgreement,
 } = require('../modules/vippsModules');
 const { cleanOrder } = require('../modules/orders');
 const { vippsStatusMap } = require('../modules/helpers');
@@ -143,6 +144,8 @@ const successfulSubscriptionPayment = async (orderId, customer) => {
             },
             { lean: true, new: true },
         );
+
+        await updateDonorAgreement(order._id);
         
         order.customer = customer;
         await saveLog(
