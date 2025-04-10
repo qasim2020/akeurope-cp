@@ -226,6 +226,7 @@ const successfulSubscriptionPaymentOverlay = async (orderId) => {
             },
             { lean: true, new: true },
         );
+        await updateDonorAgreement(order._id);
         order.customer = customer;
         await saveLog(
             logTemplates({
