@@ -33,7 +33,7 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
             },
             {
                 $set: {
-                    name: donor.name,
+                    name: `${donor.firstName} ${donor.lastName}`,
                     tel: donor.tel,
                     anonymous: 'false',
                     countryCode: 'NO',
@@ -50,7 +50,7 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
     } else {
         const updateFields = {
             $set: {
-                name: donor.name,
+                name: `${donor.firstName} ${donor.lastName}`,
                 organization: 'Not Listed',
                 tel: donor.tel,
                 anonymous: 'false',
