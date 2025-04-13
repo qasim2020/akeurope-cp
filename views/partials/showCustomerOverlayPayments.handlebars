@@ -4,7 +4,7 @@
     <div class="text-secondary">Payments made through website that are not linked to any beneficiary.</div>
   </div>
   {{#if data.subscriptions}}
-  <div class="p-md-3 table-responsive">
+  <div class="table-responsive">
     <table class="table table-striped mb-0 text-nowrap">
       <thead>
         <tr>
@@ -34,7 +34,7 @@
             {{/if}}
           </td>
           <td>{{formatDate this.createdAt}}</td>
-          <td>
+          <td class="pe-6">
             {{#if this.monthlySubscription}}
               {{#each this.stripeInfo}}
                 {{{getOrderIcon 'stripe'}}}

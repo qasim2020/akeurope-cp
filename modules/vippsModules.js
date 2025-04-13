@@ -125,6 +125,7 @@ const getVippsChargeNUserInfo = async (orderId) => {
         const donor = {
             firstName: user.given_name,
             lastName: user.family_name,
+            name: `${user.given_name} ${user.family_name}`,
             email: user.email,
             tel: `+${user.phone_number}`,
             address: `${address.street_address}, ${address.postal_code}, ${address.region}, ${address.country}`,
@@ -199,6 +200,7 @@ const getVippsOrderNUserInfo = async (orderId) => {
     const donor = {
         firstName: user.given_name,
         lastName: user.family_name,
+        name: `${user.given_name} ${user.family_name}`,
         email: user.email,
         tel: `+${user.phone_number}`,
         address: `${address.street_address}, ${address.postal_code}, ${address.region}, ${address.country}`,

@@ -77,7 +77,7 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
     return checkCustomer;
 };
 
-const successfulOneTimePayment = async (orderId, customer) => {
+const successfulOneTimePayment = async (orderId) => {
     try {
         let order = await Order.findById(orderId).lean();
         if (!order) {
@@ -93,7 +93,7 @@ const successfulOneTimePayment = async (orderId, customer) => {
         const info = await getVippsOrderNUserInfo(orderId);
         const updatedDonor = await updateDonorWithPayment(info);
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
-        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
+        const customer = await connectDonorInCustomer(updatedDonor, existingCustomer);
         order = await Order.findOneAndUpdate(
             { _id: order._id },
             {
@@ -117,7 +117,7 @@ const successfulOneTimePayment = async (orderId, customer) => {
     }
 };
 
-const successfulSubscriptionPayment = async (orderId, customer) => {
+const successfulSubscriptionPayment = async (orderId) => {
     try {
         let order = await Order.findById(orderId).lean();
         if (!order) {
@@ -132,7 +132,7 @@ const successfulSubscriptionPayment = async (orderId, customer) => {
             throw new Error('Payment is already captured = strange');
         }
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
-        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
+        const customer = await connectDonorInCustomer(updatedDonor, existingCustomer);
 
         await updateOrderMonthsVsVippsCharges(order._id);
 
@@ -178,7 +178,7 @@ const successfulOneTimePaymentOverlay = async (orderId) => {
         const info = await getVippsOrderNUserInfo(orderId);
         const updatedDonor = await updateDonorWithPayment(info);
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
-        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
+        const customer = await connectDonorInCustomer(updatedDonor, existingCustomer);
         order = await Subscription.findOneAndUpdate(
             { _id: order._id },
             {
@@ -217,7 +217,7 @@ const successfulSubscriptionPaymentOverlay = async (orderId) => {
             throw new Error('Payment is already captured = strange');
         }
         let existingCustomer = await Customer.findOne({ email: updatedDonor?.email?.toLowerCase() }).lean();
-        const customer = await connectDonorInCustomer(info.donor, existingCustomer);
+        const customer = await connectDonorInCustomer(updatedDonor, existingCustomer);
         order = await Subscription.findOneAndUpdate(
             { _id: order._id },
             {
