@@ -20,7 +20,7 @@
         <tr>
           <td>
             {{#if (hasAny this.stripeInfo this.vippsInfo)}}
-              {{#if this.stripeInfo.paymentIntentId}}
+              {{#if this.stripeInfo}}
               <a href="/order/{{this._id}}">{{this.orderNo}}</a>
               {{/if}}
               {{#if this.vippsInfo}}
@@ -34,7 +34,7 @@
             {{/if}}
           </td>
           <td>{{formatDate this.createdAt}}</td>
-          <td class="pe-6">
+          <td class="pe-6 pe-md-0">
             {{#if this.monthlySubscription}}
               {{#each this.stripeInfo}}
                 {{{getOrderIcon 'stripe'}}}

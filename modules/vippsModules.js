@@ -355,17 +355,17 @@ async function getVippsToken() {
 }
 
 function validateAndFormatVippsNumber(input) {
-    let cleaned = input.replace(/\D+/g, ''); // Remove all non-numeric characters
+    let cleaned = input.replace(/\D+/g, ''); 
 
     if (input.startsWith('+47') || input.startsWith('47')) {
-        cleaned = cleaned.replace(/^47/, ''); // Remove leading 47 if already present
+        cleaned = cleaned.replace(/^47/, ''); 
     }
 
     if (cleaned.length === 8 && /^[49]/.test(cleaned)) {
-        cleaned = '47' + cleaned; // Ensure it starts with 47
+        cleaned = '47' + cleaned; 
     }
 
-    let regex = /^47[49]\d{7}$/; // Must start with 47, followed by 4 or 9, then 7 more digits
+    let regex = /^47[49]\d{7}$/; 
 
     return regex.test(cleaned) ? cleaned : false;
 }

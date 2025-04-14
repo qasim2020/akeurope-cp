@@ -392,7 +392,7 @@ exports.getOrderData = async (req, res) => {
 
 exports.renderOrderEntries = async (req, res) => {
     try {
-        const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        const order = await Order.findOne({ _id: req.params.orderId }).lean();
         const project = await Project.findOne({ slug: req.params.slug }).lean();
         if (!order || !project) throw new Error('Order or project not found!');
 
