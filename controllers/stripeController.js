@@ -13,7 +13,8 @@ const { downloadStripeInvoiceAndReceipt } = require('../modules/invoice');
 
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
-const { sendErrorToTelegram } = require('../modules/telegramBot');
+const { sendErrorToTelegram, sendTelegramMessage } = require('../modules/telegramBot');
+const { truncate } = require('fs-extra');
 
 async function createCustomerPortalSession(customerId, orderId) {
     let session;
@@ -218,7 +219,10 @@ async function renewWidgetOrder(req, event) {
         const invoice = event.data.object;
         const subscriptionId = invoice.subscription;
 
-        if (!subscriptionId) throw new Error('Subscription Id not in the hook');
+        if (!subscriptionId) {
+            await sendTelegramMessage('Subscription ID not in stripe webhook. Its ok for 1 time payments');
+            return true;
+        };
 
         const orderId = await getOrderIdBySubscriptionId(subscriptionId);
 
