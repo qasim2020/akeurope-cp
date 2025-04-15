@@ -56,6 +56,8 @@ exports.register = async (req, res) => {
             name: customer.name,
             email: customer.email,
             token: customer.inviteToken,
+            address: customer.address,
+            tel: customer.tel,
         });
     } catch (err) {
         res.status(500).send('Error during registration');
