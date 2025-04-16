@@ -11,7 +11,7 @@ exports.login = async (req, res) => {
         const { email, password, rememberMe } = req.body;
         let customer = await Customer.findOne({ email: email.toLowerCase() });
 
-        if (!customer) throw new Error('User not found. Please register yourself by clicking on Register Now button.')
+        if (!customer) throw new Error(`User with email: ${email.toLowerCase()} was not found. Please register yourself by clicking on Register Now button.`)
 
         customer = await Customer.findOne({ email: email.toLowerCase(), password: {$exists: true} });
 

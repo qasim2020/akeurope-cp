@@ -14,14 +14,14 @@ exports.forgotPassword = async (req, res) => {
     const email = emailProvided.toLowerCase();
 
     if (!isValidEmail(email)) {
-        res.status(400).send('Invalid email');
+        res.status(400).send(`${email} is an invalid email.`);
         return false;
     }
 
     let customer = await Customer.findOne({ email });
 
     if (!customer) {
-        res.status(400).send('User not found');
+        res.status(400).send(`User with ${email} not found`);
         return false;
     }
 
@@ -34,7 +34,7 @@ exports.forgotPassword = async (req, res) => {
 
     const token = crypto.randomBytes(20).toString('hex');
     customer.resetPasswordToken = token;
-    customer.resetPasswordExpires = Date.now() + 3600000; // 1-hour expiration
+    customer.resetPasswordExpires = Date.now() + 3600000; 
 
     let transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
