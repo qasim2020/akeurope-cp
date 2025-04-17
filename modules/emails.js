@@ -359,7 +359,7 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
     try {
         await transporter.sendMail(mailOptions);
         await sendThankYouMessage(customer.tel, portalUrl);
-        await sendTelegramMessage(`✅ *Invoice || Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
+        await sendTelegramMessage(`✅ *Invoice & Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
         return true;
     } catch (err) {
         throw new Error(`Failed to send email: ${err.message}`);
