@@ -67,28 +67,34 @@ exports.register = async (req, res) => {
 
 exports.sendRegistrationLink = async (req, res) => {
     try {
-        const { name, email } = req.body;
+        const { name, email: gotEmail } = req.body;
 
-        const checkCustomer = await Customer.findOne({ email: email.toLowerCase(), password: { $exists: true } }).lean();
+        const email = gotEmail.toLowerCase();
+        
+        const checkCustomer = await Customer.findOne({ email: email, password: { $exists: true } }).lean();
 
         if (checkCustomer) {
             return res
                 .status(400)
                 .send(
-                    'An account with this email already exists. Try signing in with your email/ password or use forgot password form to reset password',
+                    `An account with ${email} already exists. Try signing in with your email/ password or use Forgot-Password page to change your password`,
                 );
+        }
+        
+        if (!isValidEmail(email)) {
+            return res.status(400).send(`${email} is an invalid email. If your email is correct and you are still getting this message, that means our email-validator is not working right - please inform us, jazak Allah.`);
         }
 
         const customer = await Customer.findOneAndUpdate(
             {
-                email: email.toLowerCase(),
+                email: email,
             },
             {
                 $set: {
                     name,
                 },
                 $setOnInsert: {
-                    email: email.toLowerCase(),
+                    email: email
                 },
             },
             {
