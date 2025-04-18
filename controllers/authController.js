@@ -5,6 +5,7 @@ const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const { sendCustomerInvite } = require('../modules/emails');
+const { isValidEmail } = require('../modules/checkValidForm');
 
 exports.login = async (req, res) => {
     try {
