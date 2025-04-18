@@ -23,7 +23,7 @@
     </div>
 
     {{#if (gt list.totalPages 1)}}
-    <div class="card-header border-top bg-light d-flex align-items-center">
+    <div class="card-header border-top d-flex align-items-center">
         <p class="m-0 text-secondary">Page <span>{{list.currentPage}}</span> of <span>{{list.totalPages}}</span></p>
         <ul class="pagination m-0 ms-auto">
             <li class="page-item {{#if (eq list.hasPrevPage false)}}disabled{{/if}}">

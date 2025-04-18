@@ -8,6 +8,7 @@
       <div class="datagrid">
 
         {{#each ../data.fields}}
+        {{#if this.visible}}
         <div class="datagrid-item">
           {{#if this.subscription}}
           <div class="datagrid-title text-red">{{this.actualName}}</div>
@@ -15,13 +16,13 @@
           <div class="datagrid-title">{{this.actualName}}</div>
           {{/if}}
           <div class="datagrid-content">
-
             {{#if (eq this.type "boolean")}}
-            {{#if (eq this.options.0.value (lookup entry this.name))}}
-            <span class="status status-green">{{lookup entry this.name}}</span>
-            {{else}}
-            <span class="status status-red"> {{lookup entry this.name}}</span>
-            {{/if}}
+            
+              {{#if (eq this.options.0.value (lookup entry this.name))}}
+              <span class="status status-green">{{lookup entry this.name}}</span>
+              {{else}}
+              <span class="status status-red"> {{lookup entry this.name}}</span>
+              {{/if}}
 
             {{else if (eq this.type "dropdown")}}
             {{lookup entry this.name}}
@@ -30,22 +31,24 @@
             {{formatDate (lookup entry this.name)}}
 
             {{else if (eq this.type "image")}}
-            {{#if (lookup entry this.name)}}
-            <a data-fslightbox="gallery" href="{{lookup entry this.name}}">
-              <img src="{{resizeCloudinaryUrl (lookup entry this.name) 't_w-250'}}" alt="" style="max-width: 150px;">
-            </a>
-            {{else}}
-            <a data-fslightbox="gallery" href="/static/images/no-image-placement.png">
-              <img src="/static/images/no-image-placement.png" alt="" style="max-width: 150px;">
-            </a>
-            {{/if}}
+
+              {{#if (lookup entry this.name)}}
+              <a data-fslightbox="gallery" href="{{lookup entry this.name}}">
+                <img src="{{resizeCloudinaryUrl (lookup entry this.name) 't_w-250'}}" alt="" style="max-width: 150px;">
+              </a>
+              {{else}}
+              <a data-fslightbox="gallery" href="/static/images/no-image-placement.png">
+                <img src="/static/images/no-image-placement.png" alt="" style="max-width: 150px;">
+              </a>
+              {{/if}}
 
             {{else if (eq this.type "file")}}
-            {{#if (lookup entry this.name)}}
-            <a href="{{lookup entry this.name}}" target="_blank">Download File</a>
-            {{else}}
-            <span>No file uploaded</span>
-            {{/if}}
+              
+              {{#if (lookup entry this.name)}}
+              <a href="{{lookup entry this.name}}" target="_blank">Download File</a>
+              {{else}}
+              <span>No file uploaded</span>
+              {{/if}}
 
             {{else if this.subscription}}
             <span class="text-danger fw-bold">{{lookup entry this.name}} <sup>{{../../data.project.currency}} /
@@ -56,6 +59,7 @@
 
           </div>
         </div>
+        {{/if}}
         {{/each}}
 
       </div>
