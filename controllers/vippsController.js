@@ -160,6 +160,10 @@ exports.vippsWebhook = async (req, res) => {
         } else if (req.body.chargeExternalId) {
             paymentId = req.body.chargeExternalId;
         }
+        if (!paymentId) {
+            console.log(req.body);
+            throw new Error(`PaymentId was not found:- \n\n ${JSON.stringify(req.body, null, 2)}`);
+        }
         await handleVippsEvent(event, paymentId);
         res.status(200).send('Webhook received');
     } catch (error) {

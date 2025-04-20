@@ -83,6 +83,7 @@ app.use((req, res, next) => {
                 url: req.originalUrl,
             };
 
+            console.log(responseBody);
             sendErrorToTelegram(errorData);
         }
     });

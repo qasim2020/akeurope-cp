@@ -18,6 +18,9 @@ const getFileModal = function (elem, fileId) {
         success: function (response) {
             $('footer').before(response);
             $(`#button-${fileId}`).trigger('click');
+            $(`#modal-${fileId}`).on('hidden.bs.modal', function () {
+                $(this).remove();
+            });
         },
         error: function (xhr, status, error) {
             alert(xhr.responseText);

@@ -2,7 +2,7 @@
 <div class="col-12 pb-2 entry" entry-id="{{entry.detail._id}}" order-id="{{order._id}}">
     <div class="card border-0 flex-row h-100 rounded-3">
         <div class="pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3"> Beneficiary # {{entry.detail.ser}} </div>
+            <div class="card-title mb-1 fs-3"> {{order.project.detail.name}} # {{entry.detail.ser}} </div>
             {{#if entry.detail.dateOfBirth}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
             {{/if}}
@@ -59,7 +59,7 @@
 <div class="col-12 pb-2 entry" entry-id="{{entry.detail._id}}" order-id="{{order._id}}">
     <div class="card border-0 flex-row h-100 rounded-3">
         <div class="pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3"> Beneficiary # {{entry.detail.ser}} </div>
+            <div class="card-title mb-1 fs-3"> {{order.project.detail.name}} # {{entry.detail.ser}} </div>
             {{#if entry.detail.dateOfBirth}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
             {{/if}}
@@ -102,7 +102,7 @@
 <div class="col-12 pb-2 entry" entry-id="{{entry.detail._id}}" order-id="{{order._id}}">
     <div class="card border-0 flex-row h-100 rounded-3">
         <div class="pt-1 w-100 h-100 d-flex flex-column">
-            <div class="card-title mb-1 fs-3"> Beneficiary # {{entry.detail.ser}} </div>
+            <div class="card-title mb-1 fs-3"> {{order.project.detail.name}} # {{entry.detail.ser}} </div>
             {{#if entry.detail.dateOfBirth}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dateOfBirth}}</div>
             {{/if}}

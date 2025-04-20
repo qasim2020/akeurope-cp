@@ -96,6 +96,8 @@ const vippsChargeCaptured = async (orderId) => {
     console.log(`Charge captured: ${orderId}`);
     await successfulSubscriptionPayment(orderId);
     const order = (await Subscription.findById(orderId).lean()) || (await Order.findById(orderId).lean());
+    if (!order) 
+        throw new Error(`This order:- ${orderId} does not exist in our database`);
     if (order.projects?.length > 0) {
         await sendTelegramMessage(`Monthly Charge captured: ${order.orderNo} | ${order.total || order.totalCost} NOK | ${slugToString(order.projects[0].slug)}`);
     } else {

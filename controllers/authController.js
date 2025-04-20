@@ -16,7 +16,7 @@ exports.login = async (req, res) => {
 
         customer = await Customer.findOne({ email: email.toLowerCase(), password: {$exists: true} });
 
-        if (!customer) throw new Error('You have not yet registered yourself. Please use Register Now button to see your payments. Your payments are safely linked with your email address.')
+        if (!customer) throw new Error('You have not yet created a password. Please use Register Now button to create one. Your payments are safely linked with your email address.')
 
         const loginCondition = process.env.ENV === 'test'? 
             customer :

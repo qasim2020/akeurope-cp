@@ -636,6 +636,7 @@ const formatOrderWidget = async (order) => {
                 }
             }
         }
+        project.detail = await Project.findOne({slug: project.slug}).lean();
         order.project = project;
     }
     return order;
