@@ -60,8 +60,10 @@ const updateLog = async ({ logId, updates }) => {
     return updatedLog;
 };
 
-const entryLogs = async (req, res, customerId) => {
+const entryLogs = async (req, res, customerId, project) => {
     try {
+
+        const visibleFields = project.fields.filter(field => field.visible);
         const query = {
                     entityId: req.params.entryId,
                     entityType: { $ne: 'order' },
@@ -77,10 +79,27 @@ const entryLogs = async (req, res, customerId) => {
             .sort({ timestamp: -1 })
             .lean();
 
+        const filteredLogs = logs.map(log => {
+            if (log.changes?.length > 0) {
+                const changes = log.changes.filter(change => {
+                    const field = visibleFields.find(fd => fd.name === change.key);
+                    return field != null;
+                });
+        
+                if (changes.length > 0) {
+                    return { ...log, changes };
+                } else {
+                    return null;
+                }
+            } else {
+                return log;
+            }
+        }).filter(log => log !== null);
+
         const totalPages = Math.ceil(total / limit);
 
         return {
-            logs: await findConnectedIds(logs),
+            logs: await findConnectedIds(filteredLogs),
             pagesArray: generatePagination(totalPages, page),
             currentPage: page,
             totalPages,

@@ -248,7 +248,6 @@ exports.vippsPaymentStatus = async (req, res) => {
 
 exports.createVippsPaymentIntent = async (req, res) => {
     try {
-        // throw new Error('testing error to check error is handled');
         const { total, currency, project: slug } = req.body;
         if (!(process.env.ENV === 'test') && total < 10) throw new Error('Order cost can not be lower than 10 NOK.');
         if (currency != 'NOK') throw new Error('Vipps works for Norway only.');

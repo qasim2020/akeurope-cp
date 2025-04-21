@@ -78,7 +78,7 @@ exports.entry = async (req, res) => {
                 files,
                 role: req.userPermissions,
                 logs: await visibleLogs(req, res),
-                entryLogs: await entryLogs(req, res, req.session.user._id),
+                entryLogs: await entryLogs(req, res, req.session.user._id, project),
                 sidebarCollapsed: req.session.sidebarCollapsed,
                 customers: await Customer.find().lean(),
                 payments: await getOrdersByEntryId(req),
@@ -139,7 +139,7 @@ exports.getSingleEntryLogs = async (req, res) => {
         res.render('partials/showEntryLogs', {
             layout: false,
             data: {
-                entryLogs: await entryLogs(req, res, req.session.user._id),
+                entryLogs: await entryLogs(req, res, req.session.user._id, project),
                 project,
                 entry,
             },
