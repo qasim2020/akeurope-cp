@@ -2,6 +2,7 @@ const File = require('../models/File');
 const Order = require('../models/Order');
 const fs = require('fs').promises;
 const path = require('path');
+const mime = require('mime-types');
 const { createDynamicModel } = require('../models/createDynamicModel');
 const User = require('../models/User');
 const Customer = require('../models/Customer');
