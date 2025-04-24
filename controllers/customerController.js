@@ -72,20 +72,6 @@ exports.updateCustomer = async (req, res) => {
 
         console.log({tel});
 
-        let check = [];
-
-        if (!checkValidForm.isValidName(name)) {
-            check.push({
-                elem: '.name',
-                msg: 'Name contains only letters and spaces and is at least three characters long',
-            });
-        }
-
-        if (check.length > 0) {
-            res.status(400).send(check);
-            return false;
-        }
-
         await Donor.updateOne({email: req.session.user.email}, {$set: {
             tel,
         }})

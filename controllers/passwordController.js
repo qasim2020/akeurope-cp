@@ -8,6 +8,36 @@ const { isValidEmail } = require('../modules/checkValidForm');
 const { validateExpressRequest } = require('twilio/lib/webhooks/webhooks');
 const authController = require('../controllers/authController');
 
+const getPasswordToken = async (customer) => {
+    const moment = require('moment');
+
+    if (customer.resetPasswordToken && customer.resetPasswordExpires > Date.now()) {
+        const duration = moment.duration(customer.resetPasswordExpires - Date.now());
+        const hours = Math.floor(duration.asHours());
+        const minutes = Math.floor(duration.minutes());
+
+        return {
+            token: customer.resetPasswordToken,
+            expiry: `${hours} hour(s) and ${minutes} minute(s)`
+        };
+    } else {
+        const token = crypto.randomBytes(20).toString('hex');
+        customer.resetPasswordToken = token;
+        customer.resetPasswordExpires = Date.now() + 3600000; 
+
+        await customer.save();
+
+        const duration = moment.duration(customer.resetPasswordExpires - Date.now());
+        const hours = Math.floor(duration.asHours());
+        const minutes = Math.floor(duration.minutes());
+
+        return {
+            token: token,
+            expiry: `${hours} hour(s) and ${minutes} minute(s)`
+        };
+    }
+}
+
 exports.forgotPassword = async (req, res) => {
     const { email: emailProvided } = req.body;
 
@@ -32,9 +62,7 @@ exports.forgotPassword = async (req, res) => {
         return;
     }
 
-    const token = crypto.randomBytes(20).toString('hex');
-    customer.resetPasswordToken = token;
-    customer.resetPasswordExpires = Date.now() + 3600000; 
+    const { token, expiry } = await getPasswordToken(customer);
 
     let transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
@@ -56,6 +84,7 @@ exports.forgotPassword = async (req, res) => {
         subject: 'Password Reset',
         html: compiledTemplate({
             name: customer.name,
+            expiry,
             resetLink: `${process.env.CUSTOMER_PORTAL_URL}/reset/${token}`,
         }),
     };
@@ -65,7 +94,6 @@ exports.forgotPassword = async (req, res) => {
         if (err) {
             return res.status(400).send(err);
         }
-        await customer.save();
         res.status(200).send('Email sent successfully. Check your inbox.');
     });
 };

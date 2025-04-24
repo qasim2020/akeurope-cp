@@ -33,7 +33,7 @@ exports.login = async (req, res) => {
             }
             res.status(200).send('login successful');
         } else {
-            res.status(400).send('Your credentials are wrong! Please use forget password page to reset your password.');
+            res.status(400).send(`Password mismatch for email: ${customer.email}. Please use forgot password page to change password.`);
         }
     } catch (error) {
         console.log(error);

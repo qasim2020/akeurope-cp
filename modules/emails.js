@@ -424,7 +424,7 @@ const sendReceiptToCustomer = async (order, customer) => {
     }
 };
 
-const sendCustomerInvite = async (customer) => {
+const getInviteToken = async (customer) => {
 
     let inviteToken = customer.inviteToken;
     let inviteExpires = customer.inviteExpires;
@@ -449,6 +449,23 @@ const sendCustomerInvite = async (customer) => {
     const minutes = Math.floor(duration.minutes());
 
     const expiry = `${hours} hour(s) and ${minutes} minute(s)`;
+
+    return {
+        inviteToken,
+        expiry,
+        isNewToken,
+    }
+
+}
+
+const sendCustomerInvite = async (customer) => {
+
+    const {
+        inviteToken,
+        expiry,
+        isNewToken,
+    } = await getInviteToken(customer);
+
 
     let transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
@@ -500,4 +517,5 @@ module.exports = {
     sendThankYouForSponsoringBeneficiaryMessage,
     sendThankYouMessage,
     sendThankYouEmail,
+    getInviteToken,
 };

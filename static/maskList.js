@@ -293,5 +293,3 @@ const maskList = [
     { "code": "+86 ## ##### #####" },
     { "code": "+850 #### #############" }
 ];
-
-module.exports = maskList;
