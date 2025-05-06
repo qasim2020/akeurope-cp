@@ -15,7 +15,7 @@ const {
 } = require('../modules/orderPostActions');
 const { isValidEmail } = require('../modules/checkValidForm');
 const { getCurrencyRates } = require('../modules/getCurrencyRates');
-const { slugToString } = require('../modules/helpers');
+const { slugToString, roundToNearest } = require('../modules/helpers');
 const {
     createSubscriptionModule,
     createSetupIntentModule,
@@ -28,7 +28,7 @@ exports.wScript = async (req, res) => {
     try {
         const scriptPath = path.join(__dirname, '..', 'static', 'webflow.js');
         const file = await fs.readFile(scriptPath, 'utf8');
-        const scriptContent = file.replace('__CUSTOMER_PORTAL_URL__', process.env.CUSTOMER_PORTAL_URL);
+        const scriptContent = file.replaceAll('__CUSTOMER_PORTAL_URL__', process.env.CUSTOMER_PORTAL_URL);
         res.setHeader('Content-Type', 'application/javascript');
         res.send(scriptContent);
     } catch (error) {
@@ -37,28 +37,16 @@ exports.wScript = async (req, res) => {
     }
 };
 
-function roundToNearest(amount) {
-    if (amount < 50) return 50;
-    if (amount < 100) return 100;
-    if (amount < 500) return 500;
-    if (amount < 1000) return 1000;
-    if (amount < 5000) return 5000;
-    if (amount < 10000) return 10000;
-    return Math.ceil(amount / 10000) * 10000;
-}
-
-async function getProductList(code) {
-    const filePath = path.join(__dirname, '../products.json');
-    const fileContent = await fs.readFile(filePath, 'utf8');
-    const data = JSON.parse(fileContent);
-
-    const randomSet = data[Math.floor(Math.random() * data.length)];
+async function getRandomProducts(project, code) {
+    const baseCurrency = project.currency;
+    const products = project.products;
+    const randomSet = products[Math.floor(Math.random() * products.length)];
 
     const oneTime = randomSet.oneTime;
     const monthly = randomSet.monthly;
 
     const currencyRates = await getCurrencyRates(code);
-    const currencyRate = parseFloat(currencyRates.rates['NOK'].toFixed(2));
+    const currencyRate = parseFloat(currencyRates.rates[baseCurrency].toFixed(2));
 
     const productList = {
         oneTime: oneTime.map((amount) => roundToNearest(amount / currencyRate)),
@@ -68,14 +56,47 @@ async function getProductList(code) {
     return productList;
 }
 
+async function getProductList(code, requestedProducts) {
+    const filePath = path.join(__dirname, '../products.json');
+    const fileContent = await fs.readFile(filePath, 'utf8');
+    const data = JSON.parse(fileContent);
+    const project = data[requestedProducts];
+    if (!project) 
+        throw new Error('Products not listed in json file');
+    
+    let productList;
+
+    if (requestedProducts === 'random') {
+        productList = await getRandomProducts(project, code);
+    } else {
+        throw new Error('Only random products can be accessed here.');
+    }
+
+    return productList;
+}
+
 exports.overlayProducts = async (req, res) => {
     try {
         if (!req.params.code) throw new Error('Country Code is required');
         const country = await Country.findOne({ code: req.params.code }).lean();
         if (!country) throw new Error('Currency is not supported');
-        const products = await getProductList(country.currency.code);
+        const products = await getProductList(country.currency.code, req.params.products);
         res.status(200).json({
             products,
+            country,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error.message);
+    }
+};
+
+exports.overlayCountry = async (req, res) => {
+    try {
+        if (!req.params.code) throw new Error('Country Code is required');
+        const country = await Country.findOne({ code: req.params.code }).lean();
+        if (!country) throw new Error('Currency is not supported');
+        res.status(200).json({
             country,
         });
     } catch (error) {

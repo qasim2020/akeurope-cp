@@ -36,6 +36,7 @@ const {
     validateAndFormatVippsNumber,
     getVippsPaymentStatus,
     getVippsSetupStatus,
+    makeVippsReceipt,
 } = require('../modules/vippsModules');
 
 const projects = [
@@ -395,6 +396,61 @@ exports.createVippsPaymentIntentWidget = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
+        res.status(400).send(error.message);
+    }
+};
+
+
+exports.createVippsPaymentIntentProduct = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        let order = await Subscription.findOne({ _id: orderId, customerId: process.env.TEMP_CUSTOMER_ID });
+
+        if (!order) throw new Error('Order not found');
+
+        if (order.currency != 'NOK') throw new Error('Vipps works for Norway only.');
+
+        const amount = Math.max(100, Math.round(order.total * 100));
+
+        const reference = uuidv4();
+        order.vippsReference = reference;
+        await order.save();
+
+        let data = JSON.stringify({
+            amount: {
+                currency: 'NOK',
+                value: amount,
+            },
+            paymentMethod: {
+                type: 'WALLET',
+            },
+            reference,
+            returnUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-payment-status/${order._id}`,
+            userFlow: 'WEB_REDIRECT',
+            profile: {
+                scope: 'name phoneNumber email address',
+            },
+            paymentDescription: `Order - ${order.orderNo}`,
+            receipt: await makeVippsReceipt(orderId, order.products)
+        });
+        const token = await getVippsToken();
+        const config = await getConfig(`${process.env.VIPPS_API_URL}/epayment/v1/payments`, data, token);
+        const response = await axios.request(config);
+
+        res.status(200).send({
+            redirectUrl: response.data.redirectUrl,
+            reference,
+        });
+    } catch (error) {
+        if (error.response) {
+            console.error('Vipps API Error:', error.response.status);
+            console.error('Response body:', error.response.data);
+        } else if (error.request) {
+            console.error('No response from Vipps:', error.request);
+        } else {
+            console.error('Error setting up request:', error.message);
+        }
         res.status(400).send(error.message);
     }
 };

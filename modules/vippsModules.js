@@ -355,17 +355,17 @@ async function getVippsToken() {
 }
 
 function validateAndFormatVippsNumber(input) {
-    let cleaned = input.replace(/\D+/g, ''); 
+    let cleaned = input.replace(/\D+/g, '');
 
     if (input.startsWith('+47') || input.startsWith('47')) {
-        cleaned = cleaned.replace(/^47/, ''); 
+        cleaned = cleaned.replace(/^47/, '');
     }
 
     if (cleaned.length === 8 && /^[49]/.test(cleaned)) {
-        cleaned = '47' + cleaned; 
+        cleaned = '47' + cleaned;
     }
 
-    let regex = /^47[49]\d{7}$/; 
+    let regex = /^47[49]\d{7}$/;
 
     return regex.test(cleaned) ? cleaned : false;
 }
@@ -397,7 +397,9 @@ const authVippsWebhook = (req, res, next) => {
         return next();
     } else {
         console.log('Invalid Vipps signature');
-        return res.status(401).send('Unauthorized: Some hooks are missing credentials but its ok as I am getting some that are valid.');
+        return res
+            .status(401)
+            .send('Unauthorized: Some hooks are missing credentials but its ok as I am getting some that are valid.');
     }
 };
 
@@ -457,6 +459,37 @@ const updateDonorAgreement = async (orderId) => {
     return 'Agreement updated';
 };
 
+const makeVippsReceipt = async (orderId, products) => {
+    const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+
+    const receipt = {
+        orderLines: [],
+        bottomLine: {
+            currency: 'NOK',
+            receiptNumber: order.orderNo,
+        },
+    };
+
+    for (const product of products) {
+        for (const variant of product.variants) {
+            if (variant.orderedCost > 0) {
+                const totalAmount = Math.round(variant.orderedCost * 100); // in øre
+                const totalTaxAmount = Math.round(((variant.orderedCost * 25) / 125) * 100); // in øre
+                const totalAmountExcludingTax = totalAmount - totalTaxAmount;
+
+                receipt.orderLines.push({
+                    name: `${product.name} - ${variant.name}`,
+                    id: variant.id,
+                    totalAmount,
+                    taxPercentage: 25,
+                });
+            }
+        }
+    }
+
+    return receipt;
+};
+
 module.exports = {
     getVippsToken,
     getVippsUserInfo,
@@ -473,4 +506,5 @@ module.exports = {
     getVippsChargeNUserInfo,
     updateDonorAgreement,
     updateOrderWithCharge,
+    makeVippsReceipt,
 };

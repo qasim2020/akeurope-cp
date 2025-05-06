@@ -1,0 +1,36 @@
+<div id="product-entries" class="row g-2" order-id="{{data.order._id}}" project-slug="{{data.project.slug}}">
+    {{#unless data.order}}
+    <div class="col-12 pb-2 placeholder-glow">
+        <div class="card border-0 flex-row p-2 rounded-3">
+            <div class="placeholder" style="width: 201px; height: 153px"></div>
+            <div class="ps-3 pe-2 w-100 h-100 d-flex flex-column">
+                <div class="card-title mb-1 fs-3 placeholder w-66" style="height: 40px"></div>
+                <div class="text-muted placeholder w-33"></div>
+                <div class="d-flex p-3 rounded-3 mt-2 border cursor-pointer w-100">
+                    <div class="text-start w-100" style="height: 50px;"></div>
+                </div>
+                <div class="d-flex p-3 rounded-3 mt-2 border cursor-pointer w-100">
+                    <div class="text-start w-100" style="height: 50px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="card border-0 flex-row p-2 rounded-3">
+            <div class="placeholder" style="width: 201px"></div>
+            <div class="ps-3 pe-2 w-100 h-100 d-flex flex-column">
+                <div class="card-title mb-1 fs-3 placeholder w-66" style="height: 40px"></div>
+                <div class="text-muted placeholder w-33"></div>
+                <div class="d-flex p-3 rounded-3 mt-2 border popover-card cursor-pointer w-100">
+                    <div class="text-start w-100" style="height: 50px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{/unless}}
+
+    {{#with data.order as |order|}}
+        {{#each order.products as |product|}}
+            {{> productEntry order=order product=product}}
+        {{/each}}
+    {{/with}}
+</div>

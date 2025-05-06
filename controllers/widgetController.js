@@ -51,22 +51,43 @@ exports.overlay = async (req, res) => {
         const publicKey = process.env.STRIPE_PUBLIC_KEY;
         const portalUrl = process.env.CUSTOMER_PORTAL_URL;
         if (req.query.webflow) {
-            res.render('overlays/overlayModal', {
-                layout: false,
-                data: {
-                    project: {
-                        name: req.query.name,
-                        heading: req.query.heading,
-                        cover: req.query.cover,
-                        desc: req.query.description,
-                        slug: req.params.slug,
+            if (req.query.products === 'random') {
+                res.render('overlays/overlayModal', {
+                    layout: false,
+                    data: {
+                        project: {
+                            name: req.query.name,
+                            heading: req.query.heading,
+                            cover: req.query.cover,
+                            desc: req.query.description,
+                            slug: req.params.slug,
+                            products: req.query.products,
+                        },
+                        countryCode: req.query.countryCode,
+                        publicKey,
+                        portalUrl,
                     },
-                    countryCode: req.query.countryCode,
-                    publicKey,
-                    portalUrl,
-                },
-            });
-            return;
+                });
+                return;     
+            }
+            if (req.query.products === 'qurbani') {
+                res.render('overlays/productModal', {
+                    layout: false,
+                    data: {
+                        project: {
+                            slug: req.params.slug,
+                            products: req.query.products,
+                        },
+                        countryCode: req.query.countryCode,
+                        publicKey,
+                        portalUrl,
+                    },
+                });
+                return;     
+            }
+
+            throw new Error('Project modal does not exist with webflow=true');
+           
         }
         const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
         if (!project) throw new Error('Project not found');
@@ -221,7 +242,7 @@ exports.createNewOrder = async (req, res) => {
 
 exports.updateOrder = async (req, res) => {
     try {
-        let order = await Order.findById({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
+        let order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
 
         if (!order) throw new Error('Order not found!');
 

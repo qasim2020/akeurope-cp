@@ -1,0 +1,5 @@
+{{#with data.order as |order|}}
+{{#each order.products as |product|}}
+{{> productEntry order=order product=product}}
+{{/each}}
+{{/with}}

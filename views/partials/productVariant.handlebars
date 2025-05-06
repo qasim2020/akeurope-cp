@@ -1,0 +1,71 @@
+{{#if (or (eq order.status 'aborted') (eq order.status 'draft')) }}
+<div class="flex-shrink mt-2 variant" variant-id="{{variant.id}}">
+    <div
+        class="cursor-pointer position-relative d-flex rounded-3 border shadow-none subscription overflow-hidden {{#if (gt variant.orderedCost 0)}}active{{/if}}">
+        <div class="p-3 d-flex align-items-start flex-grow-1" onclick="addToOrder(this)">
+            {{#if (gt variant.orderedCost 0)}}
+            <span class="ti ti-check text-blue me-2" style="padding-top: 3px"></span>
+            {{else}}
+            <span class="ti ti-plus text-black me-2" style="padding-top: 3px"></span>
+            {{/if}}
+            <div class="text-start">
+                <div class="fw-bold text-primary">{{variant.name}}</div>
+                {{#if (gt variant.orderedCost 0)}}
+                <div class="text-secondary">{{variant.quantity}} x {{variant.price}} {{order.currency}}</div>
+                {{else}}
+                <div class="text-secondary">{{variant.price}} {{order.currency}}</div>
+                {{/if}}
+            </div>
+        </div>
+        {{#if (gt variant.orderedCost 0)}}
+        <div class="d-flex">
+            <div class="p-3 d-flex align-items-center justify-content-center" onclick="addToOrder(this)">
+                <span class="ti ti-plus text-blue fs-3"></span>
+            </div>
+            <div class="p-3 d-flex align-items-center justify-content-center border-start" style="background: #fde3e3;"
+                onclick="removeFromOrder(this)">
+                <span class="ti ti-minus fs-3" style="color: #fe2d2d; opacity: 0.8"></span>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+</div>
+{{else if (or (eq order.status 'pending payment') (eq order.status 'processing'))}}
+{{#if (gt variant.orderedCost 0)}}
+<div class="flex-shrink mt-2 variant popover-card" variant-id="{{variant.id}}">
+    <div
+        class="cursor-pointer position-relative d-flex rounded-3 border shadow-none subscription overflow-hidden active">
+        <div class="p-3 d-flex align-items-start flex-grow-1">
+            <span data-bs-toggle="popover" data-bs-placement="top"
+                data-bs-content="You have selected this product. To change your selection go to first slide."
+                data-bs-html="true">
+                <span class="ti ti-lock-check text-blue me-2" style="padding-top: 3px"></span>
+            </span>
+            <div class="text-start">
+                <div class="fw-bold text-primary">{{variant.name}}</div>
+                <div class="text-secondary">{{variant.quantity}} x {{variant.price}} {{order.currency}}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}
+{{else if (eq order.status 'paid')}}
+{{#if (gt variant.orderedCost 0)}}
+<div class="flex-shrink mt-2 variant popover-card" variant-id="{{variant.id}}">
+    <div
+        class="cursor-pointer position-relative d-flex rounded-3 border shadow-none subscription paid">
+        <div class="p-3 d-flex align-items-start flex-grow-1">
+            <span data-bs-toggle="popover" data-bs-placement="top"
+                data-bs-content="Product has been added to your email in our donor portal."
+                data-bs-html="true">
+                <span class="ti ti-lock-check text-green me-2" style="padding-top: 3px"></span>
+            </span>
+            <div class="text-start">
+                <div class="fw-bold text-green">{{variant.name}}</div>
+                <div class="text-secondary">{{variant.quantity}} x {{variant.price}} {{order.currency}}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{{/if}}
+{{/if}}

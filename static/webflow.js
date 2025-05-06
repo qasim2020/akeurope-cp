@@ -127,12 +127,23 @@ function attachIframe(elem, code) {
     } 
 
     const slug = encodeURIComponent($(elem).attr('projectSlug'));
+    const products = encodeURIComponent($(elem).attr('projectProducts'));
     const name = encodeURIComponent($(elem).attr('projectName'));
     const hdg = encodeURIComponent($(elem).attr('projectHeading'));
     const cover = encodeURIComponent($(elem).siblings('img').attr('src'));
     const desc = encodeURIComponent($(elem).siblings('.project-desc').html());
+    let url;
+    if (products === 'random') {
+        url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?name=${name}&heading=${hdg}&cover=${cover}&description=${desc}&countryCode=${code}&webflow=true&products=${products}`;
+    }
 
-    const url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?name=${name}&heading=${hdg}&cover=${cover}&description=${desc}&countryCode=${code}&webflow=true`;
+    if (products === 'qurbani') {
+        url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?countryCode=${code}&webflow=true&products=${products}`;
+    }
+
+    if (products !== 'qurbani') {
+        return true; // testing for now
+    }
 
     var $iframe = $(`<iframe id="iframe-${slug}" allow="payment"></iframe>`)
     .attr('src', url)

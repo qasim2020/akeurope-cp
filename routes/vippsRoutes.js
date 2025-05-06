@@ -7,6 +7,7 @@ const { authVippsWebhook } = require('../modules/vippsModules');
 // router.get('/vipps-token', vippsController.getVippsToken);
 router.post('/create-vipps-payment-intent', notifyTelegram, vippsController.createVippsPaymentIntent);
 router.post('/create-vipps-payment-intent-widget', notifyTelegram, vippsController.createVippsPaymentIntentWidget);
+router.post('/create-vipps-payment-intent-product', notifyTelegram, vippsController.createVippsPaymentIntentProduct);
 router.get('/poll-vipps-payment-intent/:reference', vippsController.pollVippsPaymentIntent);
 router.get('/poll-vipps-setup-intent/:orderId/:agreementId', vippsController.pollVippsSetupIntent);
 router.post('/create-vipps-setup-intent', notifyTelegram, vippsController.createVippsSetupIntent);

@@ -3,7 +3,7 @@ const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 const Donor = require('../models/Donor');
 const { validatePhoneNumber } = require('../modules/twilio');
 
-const createStripeInvoice = async (order, amount, description, customer) => {
+const createStripeInvoice = async (order, amount, description, customer, products = []) => {
     const invoice = await stripe.invoices.create({
         number: `${Date.now()} - ${order.orderNo}`,
         customer: customer.id,
@@ -12,13 +12,30 @@ const createStripeInvoice = async (order, amount, description, customer) => {
         currency: order.currency.toLowerCase(),
     });
 
-    await stripe.invoiceItems.create({
-        customer: customer.id,
-        amount,
-        currency: order.currency.toLowerCase(),
-        description,
-        invoice: invoice.id,
-    });
+    if (products.length > 0) {
+        for (const product of products) {
+            for (const variant of product.variants) {
+                if (variant.orderedCost > 0) {
+                    await stripe.invoiceItems.create({
+                        customer: customer.id,
+                        unit_amount: variant.price * 100,
+                        currency: order.currency.toLowerCase(),
+                        description: `${product.name} - ${variant.name}`,
+                        quantity: variant.quantity,
+                        invoice: invoice.id,
+                    });
+                }
+            }
+        }
+    } else {
+        await stripe.invoiceItems.create({
+            customer: customer.id,
+            amount,
+            currency: order.currency.toLowerCase(),
+            description,
+            invoice: invoice.id,
+        });
+    }
 
     const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id);
 

@@ -1,5 +1,3 @@
-// COMMON CODE
-
 let vippsOverlayStatus;
 const vippsBtnOneTime = $('#vipps-btn-one-time').html();
 const vippsBtnMonthly = $('#vipps-btn-monthly').html();
@@ -119,7 +117,7 @@ const checkVippsPaymentStatus = async (elem, currentBtnHtml, reference) => {
                         orderType: data.monthlySubscription ? 'Monthly Subscription' : 'One Time Payment',
                         date: Date.now(),
                     });
-                    if (data.projects?.length > 0) {
+                    if (data.projects?.length > 0 || data.products?.length > 0) {
                         drawOrderEntries();
                     }
                 }
@@ -372,6 +370,35 @@ const handleOneTimeVipps = async (elem, type) => {
                     $(elem).html(currentBtnHtml);
                 }
             }); 
+        }
+        if (type === 'product') {
+            $(elem).html(`
+                <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
+                <span class="text-white fs-3 py-2">Processing</span>
+            `);
+            currentBtnHtml = vippsBtnOneTime;
+            const url = `/create-vipps-payment-intent-product`;
+            const body = {
+                orderId: $('#product-entries').attr('order-id'),
+            };
+            const data = await ajaxPost(url, body);
+            if (data) {
+                if (!isMobileDevice()) {
+                    vippsOverlayStatus = 'opened';
+                    showVippsPaymentOverlay(data.redirectUrl);
+                } else {
+                    vippsOverlayStatus = 'opened';
+                    window.open(data.redirectUrl, '_blank');
+                }
+                await checkVippsPaymentStatus(elem, currentBtnHtml, data.reference);
+            }
+            $(window).on('message', function (event) {
+                if (event.originalEvent.data === 'close-vipps-overlay') {
+                    $('#vipps-overlay').remove();
+                    vippsOverlayStatus = 'closed';
+                    $(elem).html(currentBtnHtml);
+                }
+            });  
         }
     } catch (error) {
         console.log(error);

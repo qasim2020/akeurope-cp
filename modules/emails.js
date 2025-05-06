@@ -1,3 +1,4 @@
+const emailConfig = require('../config/emailConfig.js');
 const Customer = require('../models/Customer');
 const File = require('../models/File');
 const Project = require('../models/Project');
@@ -15,7 +16,7 @@ const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 const { getPaymentByOrderId, getLatestSubscriptionByOrderId } = require('../modules/orders');
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
-const { slugToString } = require('./helpers');
+const { slugToString, formatTime } = require('./helpers');
 const { sendTelegramMessage, sendErrorToTelegram } = require('./telegramBot');
 const { formatPhoneNumber } = require('../modules/twilio');
 
@@ -66,15 +67,7 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
         throw new Error('Invoice and receipt both not found');
     }
 
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    let transporter = nodemailer.createTransport(emailConfig);
 
     const templatePath = path.join(__dirname, '../views/emails/invoice.handlebars');
     const templateSource = await fs.readFile(templatePath, 'utf8');
@@ -143,15 +136,7 @@ const sendThankYouForSponsoringBeneficiaryMessage = async (phone) => {
 const sendThankYouForSponsoringBeneficiaryEmail = async (order, customer) => {
     const { portalUrl, newUser } = await getPortalUrl(customer);
 
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    let transporter = nodemailer.createTransport(emailConfig);
 
     const templatePath = path.join(__dirname, '../views/emails/thankYouBeneficiary.handlebars');
     const templateSource = await fs.readFile(templatePath, 'utf8');
@@ -216,15 +201,7 @@ const sendThankYouMessage = async (phone) => {
 const sendThankYouEmail = async (order, customer) => {
     const { portalUrl, newUser } = await getPortalUrl(customer);
 
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    let transporter = nodemailer.createTransport(emailConfig);
 
     const templatePath = path.join(__dirname, '../views/emails/thankYouEmail.handlebars');
     const templateSource = await fs.readFile(templatePath, 'utf8');
@@ -244,6 +221,42 @@ const sendThankYouEmail = async (order, customer) => {
     try {
         await transporter.sendMail(mailOptions);
         await sendTelegramMessage(`✅ *Email Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* thankYouEmail.handlebars`);
+        console.log('Thank you email sent!');
+        return true;
+    } catch (err) {
+        console.log(`Failed to send email: ${err.message}`);
+        sendErrorToTelegram(err.message);
+        return true;
+    } 
+};
+
+
+const sendEmailReceipt = async (order, customer) => {
+    const { portalUrl, newUser } = await getPortalUrl(customer);
+
+    let transporter = nodemailer.createTransport(emailConfig);
+
+    const templatePath = path.join(__dirname, '../views/emails/emailProductsReceipt.handlebars');
+    const templateSource = await fs.readFile(templatePath, 'utf8');
+    const compiledTemplate = handlebars.compile(templateSource);
+
+    order.createdAt = formatTime(order.createdAt);
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: customer.email,
+        subject: `Order Receipt - ${order.totalCost || order.total} ${order.currency}`,
+        html: compiledTemplate({
+            order,
+            customer,
+            portalUrl,
+            newUser,
+        }),
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        await sendTelegramMessage(`✅ *Email Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* emailProductsReceipt.handlebars`);
         console.log('Thank you email sent!');
         return true;
     } catch (err) {
@@ -326,15 +339,7 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
         throw new Error('Invoice and receipt both not found');
     }
 
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    let transporter = nodemailer.createTransport(emailConfig);
 
     const templatePath = path.join(__dirname, '../views/emails/invoiceRenewel.handlebars');
     const templateSource = await fs.readFile(templatePath, 'utf8');
@@ -387,15 +392,7 @@ const sendReceiptToCustomer = async (order, customer) => {
         throw new Error('Receipt not found');
     }
 
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    let transporter = nodemailer.createTransport(emailConfig);
 
     const templatePath = path.join(__dirname, '../views/emails/invoice.handlebars');
     const templateSource = await fs.readFile(templatePath, 'utf8');
@@ -467,15 +464,7 @@ const sendCustomerInvite = async (customer) => {
     } = await getInviteToken(customer);
 
 
-    let transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
-        secure: true,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    let transporter = nodemailer.createTransport(emailConfig);
 
     const templatePath = path.join(__dirname, '../views/emails/customerInvite.handlebars');
     const templateSource = await fs.readFile(templatePath, 'utf8');
@@ -517,5 +506,6 @@ module.exports = {
     sendThankYouForSponsoringBeneficiaryMessage,
     sendThankYouMessage,
     sendThankYouEmail,
+    sendEmailReceipt,
     getInviteToken,
 };

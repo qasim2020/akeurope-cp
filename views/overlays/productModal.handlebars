@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
             w[l] = w[l] || []; w[l].push({
                 'gtm.start':
@@ -14,36 +15,57 @@
                 j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
                     'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
         })(window, document, 'script', 'dataLayer', 'GTM-PXFJLX2J');</script>
+    <!-- End Google Tag Manager -->
 
     <title>{{data.project.name}}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0/dist/css/tabler-flags.min.css">
     {{> widgetStyling}}
+    <style>
+        .month,
+        .amount {
+            width: 100%;
+            color: #066fd1 !important;
+            font-weight: bold;
+            border: 0px;
+            box-shadow: none;
+        }
+
+        .currency-input-container {
+            position: relative;
+            border: 1px solid #dce1e7;
+            border-radius: 4px;
+            box-shadow: none;
+        }
+    </style>
+
 </head>
 
 <body>
 
+    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PXFJLX2J" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
     <div id="payment-overlay">
         <div class="row justify-content-center">
 
-            <div id="project-card" project-slug="{{data.project.slug}}" monthly="true"
+            <div id="project-card"
                 class="col-12 col-md-6 col-lg-4 card shadow-lg border-0 ms-md-2 me-md-3 p-0 rounded-md-4 overflow-hidden">
-                <div class="img-responsive img-responsive-21x9 card-img-top"
-                    style="height: 300px; position: relative; background-image: url({{{data.project.cover}}})">
-                </div>
                 <div class="card-body p-4 d-flex flex-column align-items-start">
-                    <h2 class="fw-medium mb-2">{{data.project.heading}}</h2>
-                    <div class="fs-3">{{{data.project.desc}}}</div>
-                    <a href="{{data.portalUrl}}" target="_blank" class="d-none d-md-block mt-auto text-small">Manage
-                        your
+                    <img class="mb-3"
+                        src="https://res.cloudinary.com/miscellaneous/image/upload/v1737903106/akeurope/Group_427320398.png"
+                        style="height: 40px">
+                    <h2 class="fw-medium mb-2">{{data.project.slogan}}</h2>
+                    <div class="flex-grow-1 w-100 h-100">
+                        {{> productEntries}}
+                    </div>
+                    <a href="{{data.portalUrl}}" target="_blank" class="d-none d-md-block mt-4 text-small">Manage your
                         donation</a>
                 </div>
             </div>
-
 
             <div id="slide-parent" class="col-12 col-md-5 col-lg-3 card shadow-lg me-md-2 rounded-md-4 overflow-hidden">
                 <div id="slide-wrapper">
@@ -51,53 +73,35 @@
                         <div class="slide" id="slide-select-amount">
                             <div class="header">
                                 <div class="d-flex align-content-center justify-content-center my-3">
-                                    {{{getOrderIcon 'secure_donation'}}}
+                                    <svg fill="none" height="28" viewBox="0 0 28 28" width="28" style="color: #1bc31b"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="icon-fill shrink-0 font-size-28 text-green-80 me-2" aria-hidden="true">
+                                        <g fill="currentColor">
+                                            <path clip-rule="evenodd"
+                                                d="m15.0393 2.44995c-.6707-.24772-1.4079-.24772-2.0786 0l-8.30715 3.06797c-.39274.14504-.65355.51939-.65355.93807v7.54411c0 3.6861 1.95965 6.6874 4.28911 8.8073 1.16017 1.0557 2.38789 1.8689 3.45309 2.4137 1.1081.5668 1.9145.779 2.2578.779s1.1497-.2122 2.2578-.779c1.0652-.5448 2.2929-1.358 3.4531-2.4137 2.3294-2.1199 4.2891-5.1212 4.2891-8.8073v-7.54411c0-.41868-.2608-.79303-.6536-.93807zm-2.7715-1.876139c1.1179-.412868 2.3465-.412868 3.4644 0l8.3071 3.067969c1.1783.43514 1.9607 1.55819 1.9607 2.81421v7.54411c0 4.4389-2.3618 7.9375-4.943 10.2865-1.2952 1.1786-2.6702 2.092-3.8885 2.7151-1.1754.6012-2.3332.9984-3.1685.9984s-1.9931-.3972-3.1685-.9984c-1.21831-.6231-2.59328-1.5365-3.88847-2.7151-2.58125-2.349-4.94303-5.8476-4.94303-10.2865v-7.54411c0-1.25602.78243-2.37907 1.96066-2.81421z"
+                                                fill-rule="evenodd"></path>
+                                            <path
+                                                d="m18.2906 11.75h-.2535v-1.1855c0-2.19278-1.7415-4.02451-3.9182-4.06361-.0595-.00107-.1783-.00107-.2378 0-2.1767.0391-3.91819 1.87083-3.91819 4.06361v1.1855h-.25354c-.39069 0-.70937.4028-.70937.9003v5.9463c0 .4969.31868.9035.7094.9035h8.5812c.3907 0 .7094-.4066.7094-.9035v-5.9463c0-.4974-.3187-.9003-.7094-.9003zm-3.4867 3.8674v1.7967c0 .2058-.1723.3799-.3784.3799h-.8509c-.2061 0-.3785-.1741-.3785-.3799v-1.7967c-.1999-.1966-.3162-.4684-.3162-.7691 0-.5698.4408-1.0594 1.0013-1.082.0594-.0024.1783-.0024.2377 0 .5605.0226 1.0013.5122 1.0013 1.082 0 .3007-.1164.5725-.3163.7691zm1.5623-3.8674h-4.7323v-1.1855c0-1.30621 1.0623-2.38623 2.3661-2.38623s2.3662 1.08002 2.3662 2.38623z">
+                                            </path>
+                                        </g>
+                                    </svg>
                                     <h2 class="fw-normal">Secure donation</h2>
                                 </div>
                             </div>
 
                             <div class="body">
 
-                                <div class="tabs">
-                                    <div class="nav btn-group w-100 mb-2" role="group">
-                                        <a class="btn py-2 fs-3 active" freq="once" id="one-time-tab"
-                                            data-bs-toggle="tab" href="#one-time-products">Give once</a>
-                                        <a class="btn py-2 fs-3" freq="monthly" id="monthly-tab" data-bs-toggle="tab"
-                                            href="#monthly-products">
-                                            {{{getOrderIcon 'heart_vipps'}}}
-                                            Monthly</a>
-                                    </div>
-
-                                    {{> widgetNoOrderTotal}}
+                                <div id="order-total" class="mb-2">
+                                    {{> noProductTotal}}
                                 </div>
+
                             </div>
 
-                            <div id="vipps-checkout"
-                                class="footer border-0 {{#if (neq data.countryCode 'NO')}}d-none{{/if}}"
-                                style="margin-bottom: -7px">
-                                <div id="monthly-save-donation">
-                                    <button id="vipps-btn-monthly"
-                                        class="btn donation-btn w-100 px-3 fw-bold fs-3 btn-vipps"
-                                        onclick="handleMonthlyVipps(this, 'overlay')">
-                                        <span style="color: white; font-size: 16px; font-weight: bold;">Subscribe with
-                                        </span>
-                                        <span style="margin-left:-19px;margin-right: -27px;">
-                                            {{{getOrderIcon 'vipps'}}}
-                                        </span>
-                                    </button>
-                                    <div class="hover:bg-gray-100 cursor-pointer text-dark w-100 d-flex justify-content-center pt-3 text-small fw-bold"
-                                        onclick="saveDonationAmount(this)">
-                                        <div style="margin-right: -29px;" class="d-flex align-items-center">
-                                            <span>Not use vipps</span>
-                                            <i class="ti ti-arrow-narrow-right-dashed fs-3"
-                                                style="margin-top: -1px;margin-left: 8px;"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-none" id="one-time-save-donation">
+                            <div id="vipps-checkout" class="d-none footer border-0" style="margin-bottom: -7px">
+                                <div class="" id="one-time-save-donation">
                                     <button id="vipps-btn-one-time"
                                         class="btn donation-btn w-100 px-3 fw-bold fs-3 py-2 btn-vipps"
-                                        onclick="handleOneTimeVipps(this, 'overlay')">
+                                        onclick="handleOneTimeVipps(this, 'product')">
                                         <span style="color: white; font-size: 16px; font-weight: bold;">Pay with</span>
                                         <span style="margin-left:-19px; margin-right: -38px">
                                             {{{getOrderIcon 'vipps'}}}
@@ -113,19 +117,12 @@
                                     </div>
                                 </div>
                             </div>
-                            <div id="global-checkout"
-                                class="{{#if (eq data.countryCode 'NO')}}d-none{{/if}} footer border-0">
+                            <div id="global-checkout" class="d-none footer border-0">
                                 <button id="global-one-time-donation"
-                                    class="d-none btn donation-btn btn-primary w-100 py-3 fw-bold fs-3"
-                                    onclick="saveDonationAmount(this)">
-                                    <i class="ti ti-credit-card-pay me-2"></i>
-                                    <span>Donate Once</span>
-                                </button>
-                                <button id="global-monthly-donation"
                                     class="btn donation-btn btn-primary w-100 py-3 fw-bold fs-3"
                                     onclick="saveDonationAmount(this)">
                                     <i class="ti ti-credit-card-pay me-2"></i>
-                                    <span>Give Monthly</span>
+                                    <span>Pay Now</span>
                                 </button>
                             </div>
 
@@ -300,6 +297,7 @@
                                     <div class="text-dark fw-strong">Total</div>
                                     <div class="text-dark fw-strong" id="stripe-total">300 NOK / month</div>
                                 </div>
+
                                 <div class="w-100 d-none" id="express-checkout-wrapper">
                                     <button id="processing-btn" class="btn btn-primary w-100 py-3 fw-bold fs-3 d-none">
                                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -427,13 +425,13 @@
     <script src="https://js.stripe.com/v3/"></script>
     <script src="/static/maskList.js"></script>
     <script src="/static/vippsFrontEnd.js"></script>
-
     <script>
 
         const orderCompleted = async function (elem, data, currentBtnHtml) {
-            const orderId = $('#project-card').attr('order-id');
+            await drawOrderEntries();
+            const orderId = $('#product-entries').attr('order-id');
             await $.ajax({
-                url: `/overlay-order-customer/${orderId}/${data.customerId}`,
+                url: `/product-order-customer/${orderId}/${data.customerId}`,
                 method: 'POST',
                 contentType: 'application/json',
             });
@@ -461,10 +459,10 @@
                 '{{data.publicKey}}',
             );
 
-            const orderId = $('#project-card').attr('order-id');
+            const orderId = $('#product-entries').attr('order-id');
 
             const data = await $.ajax({
-                url: `/overlay-payment-intent/${orderId}/{{data.project.slug}}`,
+                url: `/product-payment-intent/${orderId}/{{data.project.slug}}`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({
@@ -509,12 +507,12 @@
                         return;
                     }
                 } else if (elements) {
-                    const orderId = $('#project-card').attr('order-id');
+                    const orderId = $('#product-entries').attr('order-id');
                     ({ paymentIntent, error } = await stripe.confirmPayment({
                         elements,
                         clientSecret,
                         confirmParams: {
-                            return_url: `https://partner.akeurope.org`,
+                            return_url: `https://partner.akeurope.org/widget-payment-success/${orderId}/{{data.project.slug}}`,
                         },
                         redirect: "if_required",
                     }));
@@ -525,30 +523,31 @@
                     }
                 }
 
-                const orderId = $('#project-card').attr('order-id');
+                const orderId = $('#product-entries').attr('order-id');
 
                 const paymentData = await $.ajax({
-                    url: `/overlay-one-time/${orderId}/{{data.project.slug}}`,
+                    url: `/product-one-time/${orderId}/{{data.project.slug}}`,
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
                         paymentIntentId: paymentIntent.id,
                         paymentMethodId: paymentIntent.payment_method,
-                        invoiceId: invoiceId,
+                        invoiceId,
                         email: $('[name=email]').val(),
                     }),
                 });
 
                 if (paymentData.success) {
                     await orderCompleted(elem, paymentData, currentBtnHtml);
+                    console.log('one time payment completed');
                 } else {
+                    console.log(paymentData);
                     showCardError(elem, paymentData.responseText, currentBtnHtml);
                 }
 
             } catch (error) {
                 console.log(error);
                 showCardError(elem, error.message || error.responseText || error, currentBtnHtml);
-
             }
         }
 
@@ -560,10 +559,10 @@
                 '{{data.publicKey}}',
             );
 
-            const orderId = $('#project-card').attr('order-id');
+            const orderId = $('#product-entries').attr('order-id');
 
             const data = await $.ajax({
-                url: `/overlay-setup-intent/${orderId}/{{data.project.slug}}`,
+                url: `/create-setup-intent/${orderId}/{{data.project.slug}}`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({
@@ -579,7 +578,7 @@
 
             const { cardNumber, elements } = await mountStripeElems(stripe, data.clientSecret);
 
-            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, true, elements);
+            await mountExpressCheckout(stripe, data.clientSecret, cardNumber, true, elements, data.invoiceId);
 
             return true;
 
@@ -636,7 +635,7 @@
                         return;
                     }
                 } else if (elements) {
-                    const orderId = $('#project-entries').attr('order-id');
+                    const orderId = $('#product-entries').attr('order-id');
                     ({ setupIntent, error } = await stripe.confirmSetup({
                         elements,
                         clientSecret,
@@ -652,10 +651,22 @@
                     }
                 }
 
-                const orderId = $('#project-card').attr('order-id');
+                if (setupIntent.status === "requires_action" && setupIntent.next_action) {
+                    ({ paymentIntent, error } = await stripe.confirmCardPayment(clientSecret));
+
+                    if (error) {
+                        console.error("3D Secure Authentication Failed:", error);
+                        showCardError(elem, error.message, currentBtnHtml);
+                        return;
+                    }
+
+                    setupIntent = paymentIntent;
+                }
+
+                const orderId = $('#product-entries').attr('order-id');
 
                 const subscriptionData = await $.ajax({
-                    url: `/overlay-subscription/${orderId}/{{data.project.slug}}`,
+                    url: `/create-subscription/${orderId}/{{data.project.slug}}`,
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
@@ -757,14 +768,14 @@
 
         const mountExpressCheckout = async function (stripe, clientSecret, cardNumber, monthly, elements, invoiceId) {
 
-            const orderId = $('#project-card').attr('order-id');
+            const orderId = $('#product-entries').attr('order-id');
 
-            if (!orderId) return alert('Order id is required to mount stripe elements');
+            if (!orderId) return alert('Could not mount stripe elements. Please refresh your window.');
 
-            const order = await getOrderData();
+            const order = await getOrderData(orderId);
 
             if (monthly) {
-                $('#stripe-total').html(`${order.total} ${order.currency} / Month`);
+                $('#stripe-total').html(`${order.totalCostSingleMonth} ${order.currency} / Month`);
                 $('#stripe-submit').find('span').html('Subscribe');
                 $('#stripe-submit').off('click').on('click', function (e) {
                     startMonthlySubscription(stripe, clientSecret, cardNumber);
@@ -792,13 +803,15 @@
             }
 
             try {
-                const amount = Math.max(1, Math.round(order.total * 100));
+                const amount = monthly
+                    ? Math.max(1, Math.round(order.totalCostSingleMonth * 100))
+                    : Math.max(1, Math.round(order.total * 100));
 
                 const paymentRequest = stripe.paymentRequest({
                     country: order.countryCode,
                     currency: order.currency.toLowerCase(),
                     total: {
-                        label: monthly ? `Monthly Subscription - ${order.projectSlug} - ${order.orderNo}` : `One Time Payment - ${order.projectSlug} - ${order.orderNo}`,
+                        label: monthly ? `Monthly Subscription - ${order.orderNo}` : `One Time Payment - ${order.orderNo}`,
                         amount
                     },
                     requestPayerName: true,
@@ -861,31 +874,40 @@
         // START WIDGET
 
         const startWidget = async function () {
-            let countryCode = '{{data.countryCode}}' || 'NO';
-            localStorage.setItem('countryCode', countryCode);
+            let countryCode = '{{data.donor.countryCode}}';
+            if (!countryCode) {
+                try {
+                    const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
+                    const data = await response.json();
+                    countryCode = data.country_code ? data.country_code : 'NO';
+                } catch (error) {
+                    console.log(error);
+                    countryCode = 'NO';
+                }
+            }
+            if (countryCode === 'NO') {
+                $('#vipps-checkout').removeClass('d-none');
+                $('#global-checkout').addClass('d-none');
+            } else {
+                $('#vipps-checkout').addClass('d-none');
+                $('#global-checkout').removeClass('d-none');
+            }
             localStorage.setItem('projectName', '{{data.project.name}}')
-            await drawTotalCosts();
+            localStorage.setItem('countryCode', countryCode);
+            await createNewOrder();
+            const orderId = $('#product-entries').attr('order-id');
+            if (!orderId) return alert('Session expired. Please refresh your browser.');
+            const order = await getOrderData(orderId);
+            await drawTotalCosts(order);
             await refreshDropdowns();
             initializePopovers();
+
+            $('[name=email]').val('{{data.donor.email}}');
+            $('[name=firstName]').val('{{data.donor.firstName}}');
+            $('[name=lastName]').val('{{data.donor.lastName}}');
         };
 
         window.onload = startWidget;
-
-        const createNewOrder = async function () {
-            try {
-                const countryCode = localStorage.getItem('countryCode');
-                if (!countryCode) return alert('Could not find the country code. Refresh your browser.');
-                const response = await $.ajax({
-                    url: `/overlay-new-order/{{data.project.slug}}?countryCode=${countryCode}`,
-                    method: 'GET',
-                    contentType: 'application/json',
-                });
-                return response;
-            } catch (xhr) {
-                console.error("Error:", xhr);
-                alert("Server Error. Could not create the order.");
-            }
-        }
 
         function initializePopovers() {
             var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
@@ -934,20 +956,23 @@
             $('.shake').one('animationend', function () {
                 $(this).removeClass('shake');
             });
+
             const currentBtnHtml = $('#save-user-btn').html();
+
             try {
                 if (isValid) {
-
                     $('#save-user-btn').html(`<span class="spinner-border spinner-border-sm mx-2" role="status"></span> Processing ...`);
-                    const monthly = $('#project-card').attr('monthly');
-                    if (monthly == 'true') {
+                    const monthly = $('#product-entries').attr('monthly');
+                    if (monthly) {
                         await handleMonthlyPayment();
                     } else {
                         await handleOneTimePayment();
                     }
-                    $('#save-user-btn').html(currentBtnHtml);
+
                     $('#slide-container').css({ transform: `translateX(-${2 * 100}%)` });
                     $('.back-btn').attr({ index: 2 });
+
+                    $('#save-user-btn').html(currentBtnHtml);
                 }
             } catch (error) {
                 console.log(error);
@@ -956,9 +981,43 @@
 
         };
 
+        const createNewOrder = async function () {
+            try {
+                const countryCode = localStorage.getItem('countryCode');
+                if (!countryCode) return alert('Could not find the country code. Refresh your browser.');
+                const response = await $.ajax({
+                    url: `/product-new-order/{{data.project.slug}}?countryCode=${countryCode}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                });
+                $('#product-entries').replaceWith(response);
+                initializePopovers();
+                return true;
+            } catch (xhr) {
+                console.error("Error:", xhr);
+                alert("Server Error. Could not create the order.");
+            }
+        }
+
+        const drawOrderEntries = async function () {
+            try {
+                const orderId = $('#product-entries').attr('order-id');
+                if (!orderId) return console.log('orderId and slug is required!');
+                const response = await $.ajax({
+                    url: `/product-render-entries/${orderId}/{{data.project.slug}}`,
+                    method: 'GET',
+                    contentType: 'application/json',
+                });
+                $('#product-entries').replaceWith(response);
+                initializePopovers();
+            } catch (xhr) {
+                console.error("Error:", xhr);
+                alert('Could not fetch entries to render on your window. Refresh your window.');
+            }
+        }
+
         const getOrderData = async function (orderId) {
             try {
-                const orderId = $('#project-card').attr('order-id');
                 const order = await $.ajax({
                     url: `/overlay-order/${orderId}`,
                     method: 'GET',
@@ -997,20 +1056,15 @@
 
                 $('#contact-number').val(data.country.callingCodes[0].toString());
 
-                $('.currency-dropdown').on('change', async function () {
+                $('.currency-dropdown').on('change', function () {
                     const selectedOption = $(this).find(':selected');
                     const value = selectedOption.val();
                     const countryCode = selectedOption.attr('country-code');
                     if (!value || !countryCode) return console.error('value and code missing');
                     if (value === 'N/A') return alert('This currency is not supported.');
-                    $('.donation-amount').replaceWith(`
-                    <div class="donation-spinner text-blue fs-3 border w-100 h-100 rounded-2" style=" padding: 10px; ">
-                        <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
-                    </div>
-                    `);
+                    $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
                     localStorage.setItem('countryCode', countryCode);
-                    await drawTotalCosts();
-                    await refreshDropdowns();
+                    changeOrderCurrency(value, countryCode);
                     handleVippsDropdown(countryCode);
                 });
             } catch (error) {
@@ -1020,36 +1074,72 @@
 
         };
 
-        const drawTotalCosts = async function () {
+        const changeOrderCurrency = async function (currency) {
+            try {
+                const orderId = $('#product-entries').attr('order-id');
+                await $.ajax({
+                    url: `/product-update-order/${orderId}/{{data.project.slug}}?setCurrency=${currency}`,
+                    method: 'POST',
+                    contentType: 'application/json'
+                })
+                const order = await getOrderData(orderId);
+                drawTotalCosts(order);
+                drawOrderEntries();
+                refreshDropdowns();
+            } catch (error) {
+                alert(error.responseText || `Server Error. Could not change the currency.`);
+            }
+        }
 
-            const code = localStorage.getItem('countryCode');
+        const drawTotalCosts = async function (order) {
+            if (order.total === 0) {
+                const html = '<h3 class="fw-normal text-center mt-4">No product selected.</h3>';
+                $('#order-total').html(html);
+                $('#global-checkout').addClass('d-none');
+                $('#vipps-checkout').addClass('d-none');
+                return;
+            }
+
+            const countryCode = localStorage.getItem('countryCode');
+
+            if (countryCode === 'NO') {
+                $('#vipps-checkout').removeClass('d-none');
+            } else {
+                $('#global-checkout').removeClass('d-none');
+            }
 
             const response = await $.ajax({
-                url: `/overlay-products/${code}/{{data.project.products}}`,
+                url: `/overlay-country/${countryCode}`,
                 method: 'GET',
                 contentType: 'application/json',
             });
 
-            const { products, country } = response;
+            const { country } = response;
 
-            $('#monthly-products-list, #one-time-products-list').html('');
-
-            const createPriceButton = (product) => {
-                return `
-                        <div class="col-4">
-                            <button class="btn py-2 w-100 fs-3 amount" value="${product}">
-                                <span class="fs-5 me-1">${country.currency.symbol}</span> ${formatNumberToShortenedVersion(product)}
-                            </button>
+            const createProductBtn = (entry) => {
+                if (entry.orderedCost === 0) return '';
+                const productHtml = `<h4 class="fw-normal my-2">${entry.name}</h4>`;
+                const variantsHtml = entry.variants.map((variant) => {
+                    if (variant.orderedCost === 0) return '';
+                    return `
+                        <div class="col-12 mb-1">
+                            <div variant-id="${variant.id}" class="w-100 card card-small-variant active shadow p-2 d-flex flex-row justify-content-between">
+                                <div class="text-small w-66">${variant.name}</div>
+                                <div class="text-small mt-auto text-nowrap">${variant.quantity} x ${variant.price} ${order.currency}</div>
+                            </div>
                         </div>
                     `;
+                }).join('');
+                return productHtml + variantsHtml;
             };
 
-            const inputGroup = `
+            const inputGroupOneTime = `
+                <h4 class="fw-normal my-2">Total Amount</h4>
                 <div class="col-12">
                     <div class="currency-input-container border-1 rounded-2">
-                        <input type="number" class="donation-amount amount form-control py-2 fs-2" min="0">
+                        <div class="donation-amount amount p-2 ms-1 fs-2" order-cost="${order.total}">${order.total}</div>
                         <div class="currency-selector">
-                            ${country.currency.code}
+                            ${order.currency}
                             <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="ms-1 icon icon-tabler icons-tabler-outline icon-tabler-chevron-down"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>
                         </div>
                         <select class="currency-dropdown">
@@ -1058,54 +1148,29 @@
                 </div>
             `;
 
-            const sortedMonthly = products.monthly.sort((a, b) => a - b);
-
-            let monthlyHTML = '';
-            sortedMonthly.forEach((product) => {
-                monthlyHTML += createPriceButton(product);
-            });
-            monthlyHTML += inputGroup;
-            $('#monthly-products-list').prepend(monthlyHTML);
-
-            const sortedOneTime = products.oneTime.sort((a, b) => a - b);
-
-            let oneTimeHTML = '';
-            sortedOneTime.forEach((product) => {
-                oneTimeHTML += createPriceButton(product);
-            });
-            oneTimeHTML += inputGroup;
-            $('#one-time-products-list').prepend(monthlyHTML);
-
-            const monthly = $('#project-card').attr('monthly');
-            if (monthly == 'true') {
-                var tab = new bootstrap.Tab($('#monthly-tab')[0]);
-                tab.show();
-                $('#donate-btn').find('span').html('Donate Monthly');
-                $('.donation-amount').last().addClass('active');
-            }
-
-            $('.btn.amount').on('click', function (e) {
-                $(this).closest('.row').find('input.active, .btn.active').removeClass('active');
-                $(this).addClass('active');
-                const value = $(this).attr('value');
-                const input = $(this).closest('.row').find('input');
-                input.val(value);
-                input.removeClass('is-invalid');
-                input.addClass('active');
+            let wrapper = '<div id="products-selected">';
+            order.products.forEach((entry) => {
+                wrapper += createProductBtn(entry);
             });
 
-            $('input.amount').on('keyup', function (e) {
-                $('.donation-amount').removeClass('active');
-                $(this).addClass('active');
-                const value = $(this).val();
-                const btns = $(this).closest('.row').find('.btn.amount');
-                for (const btn of btns) {
-                    $(btn).removeClass('active');
-                    if ($(btn).attr('value') === value) {
-                        $(btn).addClass('active');
-                    }
-                }
-            });
+            html = wrapper + '</div>' + inputGroupOneTime;
+
+            $('#order-total').html(html);
+
+            $('.card-small-variant').on('click', async function () {
+                const variantId = $(this).attr('variant-id');
+                const leftCard = $(`.variant[variant-id="${variantId}"]`);
+                const { orderId } = changeOrderVariant(leftCard);
+                const response = await $.ajax({
+                    url: `/product-update-order/${orderId}/{{data.project.slug}}?removeVariant=true&variantId=${variantId}`,
+                    method: 'POST',
+                    contentType: 'application/json'
+                })
+                leftCard.replaceWith(response);
+                const order = await getOrderData(orderId);
+                drawTotalCosts(order);
+                refreshDropdowns();
+            })
 
         }
 
@@ -1129,6 +1194,51 @@
             return number.toString();
         }
 
+        $('[freq]').on('click', async function (e) {
+
+            const countryCode = localStorage.getItem('countryCode');
+            const freq = $(this).attr('freq');
+
+            $('.donation-amount').removeClass('active');
+            if (freq === 'once') {
+                $('#one-time-save-donation').removeClass('d-none');
+                $('#monthly-save-donation').addClass('d-none');
+                $('#global-one-time-donation').removeClass('d-none');
+                $('#global-monthly-donation').addClass('d-none');
+                $('.donation-amount').first().addClass('active');
+                $('#project-card').attr({ monthly: false });
+            } else {
+                $('#one-time-save-donation').addClass('d-none');
+                $('#monthly-save-donation').removeClass('d-none');
+                $('#global-one-time-donation').addClass('d-none');
+                $('#global-monthly-donation').removeClass('d-none');
+                $('.donation-amount').last().addClass('active');
+                $('#project-card').attr({ monthly: true });
+            }
+
+            const orderId = $('#product-entries').attr('order-id');
+            if (!orderId) return console.error('no order id provided');
+            let url;
+            if (freq === 'once') {
+                url = `/widget-update-order/${orderId}/{{data.project.slug}}?monthlySubscription=false`;
+            } else {
+                url = `/widget-update-order/${orderId}/{{data.project.slug}}?monthlySubscription=true`;
+            }
+            await $.ajax({
+                url,
+                method: 'POST',
+                contentType: 'application/json',
+                success: (response) => {
+                    drawOrderEntries();
+                    refreshDropdowns();
+                },
+                error: (xhr, status, error) => {
+                    console.log(error);
+                    alert('Order expired. Please refresh your browser.');
+                }
+            })
+
+        });
 
         $('#tel-toggle').on('show.bs.dropdown', function () {
             $('#tel-toggle').find('svg').replaceWith(`
@@ -1355,12 +1465,13 @@
             try {
                 const index = Number($(this).attr('index'));
                 if (index === 1) {
-                    const orderId = $('#project-card').attr('order-id');
+                    const orderId = $('#product-entries').attr('order-id');
                     await $.ajax({
-                        url: `/overlay-delete-order/${orderId}`,
+                        url: `/product-update-order/${orderId}/{{data.project.slug}}?checkin=true`,
                         method: 'POST',
                         contentType: 'application/json',
                     });
+                    drawOrderEntries();
                 }
                 $('.back-btn').attr({ index: index - 1 });
                 $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
@@ -1370,55 +1481,22 @@
             }
         });
 
-        const globalBtnMonthly = $('#global-monthly-donation').html();
-        const globalBtnOneTime = $('#global-one-time-donation').html();
-
-        $('[freq]').on('click', async function (e) {
-            const countryCode = localStorage.getItem('countryCode');
-            const freq = $(this).attr('freq');
-            $('.donation-amount').removeClass('active');
-            if (freq === 'once') {
-                $('#one-time-save-donation').removeClass('d-none');
-                $('#monthly-save-donation').addClass('d-none');
-                $('#global-one-time-donation').removeClass('d-none');
-                $('#global-monthly-donation').addClass('d-none');
-                $('.donation-amount').first().addClass('active');
-                $('#project-card').attr({ monthly: false });
-            } else {
-                $('#one-time-save-donation').addClass('d-none');
-                $('#monthly-save-donation').removeClass('d-none');
-                $('#global-one-time-donation').addClass('d-none');
-                $('#global-monthly-donation').removeClass('d-none');
-                $('.donation-amount').last().addClass('active');
-                $('#project-card').attr({ monthly: true });
-            }
-        });
-
         const saveDonationAmount = async function (elem) {
-            let currentBtnHtml;
             try {
-                const isValid = validateDonationForm(elem);
-                if (!isValid) return;
-                const total = $('.donation-amount.active').val();
-                const countryCode = localStorage.getItem('countryCode');
-                const monthly = $('[freq].active').attr('freq') === 'once' ? false : true;
-                if (monthly) {
-                    currentBtnHtml = globalBtnMonthly;
-                } else {
-                    currentBtnHtml = globalBtnOneTime;
-                }
-                const order = await $.ajax({
-                    url: `/overlay-create-order/{{data.project.slug}}?countryCode=${countryCode}&total=${total}&monthly=${monthly}`,
+                const orderId = $('#product-entries').attr('order-id');
+                await $.ajax({
+                    url: `/product-update-order/${orderId}/{{data.project.slug}}?checkout=true`,
                     method: 'POST',
                     contentType: 'application/json',
                 });
-                $('#project-card').attr({ 'order-id': order._id, 'monthly': order.monthlySubscription });
                 $('#slide-container').css({ transform: `translateX(-${1 * 100}%)` });
                 $('.back-btn').attr({ index: 1 });
+                drawOrderEntries();
+                drawTotalCosts(await getOrderData(orderId));
             } catch (error) {
                 const visiblebtn = getVisibleBtnFirstSlide();
                 const currentBtnHtml = $(visiblebtn).html();
-                showCardError(visiblebtn, error.responseText || error.toString, currentBtnHtml);
+                showCardError(visiblebtn, 'Order expired, please refresh your window', currentBtnHtml);
             }
 
         };
@@ -1446,33 +1524,6 @@
             }
         }
 
-        const selectBeneficiary = async function (elem) {
-            $(elem).find('.subscription').toggleClass('active');
-            const entry = $(elem).closest('.entry');
-            $(elem).find('.ti').replaceWith(`
-            <span class="text-small spinner-border spinner-border-sm mt-1" role="status" 
-            style="width: 10px; height: 10px; margin-right: 12px"></span>`);
-            const subArray = entry.find('.subscription.active').get().map(input => $(input).attr('subscription'));
-            const subscriptions = subArray.length > 0 ? subArray.join(',') : 'empty';
-            const entryId = entry.attr('entry-id');
-            const orderId = entry.attr('order-id');
-            await $.ajax({
-                url: `/widget-update-order/${orderId}/{{data.project.slug}}?entryId=${entryId}&subscriptions=${subscriptions}`,
-                method: 'POST',
-                contentType: 'application/json',
-                success: response => {
-                    $(entry).replaceWith(response);
-                },
-                error: (xhr, status, error) => {
-                    console.log(error);
-                    alert('Order expired. Please refresh your browser.');
-                }
-            })
-            const order = await getOrderData(orderId);
-            await drawTotalCosts(order);
-            refreshDropdowns();
-        }
-
         $(document).on('click', ".popover-card", function (event) {
             $('[data-bs-toggle="popover"]').not($(this).find('[data-bs-toggle="popover"]')).popover("hide");
             let popoverElement = $(this).find('[data-bs-toggle="popover"]');
@@ -1489,50 +1540,6 @@
                 }
             });
         });
-
-        const deleteOrder = async function () {
-            const orderId = $('#project-entries').attr('order-id');
-            const countryCode = localStorage.getItem('countryCode');
-            if (!orderId) return console.error('no order is available');
-            await $.ajax({
-                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true&countryCode=${countryCode}`,
-                method: 'POST',
-                contentType: 'application/json',
-                success: response => {
-                    console.log(response);
-                },
-                fail: error => {
-                    console.log(error);
-                    alert('Order expired. Please refresh your browser.');
-                }
-            });
-        }
-
-        const resetOrder = async function () {
-            const orderId = $('#project-entries').attr('order-id');
-            const countryCode = localStorage.getItem('countryCode');
-            if (!orderId) return console.error('no order is available');
-            await $.ajax({
-                url: `/widget-update-order/${orderId}/{{data.project.slug}}?deleteOrder=true&resetOrder=true&countryCode=${countryCode}`,
-                method: 'POST',
-                contentType: 'application/json',
-                success: response => {
-                    console.log(response);
-                    $('#project-entries').attr({ 'order-id': '' });
-                    if ($('#project-entries').length > 0) {
-                        $('#slide-container').css({ transform: `translateX(-${0 * 100}%)` });
-                        $('.back-btn').attr({ index: 0 });
-                        renderNoOrder();
-                        startWidget();
-                        resetTimer();
-                    }
-                },
-                fail: error => {
-                    console.log(error);
-                    alert('Order expired. Please refresh your browser.');
-                }
-            });
-        }
 
         const renderNoOrder = async function () {
             await $.ajax({
@@ -1552,7 +1559,7 @@
                 method: 'GET',
                 contentType: 'application/json',
                 success: response => {
-                    $('#project-entries').replaceWith(response);
+                    $('#product-entries').replaceWith(response);
                 },
                 fail: error => {
                     console.log(error);
@@ -1601,10 +1608,64 @@
             const urlObject = new URL(url);
             const queryParams = Object.fromEntries(urlObject.searchParams.entries());
             triggerEvent('ajax', {
-                ajaxUrl: url,
+                ajaxUrl: 'https://example.com/api',
                 queryParams,
             });
         });
+
+
+        // PRODUCT SPECIFIC METHODS
+
+        const addToOrder = async (elem) => {
+            try {
+                const { orderId, variantId } = changeOrderVariant(elem);
+                const response = await $.ajax({
+                    url: `/product-update-order/${orderId}/{{data.project.slug}}?incrementVariant=true&variantId=${variantId}`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                });
+                $(elem).closest('.variant').replaceWith(response);
+                const order = await getOrderData(orderId);
+                drawTotalCosts(order);
+                refreshDropdowns();
+            } catch (error) {
+                console.log(error);
+                alert(error.message || error.responseText || 'Order expired. Please refresh your browser.');
+            }
+        }
+
+        const removeFromOrder = async (elem) => {
+            try {
+                const { orderId, variantId } = changeOrderVariant(elem);
+                const response = await $.ajax({
+                    url: `/product-update-order/${orderId}/{{data.project.slug}}?decrementVariant=true&variantId=${variantId}`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                });
+                $(elem).closest('.variant').replaceWith(response);
+                const order = await getOrderData(orderId);
+                drawTotalCosts(order);
+                refreshDropdowns();
+            } catch (error) {
+                console.log(error);
+                alert(error.message || error.responseText || 'Order expired. Please refresh your browser.');
+            }
+        }
+
+        const changeOrderVariant = (elem) => {
+            const orderId = $('#product-entries').attr('order-id');
+            const variantId = $(elem).closest('.variant').attr('variant-id');
+            if (!orderId || !variantId) {
+                console.log({ orderId, variantId });
+                throw new Error('Order Id and entry Id are required');
+            }
+            $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
+            const variant = $(elem).closest('.variant');
+            $(variant).find('.ti:first').replaceWith(`
+                    <span class="text-small spinner-border spinner-border-sm mt-1" role="status" 
+                    style="width: 10px; height: 10px; margin-right: 12px"></span>`);
+            return { orderId, variantId };
+        }
 
     </script>
 

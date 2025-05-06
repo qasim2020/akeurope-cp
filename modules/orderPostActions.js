@@ -70,6 +70,38 @@ const connectDonorInCustomer = async (donor, checkCustomer) => {
     };
 };
 
+const successfulOneTimePaymentProducts = async (orderId, customer) => {
+    try {
+        console.log('post products one-time');
+        const order = await Subscription.findById(orderId).lean();
+        if (!order) {
+            throw new Error('Order not found, it might be a subscription');
+        }
+        if (order.monthlySubscription) {
+            throw new Error('This is a subscription payment, not a one-time payment');
+        }
+        const uploadedBy = {
+            actorType: 'customer',
+            actorId: customer._id,
+            actorUrl: `/customer/${customer._id}`,
+        };
+        order.customer = customer;
+        await downloadStripeInvoice(order, uploadedBy);
+        await saveLog(
+            logTemplates({
+                type: 'successfulOneTimePaymentOverlay',
+                entity: order,
+                actor: customer,
+            }),
+        );
+        await sendInvoiceAndReceiptToCustomer(order, customer);
+        
+    } catch (error) {
+        console.log(error);
+        sendErrorToTelegram(error.message);
+    }
+};
+
 const successfulOneTimePayment = async (orderId, customer) => {
     try {
         const order = await Order.findById(orderId).lean();
@@ -202,4 +234,5 @@ module.exports = {
     successfulOneTimePaymentOverlay,
     successfulSubscriptionPaymentOverlay,
     connectDonorInCustomer,
+    successfulOneTimePaymentProducts,
 };

@@ -26,11 +26,20 @@
     }
 
     .subscription.active,
+    .card-small-variant.active,
     .card-beneficiary.active {
         background-color: #e3f2fd;
         color: rgb(25 109 187);
         border: 1px solid #066fd1 !important;
         cursor: pointer;
+    }
+    
+    .card-beneficiary.active:hover,
+    .card-small-variant.active:hover {
+        background: #fde3e3;
+        color: #fe2d2d;
+        opacity: 0.8;
+        border: 1px solid #ffbbbb !important;
     }
 
     .subscription.paid {
@@ -360,6 +369,12 @@
         min-height: 500px;
     }
 
+    #products-selected {
+        max-height: 265px;
+        overflow: scroll;
+    }
+
+    #product-entries,
     #project-entries {
         max-height: 435px;
         overflow: scroll;

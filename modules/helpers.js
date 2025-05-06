@@ -382,7 +382,19 @@ const vippsStatusMap = {
     refunded: 'REFUNDED',
 };
 
+
+const roundToNearest = (amount) => {
+    if (amount < 50) return 50;
+    if (amount < 100) return 100;
+    if (amount < 500) return 500;
+    if (amount < 1000) return 1000;
+    if (amount < 5000) return 5000;
+    if (amount < 10000) return 10000;
+    return Math.ceil(amount / 10000) * 10000;
+}
+
 module.exports = {
+    roundToNearest,
     vippsStatusMap,
     dynamicRound,
     divide,

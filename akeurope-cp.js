@@ -18,11 +18,14 @@ const customerRoutes = require('./routes/customerRoutes');
 const filesRoutes = require('./routes/filesRoutes');
 const widgetRoutes = require('./routes/widgetRoutes');
 const overlayRoutes = require('./routes/overlayRoutes');
+const productRoutes = require('./routes/productRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const { sendThankYouMessage } = require('./modules/emails');
 const { downloadStripeInvoiceAndReceipt } = require('./modules/invoice');
 const vippsRoutes = require('./routes/vippsRoutes');
 const { captureVippsPayment } = require('./modules/vippsModules');
+const Subscription = require('./models/Subscription');
+const Customer = require('./models/Customer');
 
 require('dotenv').config();
 mongoose();
@@ -107,6 +110,7 @@ app.use(customerRoutes);
 app.use(filesRoutes);
 app.use(widgetRoutes);
 app.use(overlayRoutes);
+app.use(productRoutes);
 app.use(vippsRoutes);
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
@@ -114,23 +118,23 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 });
 
 // app.get('/preview-email', async (req, res) => {
-//     const templateName = 'invoiceRenewel';
+//     const templateName = 'emailProductsReceipt';
+//     const orderId = '6819fb6db7c0f51053e3701f';
+//     const order = await Subscription.findById(orderId).lean();
+//     const customer = await Customer.findById(order.customerId).lean();
 //     const data = {
-//         name: 'Hassam Bukhari',
-//         invoiceNreceipt: true,
-//         newUser: false,
-//         invoiceUrl: '123',
-//         receiptUrl: '123',
-//         portalUrl: '123'
+//         order,
+//         customer,
+//         newUser: true,
 //     };
 //     res.render(`emails/${templateName}`, data);
 // });
 
-// app.get('/testing/:orderId', async (req, res) => {
+// app.get('/testing', async (req, res) => {
 //     try {
-//         const { updateOrderMonthsVsVippsCharges } = require('./modules/orders');
-//         const orderId = req.params.orderId;
-//         await updateOrderMonthsVsVippsCharges(orderId);
+//         const { successfulOneTimePaymentProducts } = require('./modules/vippsPostActions');
+//         const orderId = '6819fb6db7c0f51053e3701f';
+//         await successfulOneTimePaymentProducts(orderId);
 //         res.status(200).send('Done');
 //     } catch (error) {
 //         console.log(error);

@@ -7,6 +7,7 @@ const { sendTelegramMessage } = require('./telegramBot');
 const {
     successfulOneTimePayment,
     successfulOneTimePaymentOverlay,
+    successfulOneTimePaymentProducts,
     successfulSubscriptionPaymentOverlay,
     successfulSubscriptionPayment
 } = require('./vippsPostActions');
@@ -42,6 +43,9 @@ const vippsPaymentCaptured = async (orderId) => {
     if (order.projects?.length > 0) {
         await successfulOneTimePayment(orderId);
         await sendTelegramMessage(`One Time Payment captured: ${order.orderNo} | ${order.total || order.totalCost} NOK | ${slugToString(order.projects[0].slug)}`);
+    } else if (order.products?.length > 0) {
+        await successfulOneTimePaymentProducts(orderId);
+        await sendTelegramMessage(`One Time Payment captured: ${order.orderNo} | ${order.total} NOK | ${slugToString(order.products[0].slug)}`); 
     } else {
         await successfulOneTimePaymentOverlay(orderId);
         await sendTelegramMessage(`One Time Payment captured: ${order.orderNo} | ${order.total} NOK | ${slugToString(order.projectSlug)}`);

@@ -1,10 +1,78 @@
-[
-    {
-        "oneTime": [100, 500, 1000, 5000, 10000, 15000],
-        "monthly": [250, 600, 1500, 3000, 7500, 15000]
+{
+    "qurbani": {
+        "currency": "NOK",
+        "products": [
+            {
+                "name": "Qurbani in Pakistan 🇵🇰",
+                "id": "qurbani-pakistan",
+                "variants": [
+                    {
+                        "name": "Goat in Pakistan",
+                        "id": "goat-in-pakistan",
+                        "price": 2.00
+                    },
+                    {
+                        "name": "1/7 Cow Share in Pakistan",
+                        "id": "cow-share-in-pakistan",
+                        "price": 8.60
+                    },
+                    {
+                        "name": "Cow in Pakistan",
+                        "id": "cow-in-pakistan",
+                        "price": 6.00
+                    }
+                ]
+            },
+            {
+                "name": "Qurbani in Egypt 🇪🇬",
+                "id": "qurbani-egypt",
+                "variants": [
+                    {
+                        "name": "1/7 Cow Share in Egypt",
+                        "id": "cow-share-in-egypt",
+                        "price": 1.80
+                    },
+                    {
+                        "name": "Cow in Egypt",
+                        "id": "cow-in-egypt",
+                        "price": 1.250
+                    }
+                ]
+            },
+            {
+                "name": "Qurbani in Uganda 🇺🇬",
+                "id": "qurbani-uganda",
+                "variants": [
+                    {
+                        "name": "Goat in Uganda",
+                        "id": "goat-in-uganda",
+                        "price": 8.5
+                    },
+                    {
+                        "name": "1/7 Cow in Uganda",
+                        "id": "cow-share-in-uganda",
+                        "price": 1.20
+                    },
+                    {
+                        "name": "Cow in Uganda",
+                        "id": "cow-in-uganda",
+                        "price": 8.40
+                    }
+                ]
+            }
+        ]
     },
-    {
-        "oneTime": [250, 600, 1500, 3000, 7500, 15000],
-        "monthly": [500, 1000, 5000, 10000, 15000, 25000]
+    "random": {
+        "currency": "NOK",
+        "products": [
+            {
+                "oneTime": [100, 500, 1000, 5000, 10000, 15000],
+                "monthly": [250, 600, 1500, 3000, 7500, 15000]
+            },
+            {
+                "oneTime": [250, 600, 1500, 3000, 7500, 15000],
+                "monthly": [500, 1000, 5000, 10000, 15000, 25000]
+            }
+        ]
     }
-]
+}
