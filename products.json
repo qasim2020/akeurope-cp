@@ -4,6 +4,7 @@
         "products": [
             {
                 "name": "Qurbani in Pakistan 🇵🇰",
+                "desc": "Over 25.3% of the population in Pakistan is living below the poverty line, countless families in Pakistan struggle to secure daily meals. This Eid ul-Adha, through your support we can reach these families and connect with them.",
                 "id": "qurbani-pakistan",
                 "variants": [
                     {
@@ -25,6 +26,7 @@
             },
             {
                 "name": "Qurbani in Egypt 🇪🇬",
+                "desc": "As of early 2025, over 100,000 Palestinians have fled Gaza and are currently residing in Egypt without formal refugee status. On Eid-ul-adha we are planning to target these communities, in'sha'Allah.",
                 "id": "qurbani-egypt",
                 "variants": [
                     {
@@ -41,6 +43,7 @@
             },
             {
                 "name": "Qurbani in Uganda 🇺🇬",
+                "desc": "Over 29% of children suffering from stunting, your Qurbani will provide vital protein to malnourished families.",
                 "id": "qurbani-uganda",
                 "variants": [
                     {

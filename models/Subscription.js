@@ -12,6 +12,7 @@ const VariantSchema = new mongoose.Schema({
 
 const ProductSchema = new mongoose.Schema({
     name: { type: String, required: true },
+    desc: { type: String, required: true },
     id: { type: String, required: true },
     variants: { type: [VariantSchema], default: [] },
     orderedCost: { type: Number, default: 0 },

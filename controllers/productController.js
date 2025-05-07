@@ -40,22 +40,6 @@ const {
     removeUnorderedProducts
 } = require('../modules/productActions');
 
-exports.widgets = async (req, res) => {
-    try {
-        res.render('widgets', {
-            layout: 'dashboard',
-        });
-    } catch (err) {
-        console.log(err);
-        res.render('error', { heading: 'Server Error', error: 'Failed to fetch widgets' });
-    }
-};
-
-exports.widget = async (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.sendFile(path.join(__dirname, 'public', 'payment-widget.js'));
-};
-
 exports.createNewOrder = async (req, res) => {
     try {
         const { slug } = req.params;
