@@ -113,7 +113,7 @@ exports.overlay = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(400).send(error);
+        res.status(400).send(error.message || 'Server error. Could not fetch overlay!');
     }
 };
 
@@ -136,7 +136,7 @@ exports.scriptIframe = async (req, res) => {
         res.send(scriptContent);
     } catch (error) {
         console.error('Unexpected error:', error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send(error.message || 'Internal Server Error');
     }
 };
 
@@ -165,7 +165,7 @@ exports.script = async (req, res) => {
         res.send(scriptContent);
     } catch (error) {
         console.error('Unexpected error:', error);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send(error.message || 'Internal Server Error');
     }
 };
 
@@ -181,7 +181,7 @@ exports.getCountryList = async (req, res) => {
         });
     } catch (error) {
         console.error('Error processing product prices:', error);
-        res.status(500).send('Failed to fetch products.');
+        res.status(500).send(error.message || 'Failed to get country list.');
     }
 };
 
@@ -234,7 +234,7 @@ exports.createNewOrder = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Could not create new order!');
+        res.status(400).send( error.message || 'Server error. Could not create new order!' );
     }
 };
 
@@ -391,7 +391,7 @@ exports.updateOrder = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Try refreshing your browser.');
+        res.status(400).send(error.message || 'Server error. Try refreshing your browser.' );
     }
 };
 
@@ -405,7 +405,7 @@ exports.getOrderData = async (req, res) => {
         res.send(formattedOrder);
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Could not get order data!');
+        res.status(400).send(error.message || 'Server error. Could not get order data!');
     }
 };
 
@@ -426,7 +426,7 @@ exports.renderOrderEntries = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Could not fetch entries!');
+        res.status(400).send(error.message || 'Server error. Could not fetch entries!');
     }
 };
 
@@ -441,7 +441,7 @@ exports.renderNoOrderEntries = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Could not render entries.');
+        res.status(400).send(error.message || 'Server error. Could not render entries.');
     }
 };
 
@@ -453,7 +453,7 @@ exports.renderNoOrderTotal = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(400).send('Server error. Could not render entries.');
+        res.status(400).send(error.message || 'Server error. Could not render entries.');
     }
 };
 
