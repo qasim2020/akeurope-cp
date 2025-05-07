@@ -141,10 +141,6 @@ function attachIframe(elem, code) {
         url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?countryCode=${code}&webflow=true&products=${products}`;
     }
 
-    if (products !== 'qurbani') {
-        return true; // testing for now
-    }
-
     var $iframe = $(`<iframe id="iframe-${slug}" allow="payment"></iframe>`)
     .attr('src', url)
     .css({

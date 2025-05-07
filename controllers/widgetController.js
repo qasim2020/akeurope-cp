@@ -51,25 +51,7 @@ exports.overlay = async (req, res) => {
         const publicKey = process.env.STRIPE_PUBLIC_KEY;
         const portalUrl = process.env.CUSTOMER_PORTAL_URL;
         if (req.query.webflow) {
-            if (req.query.products === 'random') {
-                res.render('overlays/overlayModal', {
-                    layout: false,
-                    data: {
-                        project: {
-                            name: req.query.name,
-                            heading: req.query.heading,
-                            cover: req.query.cover,
-                            desc: req.query.description,
-                            slug: req.params.slug,
-                            products: req.query.products,
-                        },
-                        countryCode: req.query.countryCode,
-                        publicKey,
-                        portalUrl,
-                    },
-                });
-                return;     
-            }
+            
             if (req.query.products === 'qurbani') {
                 res.render('overlays/productModal', {
                     layout: false,
@@ -86,7 +68,23 @@ exports.overlay = async (req, res) => {
                 return;     
             }
 
-            throw new Error('Project modal does not exist with webflow=true');
+            res.render('overlays/overlayModal', {
+                layout: false,
+                data: {
+                    project: {
+                        name: req.query.name,
+                        heading: req.query.heading,
+                        cover: req.query.cover,
+                        desc: req.query.description,
+                        slug: req.params.slug,
+                        products: req.query.products,
+                    },
+                    countryCode: req.query.countryCode,
+                    publicKey,
+                    portalUrl,
+                },
+            });
+            return;    
            
         }
         const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();

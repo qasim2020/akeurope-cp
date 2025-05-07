@@ -9,17 +9,17 @@
                     {
                         "name": "Goat in Pakistan",
                         "id": "goat-in-pakistan",
-                        "price": 2.00
+                        "price": 2100
                     },
                     {
                         "name": "1/7 Cow Share in Pakistan",
                         "id": "cow-share-in-pakistan",
-                        "price": 8.60
+                        "price": 900
                     },
                     {
                         "name": "Cow in Pakistan",
                         "id": "cow-in-pakistan",
-                        "price": 6.00
+                        "price": 6300
                     }
                 ]
             },
@@ -30,12 +30,12 @@
                     {
                         "name": "1/7 Cow Share in Egypt",
                         "id": "cow-share-in-egypt",
-                        "price": 1.80
+                        "price": 1900
                     },
                     {
                         "name": "Cow in Egypt",
                         "id": "cow-in-egypt",
-                        "price": 1.250
+                        "price": 13100
                     }
                 ]
             },
@@ -46,17 +46,17 @@
                     {
                         "name": "Goat in Uganda",
                         "id": "goat-in-uganda",
-                        "price": 8.5
+                        "price": 900
                     },
                     {
                         "name": "1/7 Cow in Uganda",
                         "id": "cow-share-in-uganda",
-                        "price": 1.20
+                        "price": 1300
                     },
                     {
                         "name": "Cow in Uganda",
                         "id": "cow-in-uganda",
-                        "price": 8.40
+                        "price": 8800
                     }
                 ]
             }
