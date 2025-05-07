@@ -120,14 +120,15 @@ const calculateProductOrder = async (orderId) => {
     });
 
     const totalSum = updatedProducts.reduce((total, category) => total + category.orderedCost, 0);
+    const totalRoundedSum = totalSum.toFixed(2);
 
     await Subscription.updateOne(
         { _id: order._id },
         {
             $set: {
                 products: updatedProducts,
-                total: totalSum,
-                totalAllTime: totalSum,
+                total: totalRoundedSum,
+                totalAllTime: totalRoundedSum,
             },
         },
     );
