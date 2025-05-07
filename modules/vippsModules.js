@@ -311,7 +311,7 @@ const updateDonorWithPayment = async (info) => {
 
 const captureVippsPayment = async (orderId) => {
     const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
-    const amount = order.total || order.totalCostSingleMonth;
+    const amount = order.total || order.totalCost;
     const token = await getVippsToken();
     const url = `https://api.vipps.no/epayment/v1/payments/${order.vippsReference}/capture`;
     const payload = {
