@@ -38,13 +38,23 @@ function runGlobal(countryCode) {
         $('.donation-overlay').css({ display: 'flex' });
     });
 
-    const projectSlug = $('body').attr('projectSlug');
-    if (projectSlug) {
-        $('.donate-specific').on('click', function (e) {
-            const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
-            showOverlay(elem);
-        });
-    } 
+    $('.donate-specific').on('click', function (e) {
+        const projectSlug = $('body').attr('projectSlug');
+        const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
+        showOverlay(elem);
+    });
+
+    $('.qurbani-btn').on('click', function (e) {
+        const projectSlug = 'qurbani';
+        const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
+        showOverlay(elem);
+    });
+
+    $('.orphan-btn').on('click', function (e) {
+        const projectSlug = 'orphans-care';
+        const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
+        showOverlay(elem);
+    });
 
     const processedSlugs = new Set();
 
