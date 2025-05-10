@@ -39,7 +39,7 @@ function runGlobal(countryCode) {
     });
 
     $('.donate-specific').on('click', function (e) {
-        const projectSlug = $('body').attr('projectSlug');
+        const projectSlug = $('body').attr('projectSlug') || $(this).attr('projectSlug');
         const elem = $('#donation-overlay').find(`[projectSlug=${projectSlug}]`);
         showOverlay(elem);
     });

@@ -1025,7 +1025,7 @@
             const code = localStorage.getItem('countryCode');
 
             const response = await $.ajax({
-                url: `/overlay-products/${code}/{{data.project.products}}`,
+                url: `/overlay-products/${code}/random`,
                 method: 'GET',
                 contentType: 'application/json',
             });

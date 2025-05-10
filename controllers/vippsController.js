@@ -154,7 +154,10 @@ exports.vippsWebhook = async (req, res) => {
             const order =
                 (await Order.findOne({ vippsReference: req.body.reference }).lean()) ||
                 (await Subscription.findOne({ vippsReference: req.body.reference }).lean());
-            if (!order) throw new Error('Order not found - likely deleted being too old!');
+            if (!order) {
+                const body = JSON.stringify(req.body, null, 2);
+                throw new Error(`Order not found for reference: ${req.body.reference} - \n\n ${body}`);
+            } 
             paymentId = order._id;
         } else if (req.body.agreementExternalId) {
             paymentId = req.body.agreementExternalId;
@@ -407,7 +410,7 @@ exports.createVippsPaymentIntentProduct = async (req, res) => {
 
         let order = await Subscription.findOne({ _id: orderId, customerId: process.env.TEMP_CUSTOMER_ID });
 
-        if (!order) throw new Error('Order not found');
+        if (!order) throw new Error('Order is deleted after 1 hour - please refresh the page and try again.');
 
         if (order.currency != 'NOK') throw new Error('Vipps works for Norway only.');
 
@@ -415,6 +418,7 @@ exports.createVippsPaymentIntentProduct = async (req, res) => {
 
         const reference = uuidv4();
         order.vippsReference = reference;
+        
         await order.save();
 
         let data = JSON.stringify({

@@ -6,7 +6,6 @@ const { notifyTelegram } = require('../modules/telegramBot');
 router.get('/script-webflow', overlayController.wScript);
 router.get('/overlay-country/:code', overlayController.overlayCountry);
 router.get('/overlay-products/:code/:products', overlayController.overlayProducts);
-
 router.post('/overlay-create-order/:slug', overlayController.createNewOrder);
 router.post('/overlay-delete-order/:orderId', overlayController.deleteOrder);
 router.post('/overlay-setup-intent/:orderId/:slug', notifyTelegram, overlayController.createSetupIntent);
