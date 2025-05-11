@@ -132,9 +132,9 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 
 // app.get('/testing', async (req, res) => {
 //     try {
-//         const { successfulOneTimePaymentProducts } = require('./modules/vippsPostActions');
-//         const orderId = '6819fb6db7c0f51053e3701f';
-//         await successfulOneTimePaymentProducts(orderId);
+//         const orderId = '67d05eb7d057365f9e69cbff';
+//         const order = await Subscription.findById(orderId).lean();
+//         const customer = await Customer.findById(order.customerId).lean();
 //         res.status(200).send('Done');
 //     } catch (error) {
 //         console.log(error);
