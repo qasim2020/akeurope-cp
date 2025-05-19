@@ -67,6 +67,7 @@ const entryLogs = async (req, res, customerId, project) => {
         const query = {
                     entityId: req.params.entryId,
                     entityType: { $ne: 'order' },
+                    entityType: { $ne: 'beneficiary' },
         };
 
         const page = parseInt(req.query.page) || 1;

@@ -213,9 +213,14 @@ exports.file = async (req, res) => {
         }
 
         const dir = path.join(__dirname, '../../');
-        const filePath = path.join(dir, file.path);
+        let filePath = path.join(dir, file.path);
 
-        await fs.access(filePath);
+        try {
+            await fs.access(filePath);
+        } catch (err) {
+            filePath = path.join(__dirname, '../../akeurope-forms-uploads', file.path);
+            await fs.access(filePath);
+        }
         const mimeType = mime.lookup(filePath);
     
         if (mimeType.startsWith('image/')) {

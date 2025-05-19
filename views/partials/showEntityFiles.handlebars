@@ -1,9 +1,5 @@
 <div class="card-header d-flex justify-content-between">
-    {{#if beneficiary}}
-    <h3 class="card-title">Reports</h3>
-    {{else}}
     <h3 class="card-title">Linked Documents</h3>
-    {{/if}}
 </div>
 {{#if data.files}}
 <div style="overflow-x: auto;">
@@ -30,6 +26,10 @@
                     {{#if (eq this.uploadedBy.actorType 'user')}}
                     <span class="badge bg-green-lt">
                         AKEurope Team
+                    </span>
+                    {{else if (eq this.uploadedBy.actorType 'benificiary')}}
+                    <span class="badge bg-orange-lt">
+                        Beneficiary
                     </span>
                     {{else}}
                     <span class="badge bg-red-lt">
