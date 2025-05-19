@@ -3,6 +3,10 @@
     monthly="true"
     {{/if}}
 >
+    {{#if data.order.project.detail.description}}
+    <div class="text-secondary fs-4">{{data.order.project.detail.description}}</div>
+    {{/if}}
+    
     {{#unless data.order}}
     <div class="col-12 pb-2 placeholder-glow">
         <div class="card border-0 flex-row p-2 rounded-3">

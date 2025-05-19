@@ -6,7 +6,8 @@ const ProjectSchema = new mongoose.Schema({
   address: { type: String, required: true },
   currency: { type: String, required: true },
   status: {type:String, required: true },
-  fields: { type: Array, default: [] } 
+  fields: { type: Array, default: [] },
+  description: { type: String, required: false },
 });
 
 module.exports = mongoose.model('Project', ProjectSchema);
