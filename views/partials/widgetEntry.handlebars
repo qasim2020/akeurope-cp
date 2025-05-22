@@ -15,7 +15,11 @@
             {{#if cost.prevOrder}}
             <div class="d-flex p-3 rounded-3 mt-2 border popover-card cursor-pointer">
                 <span class="me-2" data-bs-toggle="popover" data-bs-placement="top"
-                    data-bs-content="Already selected in <span class='text-blue'>{{capitalizeFirstLetter cost.prevOrder.status}}-{{cost.prevOrder.orderNo}}</span>. Invoice will expire on {{formatDate cost.prevOrder.expiry}}."
+                    {{#if (eq cost.prevOrder.status 'draft')}}
+                    data-bs-content="Already selected in <span class='text-blue'>{{capitalizeFirstLetter cost.prevOrder.status}}-{{cost.prevOrder.orderNo}}</span>. Please try in 1 hour."
+                    {{else}}
+                    data-bs-content="Already selected in <span class='text-blue'>{{capitalizeFirstLetter cost.prevOrder.status}}-{{cost.prevOrder.orderNo}}</span>."
+                    {{/if}}
                     data-bs-html="true">
                     <span class="ti ti-lock"></span>
                 </span>

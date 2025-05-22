@@ -911,14 +911,11 @@
 
         window.addEventListener('message', async function (event) {
             if (event.data === 'goingVisible') {
-                console.log('widget opened');
                 if (widgetStarted) {
-                    console.log('widget already started');
                     return;
                 }
                 await startWidget();
                 widgetStarted = true;
-                console.log('widget start completed');
             }
         });
 
