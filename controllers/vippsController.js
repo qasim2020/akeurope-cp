@@ -21,6 +21,7 @@ const {
     vippsAgreementActivated,
     vippsAgreementRejected,
     vippsAgreementStopped,
+    vippsAgreementPending,
     vippsAgreementExpired,
     vippsChargeCanceled,
     vippsChargeCaptured,
@@ -530,6 +531,8 @@ exports.pollVippsSetupIntent = async (req, res) => {
             } catch (e) {
                 sendErrorToTelegram(e.message);
             }
+        } else {
+            console.log(mappedStatus, statusMap[order.status]);
         }
         order =
             (await Order.findOne({ _id: orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||

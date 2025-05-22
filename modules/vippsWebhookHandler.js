@@ -81,6 +81,11 @@ const vippsAgreementRejected = async (orderId) => {
     await updateDonorAgreement(orderId);
 };
 
+const vippsAgreementPending = async (orderId) => {
+    console.log(`Agreement is pending - no action needed; ${orderId}`);
+    return true;
+};
+
 const vippsAgreementStopped = async (orderId) => {
     console.log(`Agreement stopped: ${orderId}`);
     await updateDonorAgreement(orderId);
@@ -144,6 +149,7 @@ module.exports = {
     vippsAgreementRejected,
     vippsAgreementStopped,
     vippsAgreementExpired,
+    vippsAgreementPending,
     vippsChargeReserved,
     vippsChargeCaptured,
     vippsChargeCanceled,

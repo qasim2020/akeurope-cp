@@ -1683,9 +1683,7 @@
         const selectPaymentBtn = function (elem) {
             $(elem).siblings('.btn').removeClass('active');
             $(elem).addClass('active');
-
             const value = $(elem).data('value');
-
             if (value === 'creditCard') {
                 $('#express-checkout-wrapper').addClass('d-none');
                 $('#credit-checkout').addClass('d-none');
@@ -1705,6 +1703,7 @@
             $(elem).find('.ti').replaceWith(`
             <span class="text-small spinner-border spinner-border-sm mt-1" role="status" 
             style="width: 10px; height: 10px; margin-right: 12px"></span>`);
+            $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
             const subArray = entry.find('.subscription.active').get().map(input => $(input).attr('subscription'));
             const subscriptions = subArray.length > 0 ? subArray.join(',') : 'empty';
             const entryId = entry.attr('entry-id');
