@@ -5,7 +5,6 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const sendErrorToTelegram = async function (errorObj) {
-    return true;
     let errorMessage;
 
     // Check if errorObj is an object, then stringify

@@ -98,10 +98,17 @@ const vippsChargeReserved = async (orderId) => {
 
 const vippsChargeCaptured = async (orderId) => {
     console.log(`Charge captured: ${orderId}`);
-    await successfulSubscriptionPayment(orderId);
-    const order = (await Subscription.findById(orderId).lean()) || (await Order.findById(orderId).lean());
-    if (!order) 
-        throw new Error(`This order:- ${orderId} does not exist in our database`);
+    let order;
+    const widgetOrder = await Order.findById(orderId).lean();
+    const overlayOrder = await Subscription.findById(orderId).lean();
+    if (widgetOrder) {
+        await successfulSubscriptionPayment(orderId);
+        order = widgetOrder;
+    };
+    if (overlayOrder) {
+        await successfulSubscriptionPaymentOverlay(orderId);
+        order = overlayOrder;
+    }
     if (order.projects?.length > 0) {
         await sendTelegramMessage(`Monthly Charge captured: ${order.orderNo} | ${order.total || order.totalCost} NOK | ${slugToString(order.projects[0].slug)}`);
     } else {

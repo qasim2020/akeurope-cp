@@ -6,6 +6,7 @@ const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Subscription = require('../models/Subscription');
 const Donor = require('../models/Donor');
+const { slugToString } = require('../modules/helpers');
 
 const { saveLog } = require('./logAction');
 const { logTemplates } = require('./logTemplates');
@@ -459,6 +460,51 @@ const updateDonorAgreement = async (orderId) => {
     return 'Agreement updated';
 };
 
+const createRecurringCharge = async (orderId) => {
+    try {
+        const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+        if (!order) {
+            throw new Error(`Order ${order.orderNo} not found - strange`);
+        }
+        if (!order.monthlySubscription) {
+            throw new Error(`Order ${order.orderNo} is not monthly subscription - strange`);
+        }
+        if (!order.vippsAgreementId) {
+            throw new Error(`Order ${order.orderNo} do not have a vipps agreement id - strange`);
+        }
+        const token = await getVippsToken();
+        const amount = (order.total || order.totalCostSingleMonth) * 100;
+        const due = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const payload = {
+            amount,
+            transactionType: "DIRECT_CAPTURE",
+            description: `${slugToString(order.projects?.[0]?.slug) || 'Order'} # ${order.orderNo}`,
+            due,
+            retryDays: 5,
+            type: "RECURRING",
+            orderId: uuidv4(),
+            externalId: order._id.toString(),
+        };
+        const url = `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${order.vippsAgreementId}/charges`;
+        const config = await getConfig(url, payload, token);
+        const response = await axios.request(config);
+        console.log(response.data);
+    } catch (error) {
+        if (error.response) {
+            console.error('Vipps API Error:', error.response.status);
+            console.error('Response body:', error.response.data);
+            sendErrorToTelegram(error.response.data);
+        } else if (error.request) {
+            console.error('No response from Vipps:', error.request);
+            sendErrorToTelegram(error.request);
+        } else {
+            console.error('Error setting up request:', error.message);
+            sendErrorToTelegram(error.message);
+        }
+    }
+
+};
+
 const makeVippsReceipt = async (orderId, products) => {
     const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
 
@@ -475,7 +521,6 @@ const makeVippsReceipt = async (orderId, products) => {
             if (variant.orderedCost > 0) {
                 const totalAmount = Math.round(variant.orderedCost * 100); // in øre
                 const totalTaxAmount = Math.round(((variant.orderedCost * 25) / 125) * 100); // in øre
-                const totalAmountExcludingTax = totalAmount - totalTaxAmount;
 
                 receipt.orderLines.push({
                     name: `${product.name} - ${variant.name}`,
@@ -507,4 +552,5 @@ module.exports = {
     updateDonorAgreement,
     updateOrderWithCharge,
     makeVippsReceipt,
+    createRecurringCharge,
 };
