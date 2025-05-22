@@ -78,7 +78,7 @@ app.use((req, res, next) => {
         return oldJson.apply(res, arguments);
     };
 
-    const forbiddenErrors = ['/overlay/fonts/Karla-regular.woff', '/robots.txt', '/favicon.ico'];
+    const forbiddenErrors = ['/overlay/fonts/Karla-regular.woff', '/robots.txt'];
 
     res.on('finish', () => {
         if (res.statusCode > 399 && !forbiddenErrors.includes(req.originalUrl)) {
