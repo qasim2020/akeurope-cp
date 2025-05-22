@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 async function initOverlay() {
-    
+
     let countryCode;
     try {
         const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
@@ -76,8 +76,8 @@ function runNorway(countryCode) {
         const projectSlug = $('body').attr('projectSlug');
         if (projectSlug) {
             $('#donation-overlay-no').css({ display: 'flex' });
-            $('.projects-container').css({display: 'none'});
-            $('.frequency-container').css({display: 'flex'});
+            $('.projects-container').css({ display: 'none' });
+            $('.frequency-container').css({ display: 'flex' });
         } else {
             $('#donation-overlay-no').css({ display: 'flex' });
         }
@@ -104,7 +104,7 @@ function runNorway(countryCode) {
         const projectName = projectSelector.attr('projectName');
         $('.project-label').html(projectName);
         updateNextButtonURL();
-    } 
+    }
 
     $('.project-selector-no').on('click', function (e) {
         $('.project-selector-no').removeClass('selected');
@@ -131,10 +131,10 @@ function runNorway(countryCode) {
 function attachIframe(elem, code) {
     const partnerPortal = $(elem).attr('partnerSlug');
 
-    if (partnerPortal){
+    if (partnerPortal) {
         console.log(partnerPortal);
         return;
-    } 
+    }
 
     const slug = encodeURIComponent($(elem).attr('projectSlug'));
     const products = encodeURIComponent($(elem).attr('projectProducts'));
@@ -152,23 +152,23 @@ function attachIframe(elem, code) {
     }
 
     var $iframe = $(`<iframe id="iframe-${slug}" allow="payment"></iframe>`)
-    .attr('src', url)
-    .css({
-        display: 'none',
-        margin: '0',
-        padding: '0',
-        border: '0',
-        width: '100%',
-        height: '100%',
-        position: 'fixed',
-        opacity: 1,
-        top: '0',
-        left: '0',
-        right: '0',
-        bottom: '0',
-        transform: 'translateZ(100px)',
-        'z-index': '9999',
-    });
+        .attr('src', url)
+        .css({
+            display: 'none',
+            margin: '0',
+            padding: '0',
+            border: '0',
+            width: '100%',
+            height: '100%',
+            position: 'fixed',
+            opacity: 1,
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+            transform: 'translateZ(100px)',
+            'z-index': '9999',
+        });
 
     $('body').append($iframe);
 }
@@ -177,6 +177,7 @@ function showOverlay(elem) {
 
     const slug = $(elem).attr('partnerSlug') || $(elem).attr('projectSlug');
     const $iframe = $(`#iframe-${slug}`);
+    $iframe[0].contentWindow.postMessage('goingVisible', '*');
 
     $('#iframe-loading-overlay').remove();
 

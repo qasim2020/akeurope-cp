@@ -60,7 +60,9 @@ app.use(
 
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store');
-    console.log(req.originalUrl);
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] | ${ip} | ${req.originalUrl} | `);
     let oldSend = res.send;
     let oldJson = res.json;
 

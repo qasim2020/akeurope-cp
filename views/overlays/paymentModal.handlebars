@@ -907,6 +907,21 @@
 
         // START WIDGET
 
+        let widgetStarted = false;
+
+        window.addEventListener('message', async function (event) {
+            if (event.data === 'goingVisible') {
+                console.log('widget opened');
+                if (widgetStarted) {
+                    console.log('widget already started');
+                    return;
+                }
+                await startWidget();
+                widgetStarted = true;
+                console.log('widget start completed');
+            }
+        });
+
         const startWidget = async function () {
             let countryCode = '{{data.donor.countryCode}}';
             if (!countryCode) {
@@ -940,7 +955,7 @@
             $('[name=lastName]').val('{{data.donor.lastName}}');
         };
 
-        window.onload = startWidget;
+        {{!-- window.onload = startWidget; --}}
 
         function initializePopovers() {
             var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
