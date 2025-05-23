@@ -564,11 +564,13 @@ exports.pollVippsPaymentIntent = async (req, res) => {
         const event = payment.state;
 
         const mappedStatus = statusMap[order.status];
-
-        if (Array.isArray(mappedStatus) ? !mappedStatus.includes(event) : mappedStatus !== event) {
+        const testStatus = Array.isArray(mappedStatus) ? !mappedStatus.includes(event) : mappedStatus !== event;
+        if (testStatus) {
             try {
                 await handleVippsEvent(event, order._id);
             } catch (e) {
+                console.log(mappedStatus);
+                console.log(event);
                 sendErrorToTelegram(e.message);
             }
         }
