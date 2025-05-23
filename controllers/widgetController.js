@@ -50,6 +50,7 @@ exports.overlay = async (req, res) => {
     try {
         const publicKey = process.env.STRIPE_PUBLIC_KEY;
         const portalUrl = process.env.CUSTOMER_PORTAL_URL;
+        const countryCode = req.headers['cf-ipcountry'] || 'NO'
         if (req.query.webflow) {
             
             if (req.query.products === 'qurbani') {
@@ -60,7 +61,7 @@ exports.overlay = async (req, res) => {
                             slug: req.params.slug,
                             products: req.query.products,
                         },
-                        countryCode: req.query.countryCode,
+                        countryCode: countryCode,
                         publicKey,
                         portalUrl,
                     },
@@ -79,7 +80,7 @@ exports.overlay = async (req, res) => {
                         slug: req.params.slug,
                         products: req.query.products,
                     },
-                    countryCode: req.query.countryCode,
+                    countryCode: countryCode,
                     publicKey,
                     portalUrl,
                 },
@@ -109,6 +110,7 @@ exports.overlay = async (req, res) => {
                 donor,
                 publicKey,
                 portalUrl,
+                countryCode,
             },
         });
     } catch (error) {

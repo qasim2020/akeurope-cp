@@ -78,7 +78,8 @@ async function getProductList(code, requestedProducts) {
 exports.overlayProducts = async (req, res) => {
     try {
         if (!req.params.code) throw new Error('Country Code is required');
-        const country = await Country.findOne({ code: req.params.code }).lean();
+        const code = req.params.code;
+        const country = await Country.findOne({ code: code }).lean();
         if (!country) throw new Error('Currency is not supported');
         const products = await getProductList(country.currency.code, req.params.products);
         res.status(200).json({

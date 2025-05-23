@@ -25,12 +25,7 @@ async function initOverlay() {
         countryCode = 'US';
     }
 
-    if (countryCode === 'NO') {
-        // runNorway(countryCode);
-        runGlobal(countryCode);
-    } else {
-        runGlobal(countryCode);
-    }
+    runGlobal(countryCode);
 }
 
 function runGlobal(countryCode) {
