@@ -3,6 +3,7 @@ const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Donor = require('../models/Donor');
 const Subscription = require('../models/Subscription');
+const VippsChargeRequest = require('../models/VippsChargeRequest');
 
 const { createDynamicModel } = require('../models/createDynamicModel');
 const { generatePagination, createPagination } = require('../modules/generatePagination');

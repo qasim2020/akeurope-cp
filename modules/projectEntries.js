@@ -1,5 +1,4 @@
 const Project = require("../models/Project");
-const Payment = require("../models/Payment");
 const Subscription = require("../models/Subscription");
 const Order = require("../models/Order");
 const Customer = require("../models/Customer");
@@ -9,52 +8,11 @@ const { generateSearchQuery } = require("../modules/generateSearchQuery");
 
 const fetchEntrySubscriptionsAndPayments = async function(entry) {
 
-    if (!entry) {
-        return null;
-    }
-
-    const entryId = entry._id;
-  
-    const payments = await Payment.find({ entryId })
-      .sort({ date: -1 }) 
-      .lean();
-  
-    const subscription = await Subscription.find({ entryId }).lean();
-  
-    entry.payments = payments || null;
-    entry.subscriptions = subscription || null;
     return entry;
     
 }
 
 const fetchEntryDetailsFromPaymentsAndSubscriptions = async function(entries) {
-    const entryIds = entries.map((entry) => entry._id);
-    const lastPayments = await Payment.aggregate([
-        { $match: { entryId: { $in: entryIds } } },
-        { $sort: { date: -1 } }, 
-        {
-            $group: {
-                _id: "$entryId", 
-                lastPaid: { $first: "$date" }, 
-            },
-        },
-    ]);
-
-    const subscriptions = await Subscription.find({ entryId: { $in: entryIds } }).lean();
-
-    const lastPaymentsMap = Object.fromEntries(
-        lastPayments.map(({ _id, lastPaid }) => [_id.toString(), lastPaid])
-    );
-
-    const subscriptionsMap = Object.fromEntries(
-        subscriptions.map((sub) => [sub.entryId.toString(), sub])
-    );
-
-    entries.forEach((entry) => {
-        entry.lastPaid = lastPaymentsMap[entry._id.toString()] || null;
-        entry.subscriptions = subscriptionsMap[entry._id.toString()] || null;
-    });
-
     return entries;
 }
 

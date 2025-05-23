@@ -6,6 +6,7 @@ const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Subscription = require('../models/Subscription');
 const Donor = require('../models/Donor');
+const VippsChargeRequest = require('../models/VippsChargeRequest');
 const { slugToString } = require('../modules/helpers');
 
 const { saveLog } = require('./logAction');
@@ -508,10 +509,18 @@ const createRecurringCharge = async (orderId) => {
             orderId: uuidv4(),
             externalId: order._id.toString(),
         };
+        console.log(payload);
         const url = `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${order.vippsAgreementId}/charges`;
         const config = await getConfig(url, payload, token);
         const response = await axios.request(config);
         console.log(response.data);
+        const chargeRequest = new VippsChargeRequest({
+            orderId: order._id,
+            payload: payload,
+            chargeId: response.data?.chargeId
+        });
+        await chargeRequest.save();
+        return response.data?.chargeId;
     } catch (error) {
         if (error.response) {
             console.error('Vipps API Error:', error.response.status);
@@ -524,6 +533,7 @@ const createRecurringCharge = async (orderId) => {
             console.error('Error setting up request:', error.message);
             sendErrorToTelegram(error.message);
         }
+        return false;
     }
 
 };
