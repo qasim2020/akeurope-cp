@@ -168,7 +168,7 @@ const decrementVariantToProductOrder = async (orderId, variantId) => {
     const variants = order.products.flatMap((product) => product.variants.filter((variant) => variant.id === variantId));
     if (variants.length === 0) throw new Error('Variant not found in products');
     const variant = variants[0];
-    if (variant.quantity <= 0) throw new Error('Cannot decrement quantity below 1');
+    if (variant.quantity <= 0) throw new Error(`Cannot decrement quantity below 1. Currently it is: ${variant.quantity}`);
     const updatedQuantity = variant.quantity - 1;
     const newCost = variant.price * updatedQuantity;
     const updatedVariant = {

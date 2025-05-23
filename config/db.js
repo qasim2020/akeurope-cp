@@ -36,6 +36,8 @@ async function handleRecurringVippsPayments() {
   const combinedOrderNos = [...projOrderNos, ...overlayOrderNos];
   const combined = [...orders, ...subscriptions];
   console.log(combined);
+  // await createRecurringCharge(combined[2]._id);
+  // await vippsChargeCaptured(combined[0]._id);
   await sendTelegramMessage(`Found ${combined.length} orders on vipps-charges; ${combinedOrderNos.join(', ')}`);
   // for (const order of combined) {
   //   await createRecurringCharge(order._id);
@@ -57,7 +59,7 @@ mongoose.connection.on('open', async () => {
   console.log('handle recurring payments started...');
 
   // await fixMissedChargeCapture();
-  // await handleRecurringVippsPayments();
+  await handleRecurringVippsPayments(); 
   // await remove600Children();
   // await resetGazaOrphanPricesTo600();
 

@@ -26,6 +26,7 @@ const vippsRoutes = require('./routes/vippsRoutes');
 const { captureVippsPayment } = require('./modules/vippsModules');
 const Subscription = require('./models/Subscription');
 const Customer = require('./models/Customer');
+const { vippsChargeCaptured } = require('./modules/vippsWebhookHandler');
 
 require('dotenv').config();
 mongoose();
@@ -133,15 +134,18 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 //     res.render(`emails/${templateName}`, data);
 // });
 
-// app.get('/testing', async (req, res) => {
+// app.get('/testing/:orderNo', async (req, res) => {
 //     try {
-//         const orderId = '67d05eb7d057365f9e69cbff';
-//         const order = await Subscription.findById(orderId).lean();
-//         const customer = await Customer.findById(order.customerId).lean();
+//         const orderNo = req.params.orderNo;
+//         const Order = require('./models/Order');
+//         const Subscription = require('./models/Subscription');
+//         const order = (await Order.findOne({orderNo: orderNo}).lean() ) || (await Subscription.findOne({orderNo: orderNo}).lean());
+//         if (!order) throw new Error('order not found:' + order);
+//         await vippsChargeCaptured(order._id);
 //         res.status(200).send('Done');
 //     } catch (error) {
 //         console.log(error);
-//         res.status(400).send(error);
+//         res.status(400).send(error.message);
 //     }
 // });
 

@@ -115,7 +115,7 @@ const vippsChargeCaptured = async (orderId) => {
         order = overlayOrder;
     }
     if (order.projects?.length > 0) {
-        await sendTelegramMessage(`Monthly Charge captured: ${order.orderNo} | ${order.total || order.totalCost} NOK | ${slugToString(order.projects[0].slug)}`);
+        await sendTelegramMessage(`Monthly Charge captured: ${order.orderNo} | ${order.totalCostSingleMonth} NOK | ${slugToString(order.projects[0].slug)}`);
     } else {
         await sendTelegramMessage(`Monthly Charge captured: ${order.orderNo} | ${order.total} NOK | ${slugToString(order.projectSlug)}`);
     }

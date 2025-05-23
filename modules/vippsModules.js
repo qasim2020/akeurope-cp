@@ -115,29 +115,51 @@ const getVippsChargeNUserInfo = async (orderId) => {
     charges.sort((a, b) => new Date(b.due) - new Date(a.due));
 
     const latestCharge = charges[0];
+    let donor;
 
     if (!responseAgreement.data?.userinfoUrl) {
         console.log(charges);
         throw new Error('No donor found! - should not happen.');
     } else {
-        const responseUserInfo = await axios.get(responseAgreement.data.userinfoUrl, headers);
-        const user = responseUserInfo.data;
-        const address = user.address;
-        const donor = {
-            firstName: user.given_name,
-            lastName: user.family_name,
-            name: `${user.given_name} ${user.family_name}`,
-            email: user.email,
-            tel: `+${user.phone_number}`,
-            address: `${address.street_address}, ${address.postal_code}, ${address.region}, ${address.country}`,
-            sub: user.sub,
-            sid: user.sid,
-        };
-        return {
-            order: latestCharge,
-            donor,
-        };
+        try {
+            const responseUserInfo = await axios.get(responseAgreement.data.userinfoUrl, headers);
+            const user = responseUserInfo.data;
+            donor = {
+                firstName: user.given_name,
+                lastName: user.family_name,
+                name: `${user.given_name} ${user.family_name}`,
+                email: user.email,
+                tel: `+${user.phone_number}`,
+                address: `${address.street_address}, ${address.postal_code}, ${address.region}, ${address.country}`,
+                sub: user.sub,
+                sid: user.sid,
+            };
+        } catch (error) {
+            if (error.response?.data?.title === 'Not a valid session') {
+                await sendTelegramMessage(`This is a recurring vipps charge for order ${dbOrder.orderNo} - fetching donor information from local database. We can't fetch donor info after 168 hours of charge has been occured.`);
+            } else {
+                await sendErrorToTelegram(error.response?.data || error.message || error);
+            }
+            const donorLocalInfo = await Donor.findOne({ vippsCustomerSub: responseAgreement.data.sub }).lean();
+            if (!donorLocalInfo) {
+                throw new Error(`Donor not found for sub: ${responseAgreement.data.sub} - strange`);
+            }
+            donor = {
+                firstName: donorLocalInfo.firstName,
+                lastName: donorLocalInfo.lastName,
+                name: `${donorLocalInfo.firstName} ${donorLocalInfo.lastName}`,
+                email: donorLocalInfo.email,
+                tel: donorLocalInfo.tel,
+                address: donorLocalInfo.address,
+                sub: responseAgreement.data.sub,
+                sid: donorLocalInfo.vippsCustomerId
+            };
+        }
     }
+    return {
+        order: latestCharge,
+        donor,
+    };
 };
 
 const getOrderChargesInVipps = async (orderId) => {
@@ -448,7 +470,8 @@ const updateDonorAgreement = async (orderId) => {
         if (existingAgreement.status !== newAgreement.status) {
             donor.vippsAgreements[index] = newAgreement;
         } else {
-            throw new Error('Agreement already exists in the database.');
+            sendTelegramMessage(`Agreement ${newAgreement.id} with status ${newAgreement.status} already exists for order ${order.orderNo}`);
+            return true;
         }
     } else {
         donor.vippsAgreements.push(agreement.data);
@@ -457,7 +480,7 @@ const updateDonorAgreement = async (orderId) => {
     sendTelegramMessage(
         `Donor agreement updated: \n\n ${customer.name} \n ${donor.tel} \n ${customer.email} \n Status: ${agreement.data.status}`,
     );
-    return 'Agreement updated';
+    return true;
 };
 
 const createRecurringCharge = async (orderId) => {
