@@ -24,9 +24,12 @@ async function changeProductsCurrency(products, newCurrency, baseCurrency) {
 
     const productList = products.map((val) => {
         const convertedPrices = val.variants?.map((variant) => {
-            return { ...variant, 
-                price: parseFloat(variant.price / currencyRate).toFixed(2),
-             };
+            const price = parseFloat(variant.price / currencyRate).toFixed(2);
+            if (!price || price === 'Infinity') throw new Error(`${newCurrency} is not supported: ${price}`);
+            return {
+                ...variant,
+                price,
+            };
         });
         return { ...val, variants: convertedPrices };
     });
@@ -232,8 +235,8 @@ const findProjectInFile = async (slug) => {
 const changeProductOrderCurrency = async (newCurrency, orderId) => {
     const order = await Subscription.findById(orderId).lean();
     const project = await findProjectInFile(order.projectSlug);
-    if (order.currency === newCurrency) 
-        throw new Error(`Cannot change currency to same currency in ${order._id} - from ${project.currency} to ${order.currency} - why calling this function`);
+    if (order.currency === newCurrency)
+        throw new Error(`Cannot change currency to same currency in ${order._id} - from ${order.currency} to ${order.currency} - why calling this function`);
     const baseCurrency = project.currency;
     const products = project.products;
     const productList = await changeProductsCurrency(products, newCurrency, baseCurrency);

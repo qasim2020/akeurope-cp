@@ -52,8 +52,7 @@
     <div id="payment-overlay">
         <div class="row justify-content-center">
 
-            <div id="project-card"
-                class="col-12 col-md-6 col-lg-4 card shadow-lg border-0 ms-md-2 me-md-3 p-0 rounded-md-4 overflow-hidden">
+            <div id="project-card" class=" card shadow-lg border-0 ms-md-2 me-md-3 p-0 rounded-md-4 overflow-hidden">
                 <div class="card-body p-4 d-flex flex-column align-items-start">
                     <img class="mb-3"
                         src="https://res.cloudinary.com/miscellaneous/image/upload/v1737903106/akeurope/Group_427320398.png"
@@ -67,7 +66,7 @@
                 </div>
             </div>
 
-            <div id="slide-parent" class="col-12 col-md-5 col-lg-3 card shadow-lg me-md-2 rounded-md-4 overflow-hidden">
+            <div id="slide-parent" class="card shadow-lg me-md-2 rounded-md-4 overflow-hidden">
                 <div id="slide-wrapper">
                     <div id="slide-container">
                         <div class="slide" id="slide-select-amount">
@@ -1459,17 +1458,25 @@
         $('.back-btn').on('click', async function (e) {
             try {
                 const index = Number($(this).attr('index'));
+                $('.back-btn').attr({ index: index - 1 });
+                $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
                 if (index === 1) {
                     const orderId = $('#product-entries').attr('order-id');
+                    const btn = getVisibleBtnFirstSlide();
+                    const currentBtnHtml = $(btn).html();
+                    $(btn).html(`
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Processing
+                    `);
                     await $.ajax({
                         url: `/product-update-order/${orderId}/{{data.project.slug}}?checkin=true`,
                         method: 'POST',
                         contentType: 'application/json',
                     });
+                    $(btn).html(currentBtnHtml);
                     drawOrderEntries();
+                    refreshDropdowns();
                 }
-                $('.back-btn').attr({ index: index - 1 });
-                $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
             } catch (error) {
                 console.log(error);
                 alert('Order expired. Please refresh your browser.');
@@ -1479,11 +1486,18 @@
         const saveDonationAmount = async function (elem) {
             try {
                 const orderId = $('#product-entries').attr('order-id');
+                const btn = getVisibleBtnFirstSlide();
+                const currentBtnHtml = $(btn).html();
+                $(btn).html(`
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Processing
+                `);
                 await $.ajax({
                     url: `/product-update-order/${orderId}/{{data.project.slug}}?checkout=true`,
                     method: 'POST',
                     contentType: 'application/json',
                 });
+                $(btn).html(currentBtnHtml);
                 $('#slide-container').css({ transform: `translateX(-${1 * 100}%)` });
                 $('.back-btn').attr({ index: 1 });
                 drawOrderEntries();

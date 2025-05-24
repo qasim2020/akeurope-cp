@@ -14,17 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 async function initOverlay() {
-
-    let countryCode;
-    try {
-        const response = await fetch('https://ipwho.is?fields=country_code', { mode: 'cors' });
-        const data = await response.json();
-        countryCode = data.country_code ? data.country_code : 'US';
-    } catch (error) {
-        console.log(error);
-        countryCode = 'US';
-    }
-
+    let countryCode = 'US';
     runGlobal(countryCode);
 }
 

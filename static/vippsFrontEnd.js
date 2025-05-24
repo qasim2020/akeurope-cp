@@ -5,20 +5,30 @@ const vippsBtnMonthly = $('#vipps-btn-monthly').html();
 const getVisibleBtnFirstSlide = function () {
     let visibleBtn;
     const countryCode = localStorage.getItem('countryCode');
-    const monthly = $('[freq].active').attr('freq') === 'once' ? false : true;
-    if (countryCode === 'NO') {
-        if (monthly) {
-            visibleBtn = $('#vipps-btn-monthly');
+    const freqExists = $('[freq]').length > 0;
+    if (freqExists) {
+        const monthly = $('[freq].active').attr('freq') === 'once' ? false : true;
+        if (countryCode === 'NO') {
+            if (monthly) {
+                visibleBtn = $('#vipps-btn-monthly');
+            } else {
+                visibleBtn = $('#vipps-btn-one-time');
+            }
         } else {
-            visibleBtn = $('#vipps-btn-one-time');
+            if (monthly) {
+                visibleBtn = $('#global-monthly-donation');
+            } else {
+                visibleBtn = $('#global-one-time-donation');
+            }
         }
     } else {
-        if (monthly) {
-            visibleBtn = $('#global-monthly-donation');
+        if (countryCode === 'NO') {
+            visibleBtn = $('#vipps-btn-one-time');
         } else {
             visibleBtn = $('#global-one-time-donation');
         }
     }
+
     return visibleBtn;
 }
 
@@ -297,7 +307,7 @@ const handleMonthlyVipps = async (elem, type) => {
                     vippsOverlayStatus = 'closed';
                     $(elem).html(currentBtnHtml);
                 }
-            }); 
+            });
         }
     } catch (error) {
         console.log(error);
@@ -308,7 +318,7 @@ const handleMonthlyVipps = async (elem, type) => {
 const handleOneTimeVipps = async (elem, type) => {
     let currentBtnHtml;
     try {
-        
+
         if (type === 'overlay') {
             const isValid = validateDonationForm();
             if (!isValid) return;
@@ -369,7 +379,7 @@ const handleOneTimeVipps = async (elem, type) => {
                     vippsOverlayStatus = 'closed';
                     $(elem).html(currentBtnHtml);
                 }
-            }); 
+            });
         }
         if (type === 'product') {
             $(elem).html(`
@@ -398,7 +408,7 @@ const handleOneTimeVipps = async (elem, type) => {
                     vippsOverlayStatus = 'closed';
                     $(elem).html(currentBtnHtml);
                 }
-            });  
+            });
         }
     } catch (error) {
         console.log(error);

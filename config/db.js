@@ -52,12 +52,15 @@ async function handleRecurringVippsPayments() {
         createdAt: { $gte: threeDaysAgo }
       }).lean();
       if (alreadyRequestedVipps) {
-        message.push(`${order.orderNo}: Charge response awaited from vipps. \nChargeId: ${alreadyRequestedVipps.chargeId} \nRequested At: ${alreadyRequestedVipps.createdAt}`);
+        message.push(`${order.orderNo}: Charge response awaited from vipps. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nChargeId: ${alreadyRequestedVipps.chargeId} \nRequested At: ${alreadyRequestedVipps.createdAt} `);
       } else {
-        const chargeId = await createRecurringCharge(order._id);
-        if (chargeId) {
-          message.push(`${order.orderNo}: New charge initiated ${order.orderNo} with vipps: \n ${chargeId}, \n vipps should send a webhook back after 2 days.`)
-        }
+        message.push(`Push the charge into live db`);
+        // const chargeId = await createRecurringCharge(order._id);
+        // if (chargeId) {
+        //   message.push(`${order.orderNo}: New charge initiated ${order.orderNo} with vipps: \n ${chargeId}, \n vipps should send a webhook back after 2 days.`)
+        // } else {
+        //   message.push(`Unknown response: ${chargeId}`);
+        // }
       }
     } else {
       message.push(`${order.orderNo}: No action needed \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
@@ -76,7 +79,6 @@ async function fixMissedChargeCapture() {
     console.log(error.message);
     sendErrorToTelegram(error.message);
   }
-
 }
 
 mongoose.connection.on('open', async () => {

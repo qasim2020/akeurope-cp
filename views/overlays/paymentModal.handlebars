@@ -950,8 +950,6 @@
             $('[name=lastName]').val('{{data.donor.lastName}}');
         };
 
-        {{!-- window.onload = startWidget; --}}
-
         function initializePopovers() {
             var popoverTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="popover"]'));
             popoverTriggerList.forEach(function (popoverTriggerEl) {
@@ -1278,6 +1276,7 @@
                     console.log({ orderId, entryId });
                     return console.error('Order Id and entry Id are required');
                 }
+                $('.donation-amount').html(`<span class="spinner-border spinner-border-sm ms-2" role="status"></span>`);
                 await $.ajax({
                     url: `/widget-update-order/${orderId}/{{data.project.slug}}?entryId=${entryId}&subscriptions=empty`,
                     method: 'POST',
@@ -1637,17 +1636,25 @@
         $('.back-btn').on('click', async function (e) {
             try {
                 const index = Number($(this).attr('index'));
+                $('.back-btn').attr({ index: index - 1 });
+                $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
                 if (index === 1) {
                     const orderId = $('#project-entries').attr('order-id');
+                    const btn = getVisibleBtnFirstSlide();
+                    const currentBtnHtml = $(btn).html();
+                    $(btn).html(`
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Processing
+                    `);
                     await $.ajax({
                         url: `/widget-update-order/${orderId}/{{data.project.slug}}?checkin=true`,
                         method: 'POST',
                         contentType: 'application/json',
                     });
+                    $(btn).html(currentBtnHtml);
                     drawOrderEntries();
+                    refreshDropdowns();
                 }
-                $('.back-btn').attr({ index: index - 1 });
-                $('#slide-container').css({ transform: `translateX(-${(index - 1) * 100}%)` });
             } catch (error) {
                 console.log(error);
                 alert('Order expired. Please refresh your browser.');
@@ -1657,14 +1664,21 @@
         const saveDonationAmount = async function (elem) {
             try {
                 const orderId = $('#project-entries').attr('order-id');
+                const btn = getVisibleBtnFirstSlide();
+                const currentBtnHtml = $(btn).html();
+                $(btn).html(`
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Processing
+                `);
                 await $.ajax({
                     url: `/widget-update-order/${orderId}/{{data.project.slug}}?checkout=true`,
                     method: 'POST',
                     contentType: 'application/json',
                 });
+                $(btn).html(currentBtnHtml);
+                drawOrderEntries();
                 $('#slide-container').css({ transform: `translateX(-${1 * 100}%)` });
                 $('.back-btn').attr({ index: 1 });
-                drawOrderEntries();
                 drawTotalCosts(await getOrderData(orderId));
             } catch (error) {
                 const visiblebtn = getVisibleBtnFirstSlide();

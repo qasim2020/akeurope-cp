@@ -367,6 +367,8 @@
 
     #project-card {
         min-height: 500px;
+        border-radius: 0px;
+        width: 100%;
     }
 
     #products-selected {
@@ -384,6 +386,7 @@
     #slide-parent {
         box-shadow: none !important;
         margin-top: -5px;
+        width: 100%;
     }
 
     .logo-container {
@@ -397,7 +400,7 @@
         height: 40px;
     }
 
-    @media (min-width: 768px) {
+    @media (min-width: 844px) {
         #payment-overlay {
             position: fixed;
             top: 0;
@@ -413,12 +416,13 @@
 
         #project-card {
             min-height: 580px;
-            width: 500px;
+            border-radius: 1rem;
+            max-width: 500px;
         }
 
         #product-entries,
         #project-entries {
-            height: 430px;
+            max-height: 430px;
             overflow: scroll;
         }
 
@@ -426,6 +430,7 @@
             padding: 0px;
             margin: 0px;
             max-width: 320px;
+            width: 41.6667%;
         }
 
         #slide-wrapper {
