@@ -1163,8 +1163,7 @@
 
         const drawTotalCosts = async function (order) {
             $('#monthly-products-list, #one-time-products-list').html('');
-
-            if (order.totalCost === 0) {
+            if (!order.totalCost) {
                 const html = '<h3 class="fw-normal text-center mt-4">No beneficiary selected.</h3>';
                 $('#monthly-products-list').prepend(html);
                 $('#one-time-products-list').prepend(html);

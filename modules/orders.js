@@ -61,7 +61,7 @@ const calculationOnProject = async (projectOrdered, requestedCurrencyRate) => {
 
     const currencyRates = await getCurrencyRates(requestedCurrencyRate);
     const currencyRate = parseFloat(currencyRates.rates[projectOriginal.currency].toFixed(2));
-    const foreignRate = currencyRate == 1 ? currencyRate : (currencyRate - (currencyRate * 0.05));
+    const foreignRate = currencyRate == 1 ? currencyRate : (currencyRate - (currencyRate * 0.035));
 
     let allEntries = await Promise.all(projectOrdered.entries.map((entry) => DynamicModel.findById(entry.entryId).lean()));
 

@@ -24,8 +24,8 @@ async function changeProductsCurrency(products, newCurrency, baseCurrency) {
 
     const productList = products.map((val) => {
         const convertedPrices = val.variants?.map((variant) => {
-            const price = parseFloat(variant.price / currencyRate).toFixed(2);
-            if (!price || price === 'Infinity') throw new Error(`${newCurrency} is not supported: ${price}`);
+            let price = parseFloat(variant.price / currencyRate).toFixed(2);
+            if (!price || price === 'Infinity') price = 0;
             return {
                 ...variant,
                 price,
