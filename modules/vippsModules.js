@@ -125,6 +125,7 @@ const getVippsChargeNUserInfo = async (orderId) => {
         try {
             const responseUserInfo = await axios.get(responseAgreement.data.userinfoUrl, headers);
             const user = responseUserInfo.data;
+            const address = user.address;
             donor = {
                 firstName: user.given_name,
                 lastName: user.family_name,

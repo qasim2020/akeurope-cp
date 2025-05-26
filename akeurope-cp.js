@@ -141,7 +141,7 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 //         const Subscription = require('./models/Subscription');
 //         const order = (await Order.findOne({orderNo: orderNo}).lean() ) || (await Subscription.findOne({orderNo: orderNo}).lean());
 //         if (!order) throw new Error('order not found:' + order);
-//         await vippsChargeCaptured(order._id);
+//         await successfulSubscriptionPayment(order._id);
 //         res.status(200).send('Done');
 //     } catch (error) {
 //         console.log(error);

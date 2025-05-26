@@ -34,7 +34,7 @@ async function handleRecurringVippsPayments() {
 
   const orders = await Order.find(query).select('_id orderNo vippsAgreementId createdAt').lean();
   const subscriptions = await Subscription.find(query).select('_id orderNo vippsAgreementId createdAt').lean();
-  const combined = [...orders, ...subscriptions].sort((a,b) => a.orderNo - b.orderNo);
+  const combined = [...orders, ...subscriptions].sort((a, b) => a.orderNo - b.orderNo);
   const combinedOrderNos = combined.map(order => order.orderNo);
   let message = [];
   message.push(`Found ${combined.length} orders on vipps-charges; ${combinedOrderNos.join(', ')}`);
@@ -84,13 +84,7 @@ async function fixMissedChargeCapture() {
 mongoose.connection.on('open', async () => {
   console.log('handle recurring payments started...');
 
-  // await fixMissedChargeCapture();
   await handleRecurringVippsPayments();
-  // await remove600Children();
-  // await resetGazaOrphanPricesTo600();
-
-  // await Order.deleteMany({status: 'draft'});
-  // await Subscription.deleteMany({status: 'draft'});
 
   setInterval(async () => {
     try {
