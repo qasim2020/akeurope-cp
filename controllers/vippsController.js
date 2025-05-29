@@ -370,6 +370,8 @@ exports.createVippsPaymentIntentWidget = async (req, res) => {
 
         const amount = Math.max(100, Math.round(order.totalCost * 100));
 
+        const projectNames = order.projects.map(proj => slugToString(proj.slug)).join(', ');
+
         const reference = uuidv4();
         order.vippsReference = reference;
         await order.save();
@@ -388,7 +390,7 @@ exports.createVippsPaymentIntentWidget = async (req, res) => {
             profile: {
                 scope: 'name phoneNumber email address',
             },
-            paymentDescription: `Order - ${order.orderNo}`,
+            paymentDescription: `${projectNames} # ${order.orderNo}`,
         });
         const token = await getVippsToken();
         const config = await getConfig(`${process.env.VIPPS_API_URL}/epayment/v1/payments`, data, token);
@@ -403,7 +405,6 @@ exports.createVippsPaymentIntentWidget = async (req, res) => {
         res.status(400).send(error.message);
     }
 };
-
 
 exports.createVippsPaymentIntentProduct = async (req, res) => {
     try {
@@ -436,7 +437,7 @@ exports.createVippsPaymentIntentProduct = async (req, res) => {
             profile: {
                 scope: 'name phoneNumber email address',
             },
-            paymentDescription: `Order - ${order.orderNo}`,
+            paymentDescription: `Qurbani 2025`,
             receipt: await makeVippsReceipt(orderId, order.products)
         });
         const token = await getVippsToken();
@@ -471,6 +472,8 @@ exports.createVippsSetupIntentWidget = async (req, res) => {
         if (order.currency != 'NOK') throw new Error('Vipps works for Norway only.');
 
         const amount = Math.max(100, Math.round(order.totalCostSingleMonth * 100));
+
+        const projectNames = order.projects.map(proj => slugToString(proj.slug)).join(', ');
  
         const payload = {
             pricing: {
@@ -484,7 +487,7 @@ exports.createVippsSetupIntentWidget = async (req, res) => {
             },
             merchantRedirectUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-setup-status/${order._id}`,
             merchantAgreementUrl: `${process.env.CUSTOMER_PORTAL_URL}/vipps-setup-status/${order._id}`,
-            productName: `${slugToString(order.projects?.[0]?.slug) || 'Order'} # ${order.orderNo}`,
+            productName: `${projectNames} # ${order.orderNo}`,
             phoneNumber: null,
             scope: 'name phoneNumber email address',
             externalId: order._id.toString(),

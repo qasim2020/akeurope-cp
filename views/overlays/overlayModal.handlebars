@@ -1407,6 +1407,7 @@
                 } else {
                     currentBtnHtml = globalBtnOneTime;
                 }
+                $(elem).html(`<span class="spinner-border spinner-border-sm me-2" role="status"></span> Processing`);
                 const order = await $.ajax({
                     url: `/overlay-create-order/{{data.project.slug}}?countryCode=${countryCode}&total=${total}&monthly=${monthly}`,
                     method: 'POST',
@@ -1415,6 +1416,7 @@
                 $('#project-card').attr({ 'order-id': order._id, 'monthly': order.monthlySubscription });
                 $('#slide-container').css({ transform: `translateX(-${1 * 100}%)` });
                 $('.back-btn').attr({ index: 1 });
+                $(elem).html(currentBtnHtml);
             } catch (error) {
                 const visiblebtn = getVisibleBtnFirstSlide();
                 const currentBtnHtml = $(visiblebtn).html();
