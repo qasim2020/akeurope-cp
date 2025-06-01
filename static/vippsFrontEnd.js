@@ -254,7 +254,7 @@ const handleMonthlyVipps = async (elem, type) => {
             $(elem).html(`
                 <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
                 <span class="text-white fs-3 py-2">Processing</span>
-            `);
+            `).attr({disabled: true});
             currentBtnHtml = vippsBtnMonthly;
             const url = `/create-vipps-setup-intent`;
             const body = {
@@ -263,6 +263,7 @@ const handleMonthlyVipps = async (elem, type) => {
                 project: $('#project-card').attr('project-slug'),
             };
             const data = await ajaxPost(url, body);
+            $(elem).attr({disabled: false}); 
             if (data) {
                 if (!isMobileDevice()) {
                     vippsOverlayStatus = 'opened';
@@ -288,13 +289,14 @@ const handleMonthlyVipps = async (elem, type) => {
             $(elem).html(`
                 <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
                 <span class="text-white fs-3 py-2">Processing</span>
-            `);
+            `).attr({disabled: true});
             currentBtnHtml = vippsBtnMonthly;
             const url = `/create-vipps-setup-intent-widget`;
             const body = {
                 orderId: $('#project-entries').attr('order-id'),
             };
             const data = await ajaxPost(url, body);
+            $(elem).attr({disabled: false}); 
             if (data) {
                 if (!isMobileDevice()) {
                     vippsOverlayStatus = 'opened';
@@ -329,7 +331,7 @@ const handleOneTimeVipps = async (elem, type) => {
             $(elem).html(`
                 <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
                 <span class="text-white fs-3 py-2">Processing</span>
-            `);
+            `).attr({disabled: true});
             currentBtnHtml = vippsBtnOneTime;
             const url = `/create-vipps-payment-intent`;
             const body = {
@@ -338,6 +340,7 @@ const handleOneTimeVipps = async (elem, type) => {
                 project: $('#project-card').attr('project-slug'),
             };
             const data = await ajaxPost(url, body);
+            $(elem).attr({disabled: false});
             if (data) {
                 if (!isMobileDevice()) {
                     vippsOverlayStatus = 'opened';
@@ -360,13 +363,14 @@ const handleOneTimeVipps = async (elem, type) => {
             $(elem).html(`
                 <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
                 <span class="text-white fs-3 py-2">Processing</span>
-            `);
+            `).attr({disabled: true});
             currentBtnHtml = vippsBtnOneTime;
             const url = `/create-vipps-payment-intent-widget`;
             const body = {
                 orderId: $('#project-entries').attr('order-id'),
             };
             const data = await ajaxPost(url, body);
+            $(elem).attr({disabled: false}); 
             if (data) {
                 if (!isMobileDevice()) {
                     vippsOverlayStatus = 'opened';
@@ -389,13 +393,14 @@ const handleOneTimeVipps = async (elem, type) => {
             $(elem).html(`
                 <span class="spinner-border spinner-border-sm me-2 text-white" role="status"></span>
                 <span class="text-white fs-3 py-2">Processing</span>
-            `);
+            `).attr({disabled: true});
             currentBtnHtml = vippsBtnOneTime;
             const url = `/create-vipps-payment-intent-product`;
             const body = {
                 orderId: $('#product-entries').attr('order-id'),
             };
             const data = await ajaxPost(url, body);
+            $(elem).attr({disabled: false});
             if (data) {
                 if (!isMobileDevice()) {
                     vippsOverlayStatus = 'opened';
