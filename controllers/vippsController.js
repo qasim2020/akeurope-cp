@@ -532,10 +532,12 @@ exports.pollVippsSetupIntent = async (req, res) => {
             try {
                 await handleVippsEvent(event, orderId);
             } catch (e) {
+                console.log(e.message);
                 sendErrorToTelegram(e.message);
             }
         } else {
-            console.log(mappedStatus, statusMap[order.status]);
+            console.log(mappedStatus);
+            console.log(statusMap[order.status]);
         }
         order =
             (await Order.findOne({ _id: orderId, createdAt: { $gte: twoHoursAgo } }).lean()) ||
@@ -574,6 +576,7 @@ exports.pollVippsPaymentIntent = async (req, res) => {
             } catch (e) {
                 console.log(mappedStatus);
                 console.log(event);
+                console.log(e.message);
                 sendErrorToTelegram(e.message);
             }
         }

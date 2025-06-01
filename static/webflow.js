@@ -1,17 +1,18 @@
-document.addEventListener('DOMContentLoaded', function () {
-    if (typeof jQuery === 'undefined') {
-        var script = document.createElement('script');
-        script.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
-        script.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
-        script.crossOrigin = 'anonymous';
-        script.onload = function () {
-            initOverlay();
-        };
-        document.body.appendChild(script);
-    } else {
-        initOverlay();
-    }
-});
+// document.addEventListener('DOMContentLoaded', function () {
+//     if (typeof jQuery === 'undefined') {
+//         var script = document.createElement('script');
+//         script.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
+//         script.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
+//         script.crossOrigin = 'anonymous';
+//         script.onload = function () {
+//             initOverlay();
+//         };
+//         document.body.appendChild(script);
+//     } else {
+//         initOverlay();
+//     }
+// });
+initOverlay();
 
 async function initOverlay() {
     let countryCode = 'US';

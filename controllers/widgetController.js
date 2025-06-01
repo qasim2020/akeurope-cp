@@ -58,6 +58,7 @@ exports.overlay = async (req, res) => {
                     layout: false,
                     data: {
                         project: {
+                            name: req.query.products,
                             slug: req.params.slug,
                             products: req.query.products,
                         },

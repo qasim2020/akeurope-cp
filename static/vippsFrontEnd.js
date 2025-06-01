@@ -97,6 +97,7 @@ const isMobileDevice = () => {
 const checkVippsPaymentStatus = async (elem, currentBtnHtml, reference) => {
     const projectName = localStorage.getItem('projectName');
     const statusUrl = `/poll-vipps-payment-intent/${reference}`;
+    if (window._vippsPollingInterval) clearInterval(window._vippsPollingInterval);
     function checkPaymentStatus() {
         $.ajax({
             url: statusUrl,
@@ -140,12 +141,14 @@ const checkVippsPaymentStatus = async (elem, currentBtnHtml, reference) => {
     }
     checkPaymentStatus();
     const interval = setInterval(checkPaymentStatus, 1000);
+    window._vippsPollingInterval = interval;
     return interval;
 };
 
 const checkVippsSetupStatus = async (elem, currentBtnHtml, orderId, agreementId) => {
     const projectName = localStorage.getItem('projectName');
     const statusUrl = `/poll-vipps-setup-intent/${orderId}/${agreementId}`;
+    if (window._vippsPollingInterval) clearInterval(window._vippsPollingInterval);
     function checkPaymentStatus() {
         $.ajax({
             url: statusUrl,
@@ -189,6 +192,7 @@ const checkVippsSetupStatus = async (elem, currentBtnHtml, orderId, agreementId)
     }
     checkPaymentStatus();
     const interval = setInterval(checkPaymentStatus, 1000);
+    window._vippsPollingInterval = interval;
     return interval;
 };
 

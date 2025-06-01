@@ -161,5 +161,20 @@ app.get('/error-test', (req, res) => {
     res.status(500).send('This is an error');
 });
 
+const defaultIcons = [
+  'favicon.ico',
+  'apple-touch-icon.png',
+  'apple-touch-icon-precomposed.png',
+  'web-app-manifest-512x512.png',
+  'apple-touch-icon-120x120-precomposed.png',
+  'apple-touch-icon-120x120.png',
+];
+
+defaultIcons.forEach((icon) => {
+  app.get('/' + icon, (req, res) => {
+    res.sendFile(path.join(__dirname, 'static', 'favicon', icon));
+  });
+});
+
 const PORT = 3009;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
