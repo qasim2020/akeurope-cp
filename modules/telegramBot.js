@@ -101,5 +101,17 @@ const sendTelegramMessage = async (message) => {
     }
 };
 
+const sendTelegramMessageInGazaGroup = async (message) => {
+    try {
+        const formattedMessage = `📢 *Notification*\n\n${message}`;
+        await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            chat_id: TELEGRAM_CHAT_GAZA_ID,
+            text: formattedMessage,
+            parse_mode: 'Markdown'
+        });
+    } catch (err) {
+        console.error('Error sending Telegram message:', err);
+    }
+};
 
-module.exports = { sendErrorToTelegram, notifyTelegram, notifyTelegramStripe, sendTelegramMessage };
+module.exports = { sendErrorToTelegram, notifyTelegram, notifyTelegramStripe, sendTelegramMessage, sendTelegramMessageInGazaGroup };

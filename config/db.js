@@ -54,13 +54,16 @@ async function handleRecurringVippsPayments() {
       if (alreadyRequestedVipps) {
         message.push(`${order.orderNo}: Charge response awaited from vipps. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nChargeId: ${alreadyRequestedVipps.chargeId} \nRequested At: ${alreadyRequestedVipps.createdAt} `);
       } else {
-        message.push(`Push the charge into live db`);
-        // const chargeId = await createRecurringCharge(order._id);
-        // if (chargeId) {
-        //   message.push(`${order.orderNo}: New charge initiated ${order.orderNo} with vipps: \n ${chargeId}, \n vipps should send a webhook back after 2 days.`)
-        // } else {
-        //   message.push(`Unknown response: ${chargeId}`);
-        // }
+        if (process.env.ENV === 'test') {
+          message.push(`${order.orderNo}: Test environment - Not creating a charge \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
+        } else {
+          const chargeId = await createRecurringCharge(order._id);
+          if (chargeId) {
+            message.push(`${order.orderNo}: New charge initiated ${order.orderNo} with vipps: \n ${chargeId}, \n vipps should send a webhook back after 2 days.`)
+          } else {
+            message.push(`Unknown response: ${chargeId}`);
+          }
+        }
       }
     } else {
       message.push(`${order.orderNo}: No action needed \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
