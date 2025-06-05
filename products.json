@@ -40,28 +40,6 @@
                         "price": 13100
                     }
                 ]
-            },
-            {
-                "name": "Qurbani in Uganda 🇺🇬",
-                "desc": "Over 29% of children in Uganda are suffering from stunting, your Qurbani will provide vital protein to these malnourished families.",
-                "id": "qurbani-uganda",
-                "variants": [
-                    {
-                        "name": "Goat in Uganda",
-                        "id": "goat-in-uganda",
-                        "price": 900
-                    },
-                    {
-                        "name": "1/7 Cow in Uganda",
-                        "id": "cow-share-in-uganda",
-                        "price": 1300
-                    },
-                    {
-                        "name": "Cow in Uganda",
-                        "id": "cow-in-uganda",
-                        "price": 8800
-                    }
-                ]
             }
         ]
     },

@@ -26,9 +26,12 @@ const {
 
 exports.wScript = async (req, res) => {
     try {
+        const countryCode = req.headers['cf-ipcountry'] || 'NO';
         const scriptPath = path.join(__dirname, '..', 'static', 'webflow.js');
         const file = await fs.readFile(scriptPath, 'utf8');
-        const scriptContent = file.replaceAll('__CUSTOMER_PORTAL_URL__', process.env.CUSTOMER_PORTAL_URL);
+        const scriptContent = file
+            .replaceAll('__CUSTOMER_PORTAL_URL__', process.env.CUSTOMER_PORTAL_URL)
+            .replaceAll('__COUNTRY_CODE__', countryCode);
         res.setHeader('Content-Type', 'application/javascript');
         res.send(scriptContent);
     } catch (error) {
