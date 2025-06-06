@@ -44,7 +44,7 @@
         },
         error: function (xhr, status, error) {
           alert(error.message || 'Server Error - please refresh window');
-          clearInterval(interval);
+          clearInterval(intervalOwn);
         }
       });
     }

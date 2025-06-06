@@ -3,6 +3,7 @@ initOverlay();
 async function initOverlay() {
     let countryCode = '__COUNTRY_CODE__';
     runGlobal(countryCode);
+    // await tracker();
 }
 
 function runGlobal(countryCode) {
@@ -200,4 +201,26 @@ function showOverlay(elem) {
             hideLoadingOverlay();
         }
     });
+}
+
+async function tracker() {
+    const referrer = document.referrer;
+    const query = new URLSearchParams(window.location);
+    console.log(query.toString());
+    $.ajax({
+        url: '__CUSTOMER_PORTAL_URL__/tracker',
+        type: 'POST',
+        data: {
+            referrer: referrer,
+            countryCode: '__COUNTRY_CODE__',
+            webflow: true,
+            query: query.toString(),
+        },
+        success: function (response) {
+            console.log('Tracking successful:', response);
+        },
+        error: function (error) {
+            console.error('Tracking failed:', error);
+        }
+    })
 }

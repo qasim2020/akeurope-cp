@@ -23,25 +23,8 @@
                         "price": 6300
                     }
                 ]
-            },
-            {
-                "name": "Qurbani in Egypt 🇪🇬",
-                "desc": "This year, we are performing Qurbani for Gaza in Egypt. The animals are slaughtered in Egypt, and the meat is packed in durable, canned boxes that can be stored for up to two years. When the border opens, the meat will be delivered into Gaza. Some of it will also be distributed to Palestinian refugees currently living in Egypt.",
-                "id": "qurbani-egypt",
-                "variants": [
-                    {
-                        "name": "1/7 Cow Share in Egypt",
-                        "id": "cow-share-in-egypt",
-                        "price": 1900
-                    },
-                    {
-                        "name": "Cow in Egypt",
-                        "id": "cow-in-egypt",
-                        "price": 13100
-                    }
-                ]
             }
-        ]
+	]
     },
     "random": {
         "currency": "NOK",

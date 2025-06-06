@@ -631,3 +631,20 @@ exports.linkOrderToCustomer = async (req, res) => {
         res.status(400).send(error.message || error || 'Server Error');
     }
 };
+
+exports.tracker = async (req, res) => {
+    try {
+        const { referrer, countryCode, webflow, query } = req.body;
+
+        // Log the tracking data
+        console.log(`Tracking data received: Referrer: ${referrer}, Country Code: ${countryCode}, Webflow: ${webflow}`);
+        console.log('Query Parameters:', req.query);
+
+        // Here you can implement your tracking logic, e.g., save to a database
+
+        res.status(200).send('Tracking successful');
+    } catch (error) {
+        console.error('Tracker error:', error);
+        res.status(500).send(error.message || 'Server Error');
+    }
+}
