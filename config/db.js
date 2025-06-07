@@ -87,6 +87,9 @@ async function fixMissedChargeCapture() {
 mongoose.connection.on('open', async () => {
   console.log('handle recurring payments started...');
 
+  const orderId = "67f6da4fea111781a8b490f6";
+  const { updateOrderMonthsVsVippsCharges } = require('../modules/orders');
+  await updateOrderMonthsVsVippsCharges(orderId);
   await handleRecurringVippsPayments();
 
   setInterval(async () => {

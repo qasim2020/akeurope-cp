@@ -52,16 +52,25 @@ const createPagination = ({ req, totalEntries, fieldFilters, filtersQuery, pageT
     };
 };
 
-const calculationOnProject = async (projectOrdered, requestedCurrencyRate) => {
+const calculationOnProject = async (projectOrdered, requestedCurrencyRate, orderDate = null) => {
     const projectOriginal = await Project.findOne({
         slug: projectOrdered.slug,
     }).lean();
 
     const DynamicModel = await createDynamicModel(projectOrdered.slug);
 
-    const currencyRates = await getCurrencyRates(requestedCurrencyRate);
+    const currencyRates = await getCurrencyRates(requestedCurrencyRate, orderDate);
     const currencyRate = parseFloat(currencyRates.rates[projectOriginal.currency].toFixed(2));
-    const foreignRate = currencyRate == 1 ? currencyRate : (currencyRate - (currencyRate * 0.035));
+    
+    let factorRate;
+    
+    if (orderDate < new Date('2025-05-25')) {
+        factorRate = 0.05;
+    } else {
+        factorRate = 0.035;
+    }
+
+    const foreignRate = currencyRate == 1 ? currencyRate : (currencyRate - (currencyRate * factorRate));
 
     let allEntries = await Promise.all(projectOrdered.entries.map((entry) => DynamicModel.findById(entry.entryId).lean()));
 
@@ -304,7 +313,7 @@ const countSubscribedEntries = (entries) => {
 const calculateOrder = async (order) => {
     order.projects = await Promise.all(
         order.projects.map(async (val) => {
-            const { project, allEntries } = await calculationOnProject(val, order.currency);
+            const { project, allEntries } = await calculationOnProject(val, order.currency, order.createdAt);
             Object.assign(project, {
                 select: countSubscribedEntries(allEntries),
                 allEntries,
@@ -702,7 +711,8 @@ const updateOrderMonthsVsVippsCharges = async (orderId) => {
     
     let order = await Order.findById(orderId).lean();
     const vippsCharges = await getVippsSubscriptionsByOrderId(order.vippsAgreementId);
-
+    console.log(JSON.stringify(vippsCharges, null, 2));
+    console.log(JSON.stringify(order, null, 2));
     for (const minOrder of order.projects) {
         const projectSlug = minOrder.slug;
         order = await Order.findOneAndUpdate(
@@ -712,8 +722,6 @@ const updateOrderMonthsVsVippsCharges = async (orderId) => {
         );
     }
     
-    // TODO: Add logic to update the total costs based on the new months value
-
     const calculatedOrder = await calculateOrder(order);
     await addPaymentsToOrder(calculatedOrder);
     return true;

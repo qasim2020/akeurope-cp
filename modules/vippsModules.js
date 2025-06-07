@@ -498,7 +498,13 @@ const createRecurringCharge = async (orderId) => {
             throw new Error(`Order ${order.orderNo} do not have a vipps agreement id - strange`);
         }
         const token = await getVippsToken();
-        const amount = (order.total || order.totalCostSingleMonth) * 100;
+        const customer = await Customer.findById(order.customerId).lean();
+        const donor = await Donor.findOne({email: customer.email, 'vippsAgreements.id': order.vippsAgreementId}).lean();
+        if (!donor) {
+            throw new Error(`Donor agreement not found for customer ${customer.email} & vippsAgreementId ${order.vippsAgreementId}`);
+        }
+        const agreement = donor.vippsAgreements.find((a) => a.id === order.vippsAgreementId);
+        const amount = agreement?.pricing?.amount;
         const due = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         const payload = {
             amount,
