@@ -711,6 +711,8 @@ const updateOrderMonthsVsVippsCharges = async (orderId) => {
             { new: true, lean: true },
         );
     }
+    
+    // TODO: Add logic to update the total costs based on the new months value
 
     const calculatedOrder = await calculateOrder(order);
     await addPaymentsToOrder(calculatedOrder);

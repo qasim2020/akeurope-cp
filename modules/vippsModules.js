@@ -510,11 +510,9 @@ const createRecurringCharge = async (orderId) => {
             orderId: uuidv4(),
             externalId: order._id.toString(),
         };
-        console.log(payload);
         const url = `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${order.vippsAgreementId}/charges`;
         const config = await getConfig(url, payload, token);
         const response = await axios.request(config);
-        console.log(response.data);
         const chargeRequest = new VippsChargeRequest({
             orderId: order._id,
             payload: payload,
