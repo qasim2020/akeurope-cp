@@ -8,11 +8,6 @@
                 "id": "qurbani-pakistan",
                 "variants": [
                     {
-                        "name": "Goat in Pakistan",
-                        "id": "goat-in-pakistan",
-                        "price": 2100
-                    },
-                    {
                         "name": "1/7 Cow Share in Pakistan",
                         "id": "cow-share-in-pakistan",
                         "price": 900

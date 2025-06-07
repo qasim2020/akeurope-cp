@@ -7,8 +7,9 @@ async function initOverlay() {
 }
 
 function runGlobal(countryCode) {
+    
     if (countryCode === 'NO') {
-        $('.vipps-number').css({display: 'none'});
+        $('.vipps-number').css({display: 'block'});
     };
 
     $('.donate').on('click', function (e) {
