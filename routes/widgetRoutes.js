@@ -22,6 +22,6 @@ router.post('/create-setup-intent/:orderId/:slug', notifyTelegram, widgetControl
 router.post('/create-subscription/:orderId/:slug', notifyTelegram, widgetController.createSubscription);
 router.post('/create-one-time/:orderId/:slug', notifyTelegram, widgetController.createOneTime);
 router.post('/widget-order-customer/:orderId/:customerId', notifyTelegram, widgetController.linkOrderToCustomer);
-router.post('/tracker', widgetController.tracker);
+router.post('/widget-loader', widgetController.tracker);
 
 module.exports = router;

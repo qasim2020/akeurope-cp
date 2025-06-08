@@ -3,13 +3,13 @@ initOverlay();
 async function initOverlay() {
     let countryCode = '__COUNTRY_CODE__';
     runGlobal(countryCode);
-    // await tracker();
+    await tracker();
 }
 
 function runGlobal(countryCode) {
-    
+
     if (countryCode === 'NO') {
-        $('.vipps-number').css({display: 'block'});
+        $('.vipps-number').css({ display: 'block' });
     };
 
     $('.donate').on('click', function (e) {
@@ -110,7 +110,6 @@ function attachIframe(elem, code) {
     const partnerPortal = $(elem).attr('partnerSlug');
 
     if (partnerPortal) {
-        console.log(partnerPortal);
         return;
     }
 
@@ -155,6 +154,7 @@ function showOverlay(elem) {
 
     const slug = $(elem).attr('partnerSlug') || $(elem).attr('projectSlug');
     const $iframe = $(`#iframe-${slug}`);
+    
     $iframe[0].contentWindow.postMessage('goingVisible', '*');
 
     $('#iframe-loading-overlay').remove();
@@ -205,23 +205,42 @@ function showOverlay(elem) {
 }
 
 async function tracker() {
-    const referrer = document.referrer;
-    const query = new URLSearchParams(window.location);
-    console.log(query.toString());
-    $.ajax({
-        url: '__CUSTOMER_PORTAL_URL__/tracker',
-        type: 'POST',
-        data: {
-            referrer: referrer,
-            countryCode: '__COUNTRY_CODE__',
-            webflow: true,
-            query: query.toString(),
+
+    const params = new URLSearchParams(window.location.search);
+
+    const utm = {
+        source: params.get('utm_source'),
+        medium: params.get('utm_medium'),
+        campaign: params.get('utm_campaign'),
+        term: params.get('utm_term'),
+        content: params.get('utm_content')
+    };
+
+    const data = {
+        referrer: document.referrer || null,
+        fullUrl: window.location.href,
+        hostname: window.location.hostname,
+        path: window.location.pathname,
+        utm: Object.fromEntries(new URLSearchParams(window.location.search)),
+        language: navigator.language,
+        userAgent: navigator.userAgent,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        screen: {
+            width: window.innerWidth,
+            height: window.innerHeight,
         },
+        platform: navigator.platform,
+        utm,
+    };
+
+    $.ajax({
+        url: '__CUSTOMER_PORTAL_URL__/widget-loader',
+        type: 'POST',
+        data,
         success: function (response) {
-            console.log('Tracking successful:', response);
         },
         error: function (error) {
-            console.error('Tracking failed:', error);
+            console.error(error);
         }
     })
 }

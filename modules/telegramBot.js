@@ -5,6 +5,13 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const sendErrorToTelegram = async function (errorObj) {
+
+
+    if (process.env.ENV === 'test') {
+        console.log('Skipping Telegram message in test environment:', message);
+        return;
+    }
+
     let errorMessage;
 
     // Check if errorObj is an object, then stringify
@@ -89,6 +96,12 @@ const notifyTelegramStripe = async (req, res, next) => {
 
 const sendTelegramMessage = async (message) => {
     try {
+
+        if (process.env.ENV === 'test') {
+            console.log('Skipping Telegram message in test environment:', message);
+            return;
+        }
+
         const formattedMessage = `📢 *Notification*\n\n${message}`;
 
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {

@@ -29,6 +29,7 @@ const {
     createOneTimeModule,
     createPaymentIntentModule,
 } = require('../modules/stripe');
+const { Tracker } = require('../models/Tracker');
 
 exports.widgets = async (req, res) => {
     try {
@@ -634,19 +635,39 @@ exports.linkOrderToCustomer = async (req, res) => {
 
 exports.tracker = async (req, res) => {
     try {
-        const { referrer, countryCode, webflow, query } = req.body;
 
-        // Log the tracking data
-        console.log(`Tracking data received: Referrer: ${referrer}, Country Code: ${countryCode}, Webflow: ${webflow}`);
-        console.log('Query Parameters:', req.query);
+        const body = req.body;
 
-        // Here you can implement your tracking logic, e.g., save to a database
+        const { referrer, fullUrl, hostname, path, utm, language, userAgent, timezone, screen, platform } = body;
 
-        res.set('Access-Control-Allow-Origin', '*'); // or specific origin
+        const geo = {
+            ip: req.headers['cf-connecting-ip'],
+            country: req.headers['cf-ipcountry'],
+            ray: req.headers['cf-ray'],
+            visitor: req.headers['cf-visitor']
+        };
+
+        const tracker = new Tracker({
+            referrer: referrer || null,
+            fullUrl: fullUrl || null,
+            hostname: hostname || null,
+            path: path || null,
+            utm: utm ? JSON.stringify(utm) : null,
+            language: language || null,
+            userAgent: userAgent || null,
+            timezone: timezone || null,
+            screen: screen ? JSON.stringify(screen) : null,
+            platform: platform || null,
+            utm: utm || null,
+            geo: geo || null,
+        });
+
+        await tracker.save();
+
+        res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET, POST');
         res.set('Access-Control-Allow-Headers', 'Content-Type');
-        res.send('This route has custom CORS headers');
-        res.status(200).send('Tracking successful');
+        res.status(200).send('Done.');
     } catch (error) {
         console.error('Tracker error:', error);
         res.status(500).send(error.message || 'Server Error');
