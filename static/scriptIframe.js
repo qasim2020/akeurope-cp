@@ -1,18 +1,5 @@
 (function () {
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof jQuery === 'undefined') {
-            var script = document.createElement('script');
-            script.src = 'https://code.jquery.com/jquery-3.7.1.min.js';
-            script.integrity = 'sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=';
-            script.crossOrigin = 'anonymous';
-            script.onload = function () {
-                __PROJECT_CAMEL_CASE__();
-            };
-            document.body.appendChild(script);
-        } else {
-            __PROJECT_CAMEL_CASE__();
-        }
-    });
+    __PROJECT_CAMEL_CASE__();
 
     function __PROJECT_CAMEL_CASE__() {
 

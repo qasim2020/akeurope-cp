@@ -308,7 +308,7 @@
         })
         .on('load', function () {
           $(this).animate({ opacity: 1 }, 300);
-          $(this).contentWindow.postMessage('goingVisible', '*');
+          this.contentWindow.postMessage('goingVisible', '*');
         });
 
       $(this).animate({ opacity: 1 }, 300).promise().done(function () {
