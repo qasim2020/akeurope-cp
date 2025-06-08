@@ -8,7 +8,7 @@ const sendErrorToTelegram = async function (errorObj) {
 
 
     if (process.env.ENV === 'test') {
-        console.log('Skipping Telegram message in test environment:', message);
+        console.log('Skipping Telegram message in test environment');
         return;
     }
 
@@ -98,7 +98,7 @@ const sendTelegramMessage = async (message) => {
     try {
 
         if (process.env.ENV === 'test') {
-            console.log('Skipping Telegram message in test environment:', message);
+            console.log('Skipping Telegram message in test environment');
             return;
         }
 
