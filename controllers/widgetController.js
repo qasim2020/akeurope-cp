@@ -213,12 +213,15 @@ exports.createNewOrder = async (req, res) => {
 
         const updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 1);
 
+        const cloudlfareIp = req.headers['cf-connecting-ip'];
+
         let order = new Order({
             customerId: customer._id,
             currency: country.currency.code,
             projects: [updatedProject],
             monthlySubscription: true,
             countryCode: country.code,
+            cloudflareIp: cloudlfareIp,
         });
 
         await order.save();

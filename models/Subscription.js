@@ -32,6 +32,7 @@ const SubscriptionRecordSchema = new mongoose.Schema(
         countryCode: { type: String, required: true },
         projectSlug: { type: String, required: true },
         products: { type: [ProductSchema], default: [], required: false },
+        cloudflareIp: { type: String, required: false, index: false },
         status: {
             type: String,
             enum: [

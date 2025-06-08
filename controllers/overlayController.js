@@ -135,6 +135,8 @@ exports.createNewOrder = async (req, res) => {
             throw new Error(`Total cannot be lower than ${minAmountInUserCurrency} ${country.currency.code}`);
         }
 
+        const cloudflareIp = req.headers['cf-connecting-ip'];
+
         let order = new Subscription({
             customerId: customer._id,
             currency: country.currency.code,
@@ -144,6 +146,7 @@ exports.createNewOrder = async (req, res) => {
             countryCode: country.code,
             projectSlug: req.params.slug,
             status: 'pending payment',
+            cloudflareIp,
         });
 
         await order.save();

@@ -257,6 +257,7 @@ exports.createVippsPaymentIntent = async (req, res) => {
         if (!(process.env.ENV === 'test') && total < 10) throw new Error('Order cost can not be lower than 10 NOK.');
         if (currency != 'NOK') throw new Error('Vipps works for Norway only.');
         if (!projects.includes(slug)) throw new Error('Project is not listed.');
+        const cloudflareIp = req.headers['cf-connecting-ip'];
         let order = new Subscription({
             customerId: process.env.TEMP_CUSTOMER_ID,
             currency: 'NOK',
@@ -266,6 +267,7 @@ exports.createVippsPaymentIntent = async (req, res) => {
             countryCode: 'NO',
             projectSlug: slug,
             status: 'draft',
+            cloudflareIp,
         });
         const reference = uuidv4();
         order.vippsReference = reference;
@@ -305,6 +307,7 @@ exports.createVippsSetupIntent = async (req, res) => {
         if (!(process.env.ENV === 'test') && total < 10) throw new Error('Order cost can not be lower than 10 NOK.');
         if (currency != 'NOK') throw new Error('Vipps works for Norway only.');
         if (!projects.includes(slug)) throw new Error('Project is not listed.');
+        const cloudflareIp = req.headers['cf-connecting-ip'];
         let order = new Subscription({
             customerId: process.env.TEMP_CUSTOMER_ID,
             currency: 'NOK',
@@ -313,6 +316,7 @@ exports.createVippsSetupIntent = async (req, res) => {
             monthlySubscription: true,
             countryCode: 'NO',
             projectSlug: slug,
+            cloudflareIp,
             status: 'draft',
         });
         await order.save();

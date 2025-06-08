@@ -11,28 +11,11 @@ const OrderSchema = new mongoose.Schema(
         customerId: {
             type: mongoose.Schema.Types.ObjectId,
         },
+        cloudflareIp: { type: String, required: false, index: false },
         vippsAgreementId: { type: String, required: false, index: false },
         vippsReference: { type: String, required: false, index: false },
         status: {
             type: String,
-            status: {
-                type: String,
-                enum: [
-                    'draft',
-                    'aborted',
-                    'cancelled',
-                    'rejected',
-                    'terminated',
-                    'stopped',
-                    'expired',
-                    'authorized',
-                    'pending payment',
-                    'processing',
-                    'paid',
-                    'refunded',
-                ],
-                default: 'draft',
-            },
             default: 'draft',
         },
         currency: {
