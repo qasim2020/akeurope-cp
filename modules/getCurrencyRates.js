@@ -17,8 +17,8 @@ const getCurrencyRates = async (baseCurrency = 'USD', orderDate = null) => {
         const rates = response.data.rates;
 
         currencyRates = await CurrencyRate.findOneAndUpdate(
-            { baseCurrency, date: today }, 
-            { baseCurrency, rates, date: today }, 
+            { baseCurrency, date: givenDate }, 
+            { baseCurrency, rates, date:  givenDate}, 
             { upsert: true, new: true, lean: true }, 
         );
 
