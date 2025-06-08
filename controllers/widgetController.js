@@ -52,7 +52,7 @@ exports.overlay = async (req, res) => {
         const portalUrl = process.env.CUSTOMER_PORTAL_URL;
         const countryCode = req.headers['cf-ipcountry'] || 'NO'
         if (req.query.webflow) {
-            
+
             if (req.query.products === 'qurbani') {
                 res.render('overlays/productModal', {
                     layout: false,
@@ -67,7 +67,7 @@ exports.overlay = async (req, res) => {
                         portalUrl,
                     },
                 });
-                return;     
+                return;
             }
 
             res.render('overlays/overlayModal', {
@@ -86,8 +86,8 @@ exports.overlay = async (req, res) => {
                     portalUrl,
                 },
             });
-            return;    
-           
+            return;
+
         }
         const project = await Project.findOne({ slug: req.params.slug, status: 'active' }).lean();
         if (!project) throw new Error('Project not found');
@@ -237,7 +237,7 @@ exports.createNewOrder = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(400).send( error.message || 'Server error. Could not create new order!' );
+        res.status(400).send(error.message || 'Server error. Could not create new order!');
     }
 };
 
@@ -259,7 +259,7 @@ exports.updateOrder = async (req, res) => {
             }
         }
 
-        if (!['draft', 'cancelled', 'aborted', 'created', 'expired', 'rejected'].includes(order.status)) 
+        if (!['draft', 'cancelled', 'aborted', 'created', 'expired', 'rejected'].includes(order.status))
             throw new Error(`Order can not be edited in ${order.status} mode`);
 
         const checkProject = await Project.findOne({ slug: req.params.slug }).lean();
@@ -394,7 +394,7 @@ exports.updateOrder = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
-        res.status(400).send(error.message || 'Server error. Try refreshing your browser.' );
+        res.status(400).send(error.message || 'Server error. Try refreshing your browser.');
     }
 };
 
@@ -502,7 +502,7 @@ exports.createOneTime = async (req, res) => {
         const email = emailProvided?.toLowerCase();
 
         const donor = await Donor.findOne({ email }).lean();
-        
+
         if (!donor) throw new Error('Donor not found.');
 
         const order = await Order.findOne({ _id: req.params.orderId, customerId: process.env.TEMP_CUSTOMER_ID }).lean();
@@ -642,6 +642,10 @@ exports.tracker = async (req, res) => {
 
         // Here you can implement your tracking logic, e.g., save to a database
 
+        res.set('Access-Control-Allow-Origin', '*'); // or specific origin
+        res.set('Access-Control-Allow-Methods', 'GET, POST');
+        res.set('Access-Control-Allow-Headers', 'Content-Type');
+        res.send('This route has custom CORS headers');
         res.status(200).send('Tracking successful');
     } catch (error) {
         console.error('Tracker error:', error);
