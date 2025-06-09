@@ -422,9 +422,10 @@ const authVippsWebhook = (req, res, next) => {
         return next();
     } else {
         console.log('Invalid Vipps signature');
+        console.log(JSON.stringify(req.body, null, 2));
         return res
             .status(401)
-            .send('Unauthorized: Some hooks are missing credentials but its ok as I am getting some that are valid.');
+            .send('Unauthorized: vipps webhooks initiated from test envmt can fall here.');
     }
 };
 
