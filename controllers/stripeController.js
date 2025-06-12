@@ -271,7 +271,7 @@ async function renewWidgetOrder(req, event) {
     }
 }
 
-exports.renewOrder = async (req, res) => {
+exports.handleStripeWebhook = async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
 

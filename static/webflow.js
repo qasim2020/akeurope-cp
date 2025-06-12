@@ -9,7 +9,7 @@ async function initOverlay() {
 function runGlobal(countryCode) {
 
     if (countryCode === 'NO') {
-        $('.vipps-number').css({ display: 'block' });
+        $('.vipps-number').css({ display: 'none' });
     };
 
     $('.donate').on('click', function (e) {
