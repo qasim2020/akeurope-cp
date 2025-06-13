@@ -14,11 +14,15 @@ exports.login = async (req, res) => {
 
         if (!customer) throw new Error(`User with email: ${email.toLowerCase()} was not found. Please register yourself by clicking on Register Now button.`)
 
-        customer = await Customer.findOne({ email: email.toLowerCase(), password: {$exists: true} });
+        if (process.env.ENV === 'test') {
+            customer = await Customer.findOne({ email: email.toLowerCase() });
+        } else {
+            customer = await Customer.findOne({ email: email.toLowerCase(), password: { $exists: true } });
+        }
 
         if (!customer) throw new Error('You have not yet created a password. Please use Register Now button to create one. Your payments are safely linked with your email address.')
 
-        const loginCondition = process.env.ENV === 'test'? 
+        const loginCondition = process.env.ENV === 'test' ?
             customer :
             customer && (await customer.comparePassword(password));
         if (loginCondition) {
@@ -70,7 +74,7 @@ exports.sendRegistrationLink = async (req, res) => {
         const { name, email: gotEmail } = req.body;
 
         const email = gotEmail.toLowerCase();
-        
+
         const checkCustomer = await Customer.findOne({ email: email, password: { $exists: true } }).lean();
 
         if (checkCustomer) {
@@ -80,7 +84,7 @@ exports.sendRegistrationLink = async (req, res) => {
                     `An account with ${email} already exists. Try signing in with your email/ password or use Forgot-Password page to change your password`,
                 );
         }
-        
+
         if (!isValidEmail(email)) {
             return res.status(400).send(`${email} is an invalid email. If your email is correct and you are still getting this message, that means our email-validator is not working right - please inform us, jazak Allah.`);
         }
@@ -112,7 +116,7 @@ exports.sendRegistrationLink = async (req, res) => {
         } else {
             res.status(200).send(
                 `An email was sent previously with the registration link. But to be safe, same link has been re-sent to ${customer.email}. Please check in spam folders if not found in inbox folder of your mailbox.`,
-            ); 
+            );
         }
 
     } catch (err) {

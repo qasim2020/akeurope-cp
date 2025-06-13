@@ -4,8 +4,8 @@
     <div class="text-secondary">Payments made through website that are not linked to any beneficiary.</div>
   </div>
   {{#if data.subscriptions}}
-  <div class="table-responsive">
-    <table class="table table-striped mb-0 text-nowrap">
+  <div class="table-responsive" style="overflow-y: hidden;">
+    <table class="table table-striped text-nowrap">
       <thead>
         <tr>
           <th>Order #</th>
@@ -17,15 +17,10 @@
       </thead>
       <tbody>
         {{#each data.subscriptions}}
-        <tr>
+        <tr class="card-hover" onclick="window.location.href='/order/{{this._id}}'" style="cursor: pointer;">
           <td>
             {{#if (hasAny this.stripeInfo this.vippsInfo)}}
-              {{#if this.stripeInfo}}
               <a href="/order/{{this._id}}">{{this.orderNo}}</a>
-              {{/if}}
-              {{#if this.vippsInfo}}
-              {{this.orderNo}} 
-              {{/if}}
             {{else}}
              <a href="/order/{{this._id}}">{{this.orderNo}}</a> 
             {{/if}}
@@ -54,7 +49,7 @@
           <td>
             <span class="badge bg-red-lt">{{slugToString this.projectSlug}}</span>
           </td>
-          <td>
+          <td style="padding-right: 4rem;">
             <span>{{{getOrderIcon this.status}}} </span>
             <span class="ms-1">{{capitalizeFirstLetter this.status}}</span>
           </td>

@@ -194,6 +194,35 @@ exports.fileDownloadPublic = async (req, res) => {
     }
 };
 
+exports.fileOpenPublic = async (req, res) => {
+    try {
+        const { secretToken } = req.params;
+        let file = await File.findOne({ secretToken, public: true });
+        if (!file)
+            return res
+                .status(403)
+                .render('error', {
+                    heading: 'Link expired',
+                    error: 'File is not publicly accessible. Please log in to your portal to access this file.',
+                });
+
+        const dir = path.join(__dirname, '../../');
+        const filePath = path.join(dir, file.path);
+
+        try {
+            await fs.access(filePath);
+        } catch (err) {
+            return res.status(404).send('Valid link, but file not found - manually deleted from server');
+        }
+
+        res.status(200).sendFile(filePath);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err.message || 'Error downloading file');
+    }
+};
+
 exports.file = async (req, res) => {
     try {
         let file;

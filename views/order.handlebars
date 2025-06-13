@@ -115,11 +115,12 @@
 
   <div class="row row-deck row-cards">
     <div class="d-block col-md-6 col-12">
-      <div class="card mb-3" id="files-container">
-        {{> showEntityFiles data=data order=true}}
-      </div>
+      {{> showOrderProducts}}
     </div>
     <div class="d-block col-md-6 col-12">
+       <div class="card mb-3" id="files-container">
+        {{> showEntityFiles data=data order=true}}
+      </div>
       {{> showOrderLogs}}
     </div>
   </div>
