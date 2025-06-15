@@ -17,7 +17,11 @@
         <div class="datagrid-item">
           <div class="datagrid-title">Payment Method</div>
           <div class="datagrid-content">
-            <span>{{#if order.vippsReference}}Vipps{{else}}Stripe{{/if}}</span>
+             <span>
+              {{#if order.vippsInfo}}Vipps{{/if}}
+              {{#if order.stripeInfo}}Stripe{{/if}}
+              {{#unless (and order.vippsInfo order.stripeInfo)}}Manual{{/unless}}
+            </span>
           </div>
         </div>
 
