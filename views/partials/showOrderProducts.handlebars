@@ -20,7 +20,7 @@
              <span>
               {{#if order.vippsInfo}}Vipps{{/if}}
               {{#if order.stripeInfo}}Stripe{{/if}}
-              {{#unless (and order.vippsInfo order.stripeInfo)}}Manual{{/unless}}
+              {{#unless (or order.vippsInfo order.stripeInfo)}}Manual{{/unless}}
             </span>
           </div>
         </div>
