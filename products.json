@@ -2,24 +2,7 @@
     "qurbani": {
         "currency": "NOK",
         "products": [
-            {
-                "name": "Qurbani in Pakistan 🇵🇰",
-                "desc": "Over 25.3% of the population in Pakistan is living below the poverty line, countless families in Pakistan struggle to secure daily meals. This Eid ul-Adha, through your support we can reach these families.",
-                "id": "qurbani-pakistan",
-                "variants": [
-                    {
-                        "name": "1/7 Cow Share in Pakistan",
-                        "id": "cow-share-in-pakistan",
-                        "price": 900
-                    },
-                    {
-                        "name": "Cow in Pakistan",
-                        "id": "cow-in-pakistan",
-                        "price": 6300
-                    }
-                ]
-            }
-	]
+        ]
     },
     "random": {
         "currency": "NOK",
