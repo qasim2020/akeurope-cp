@@ -96,15 +96,15 @@ const checkVippsPaymentStatus = async (elem, currentBtnHtml, reference) => {
             success: function (data) {
                 $(elem).html(`<span class="text-white fs-3" style="padding: 11px 0px !important">Payment ${data.status}</span>`);
                 if (data.status === 'draft' && vippsOverlayStatus === 'closed') {
-                    clearInterval(interval);
+                    stopPaymentStatusCheck();
                     $(elem).html(currentBtnHtml);
                 }
                 if (data.status === 'aborted' || data.status === 'cancelled') {
-                    clearInterval(interval);
+                    stopPaymentStatusCheck();
                     $(elem).html(currentBtnHtml);
                 }
                 if (data.status === 'paid') {
-                    clearInterval(interval);
+                    stopPaymentStatusCheck();
                     $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
                     $('.back-btn').attr({ index: 3 });
                     $('#show-dashboard').attr({
@@ -125,14 +125,28 @@ const checkVippsPaymentStatus = async (elem, currentBtnHtml, reference) => {
                 }
             },
             error: function (xhr, status, error) {
-                clearInterval(interval);
+                stopPaymentStatusCheck();
                 throw new Error(error.responseText || error.message || 'Server Error - please refresh window');
             },
         });
     }
-    checkPaymentStatus();
-    const interval = setInterval(checkPaymentStatus, 1000);
-    return interval;
+
+    function startPaymentStatusCheck() {
+        if (window.paymentCheckInterval) return; // Interval already running
+
+        checkPaymentStatus(); // First immediate check
+        window.paymentCheckInterval = setInterval(checkPaymentStatus, 1000);
+    }
+
+    function stopPaymentStatusCheck() {
+        if (window.paymentCheckInterval) {
+            clearInterval(window.paymentCheckInterval);
+            window.paymentCheckInterval = null;
+        }
+    }
+
+    startPaymentStatusCheck();
+    return true;
 };
 
 const checkVippsSetupStatus = async (elem, currentBtnHtml, orderId, agreementId) => {
@@ -145,18 +159,18 @@ const checkVippsSetupStatus = async (elem, currentBtnHtml, orderId, agreementId)
             success: function (data) {
                 $(elem).html(`<span class="text-white fs-3" style="padding: 11px 0px !important">Processing ${data.status}...</span>`);
                 if (data.status === 'draft' && vippsOverlayStatus === 'closed') {
-                    clearInterval(interval);
+                    stopPaymentStatusCheck();
                     $(elem).html(currentBtnHtml);
                 }
                 if (data.status === 'aborted') {
-                    clearInterval(interval);
+                    stopPaymentStatusCheck();
                     $(elem).html(currentBtnHtml);
                 }
                 if (data.status === 'paid') {
                     if (data.projects?.length > 0) {
                         drawOrderEntries();
                     };
-                    clearInterval(interval);
+                    stopPaymentStatusCheck();   
                     $('#slide-container').css({ transform: `translateX(-${3 * 100}%)` });
                     $('.back-btn').attr({ index: 3 });
                     $('#show-dashboard').attr({
@@ -174,14 +188,28 @@ const checkVippsSetupStatus = async (elem, currentBtnHtml, orderId, agreementId)
                 }
             },
             error: function (xhr, status, error) {
-                clearInterval(interval);
+                stopPaymentStatusCheck();
                 throw new Error(error.responseText || error.message || 'Server Error - please refresh window');
             },
         });
     }
-    checkPaymentStatus();
-    const interval = setInterval(checkPaymentStatus, 1000);
-    return interval;
+
+    function startPaymentStatusCheck() {
+        if (window.paymentCheckInterval) return; // Interval already running
+
+        checkPaymentStatus(); // First immediate check
+        window.paymentCheckInterval = setInterval(checkPaymentStatus, 1000);
+    }
+
+    function stopPaymentStatusCheck() {
+        if (window.paymentCheckInterval) {
+            clearInterval(window.paymentCheckInterval);
+            window.paymentCheckInterval = null;
+        }
+    }
+
+    startPaymentStatusCheck();
+    return true;
 };
 
 const showVippsPaymentOverlay = (paymentUrl) => {
@@ -299,7 +327,7 @@ const handleMonthlyVipps = async (elem, type) => {
                     vippsOverlayStatus = 'closed';
                     $(elem).html(currentBtnHtml);
                 }
-            }); 
+            });
         }
     } catch (error) {
         console.log(error);
@@ -310,7 +338,7 @@ const handleMonthlyVipps = async (elem, type) => {
 const handleOneTimeVipps = async (elem, type) => {
     let currentBtnHtml;
     try {
-        
+
         if (type === 'overlay') {
             const isValid = validateDonationForm();
             if (!isValid) return;
@@ -371,7 +399,7 @@ const handleOneTimeVipps = async (elem, type) => {
                     vippsOverlayStatus = 'closed';
                     $(elem).html(currentBtnHtml);
                 }
-            }); 
+            });
         }
     } catch (error) {
         console.log(error);
