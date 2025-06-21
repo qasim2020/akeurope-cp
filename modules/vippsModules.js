@@ -70,14 +70,66 @@ async function getVippsPaymentStatus(reference) {
     return response.data;
 }
 
+const getRecentVippsCharges = async (orderId) => {
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const dbOrder = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+
+    const responseCharges = await axios.get(
+        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}/charges`,
+        headers,
+    );
+
+    const charges = responseCharges.data;
+
+    const recentCharges = charges
+        .sort((a, b) => new Date(b.due) - new Date(a.due))
+        .slice(0, 4);
+
+    return recentCharges;
+};
+
+function getNextVippsTriggerDate(orderCreationDate) {
+  const createdAt = new Date(orderCreationDate);
+  const now = new Date();
+
+  const monthlyChargeDates = [];
+  let next = new Date(createdAt);
+
+  // Generate each monthly charge date up to now + 30 days
+  while (next <= now) {
+    monthlyChargeDates.push(new Date(next));
+    next.setMonth(next.getMonth() + 1);
+
+    // Handle month overflow (e.g., Jan 31 -> Feb 28)
+    if (next.getDate() !== createdAt.getDate()) {
+      const lastDayOfMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+      next.setDate(Math.min(createdAt.getDate(), lastDayOfMonth));
+    }
+  }
+
+  return monthlyChargeDates;
+}
+
+const getVippsCharge = async (chargeId) => {
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const dbOrder = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+
+    const response = await axios.get(
+        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}/charges/${chargeId}`,
+        headers,
+    );
+
+    const charge = response.data;
+
+    return charge;
+};
+
 const getVippsLatestCharge = async (orderId) => {
     const token = await getVippsToken();
     const headers = await vippsGetHeader(token);
     const dbOrder = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
-    const responseAgreement = await axios.get(
-        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}`,
-        headers,
-    );
 
     const responseCharges = await axios.get(
         `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}/charges`,
@@ -171,6 +223,11 @@ const getOrderChargesInVipps = async (orderId) => {
     const matchedCharges = donor?.vippsCharges?.filter((charge) => charge.externalId === order._id.toString()) || [];
 
     return matchedCharges;
+};
+
+const handleFailedCharge = async (orderId) => {
+    const charges = await getRecentVippsCharges(orderId);
+    await sendTelegramMessage(JSON.stringify(charges, 0, 2));
 };
 
 const updateOrderWithCharge = async (orderId) => {
@@ -500,7 +557,7 @@ const createRecurringCharge = async (orderId) => {
         }
         const token = await getVippsToken();
         const customer = await Customer.findById(order.customerId).lean();
-        const donor = await Donor.findOne({email: customer.email, 'vippsAgreements.id': order.vippsAgreementId}).lean();
+        const donor = await Donor.findOne({ email: customer.email, 'vippsAgreements.id': order.vippsAgreementId }).lean();
         if (!donor) {
             throw new Error(`Donor agreement not found for customer ${customer.email} & vippsAgreementId ${order.vippsAgreementId}`);
         }
@@ -536,7 +593,7 @@ const createRecurringCharge = async (orderId) => {
             console.error('No response from Vipps:', error.request);
             sendErrorToTelegram(error.request);
         } else {
-            console.error('Error setting up request:', error.message);
+            console.log(error);
             sendErrorToTelegram(error.message);
         }
         return false;
@@ -592,4 +649,7 @@ module.exports = {
     updateOrderWithCharge,
     makeVippsReceipt,
     createRecurringCharge,
+    handleFailedCharge,
+    getNextVippsTriggerDate,
+    getVippsCharge,
 };

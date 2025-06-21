@@ -48,6 +48,7 @@ const SubscriptionRecordSchema = new mongoose.Schema(
                 'processing',
                 'paid',
                 'refunded',
+                'due',
             ],
             default: 'draft',
         },

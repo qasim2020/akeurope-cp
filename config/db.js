@@ -3,9 +3,10 @@ require('dotenv').config();
 const Order = require('../models/Order');
 const Subscription = require('../models/Subscription');
 const Donor = require('../models/Donor');
+const Customer = require('../models/Customer');
 const VippsChargeRequest = require('../models/VippsChargeRequest');
 const { getVippsSubscriptionsByOrderId } = require('../modules/vippsPartner');
-const { createRecurringCharge } = require('../modules/vippsModules');
+const { createRecurringCharge, getNextVippsTriggerDate } = require('../modules/vippsModules');
 const { vippsChargeCaptured } = require('../modules/vippsWebhookHandler');
 const { sendErrorToTelegram, sendTelegramMessage } = require('../modules/telegramBot');
 
@@ -23,33 +24,43 @@ const connectDB = async () => {
 };
 
 async function handleRecurringVippsPayments() {
-  const twentyEightDaysAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const query = {
     monthlySubscription: true,
     vippsAgreementId: { $exists: true },
     customerId: { $ne: process.env.TEMP_CUSTOMER_ID },
-    createdAt: { $lt: twentyEightDaysAgo }
+    createdAt: { $lt: thirtyDaysAgo }
   };
 
-  const orders = await Order.find(query).select('_id orderNo vippsAgreementId createdAt').lean();
-  const subscriptions = await Subscription.find(query).select('_id orderNo vippsAgreementId createdAt').lean();
+  const orders = await Order.find(query).select('_id orderNo vippsAgreementId createdAt customerId').lean();
+  const subscriptions = await Subscription.find(query).select('_id orderNo vippsAgreementId createdAt customerId').lean();
   const combined = [...orders, ...subscriptions].sort((a, b) => a.orderNo - b.orderNo);
   const combinedOrderNos = combined.map(order => order.orderNo);
   let message = [];
   message.push(`Found ${combined.length} orders on vipps-charges; ${combinedOrderNos.join(', ')}`);
   for (const order of combined) {
+
+    const customer = await Customer.findById(order.customerId).lean();
+    const donor = await Donor.findOne({ email: customer.email, 'vippsAgreements.id': order.vippsAgreementId }).lean();
+    if (!donor) {
+      message.push(`Donor agreement not found for;\ncustomer ${customer.email}\nvippsAgreementId ${order.vippsAgreementId}`);
+      continue;
+    }
+    const agreement = donor.vippsAgreements.find((a) => a.id === order.vippsAgreementId);
+    if (agreement.status !== 'ACTIVE') {
+      message.push(`${order.orderNo}: Agreement cancelled. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
+      continue;
+    }
+
     const paidCharges = await getVippsSubscriptionsByOrderId(order.vippsAgreementId);
-    const now = Date.now() + (28 * 24 * 60 * 60 * 1000);
-    const created = new Date(order.createdAt).getTime();
-    const diffInMs = now - created;
-    const diffInDays = diffInMs / (28 * 24 * 60 * 60 * 1000);
-    const requiredCharges = Math.floor(diffInDays);
+    const calculatedChargeMonths = getNextVippsTriggerDate(order.createdAt);
+    const requiredCharges = calculatedChargeMonths.length;
     if (requiredCharges > paidCharges.length) {
-      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+      const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
       const alreadyRequestedVipps = await VippsChargeRequest.findOne({
         orderId: order._id,
-        createdAt: { $gte: threeDaysAgo }
+        createdAt: { $gte: sixDaysAgo }
       }).lean();
       if (alreadyRequestedVipps) {
         message.push(`${order.orderNo}: Charge response awaited from vipps. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nChargeId: ${alreadyRequestedVipps.chargeId} \nRequested At: ${alreadyRequestedVipps.createdAt} `);
@@ -59,9 +70,9 @@ async function handleRecurringVippsPayments() {
         } else {
           const chargeId = await createRecurringCharge(order._id);
           if (chargeId) {
-            message.push(`${order.orderNo}: New charge initiated ${order.orderNo} with vipps: \n ${chargeId}, \n vipps should send a webhook back after 2 days.`)
+            message.push(`${order.orderNo}: New charge initiated ${order.orderNo} with vipps: \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nCharge Id: ${chargeId}, \nVipps should send a webhook back after 2 days.`)
           } else {
-            message.push(`Unknown response: ${chargeId}`);
+            message.push(`!!Charge not created! Check logs!!`);
           }
         }
       }

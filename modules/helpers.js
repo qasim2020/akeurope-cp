@@ -377,6 +377,7 @@ const dynamicRound = (value) => {
 const vippsStatusMap = {
     draft: ['PENDING', 'CREATED'],
     aborted: ['ABORTED', 'EXPIRED', 'CANCELLED', 'STOPPED', 'FAILED'],
+    due: ['DUE'],
     authorized: ['AUTHORIZED', 'ACTIVE'],
     paid: ['CAPTURED', 'CHARGED'],
     refunded: 'REFUNDED',

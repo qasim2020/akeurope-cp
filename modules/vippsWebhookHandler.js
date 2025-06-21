@@ -11,7 +11,7 @@ const {
     successfulSubscriptionPaymentOverlay,
     successfulSubscriptionPayment
 } = require('./vippsPostActions');
-const { captureVippsPayment, updateOrderWithCharge, updateDonorAgreement } = require('./vippsModules');
+const { captureVippsPayment, updateOrderWithCharge, updateDonorAgreement, handleFailedCharge } = require('./vippsModules');
 const { slugToString } = require('./helpers');
 
 const vippsPaymentCreated = async (orderId) => {
@@ -128,7 +128,7 @@ const vippsChargeCanceled = async (orderId) => {
 
 const vippsChargeFailed = async (orderId) => {
     console.log(`Charge failed: ${orderId}`);
-    await updateOrderWithCharge(orderId);
+    await handleFailedCharge(orderId);
 };
 
 const vippsChargeCreationFailed = async (orderId) => {
