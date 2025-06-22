@@ -33,7 +33,7 @@
         border: 1px solid #066fd1 !important;
         cursor: pointer;
     }
-    
+
     .card-beneficiary.active:hover,
     .card-small-variant.active:hover {
         background: #fde3e3;
@@ -400,6 +400,14 @@
         height: 40px;
     }
 
+    .card-img-top {
+        height: 50%;
+        position: relative;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
     @media (min-width: 844px) {
         #payment-overlay {
             position: fixed;
@@ -436,6 +444,10 @@
         #slide-wrapper {
             height: 100%;
             max-width: 100%;
+        }
+
+        .card-img-top {
+            background-size: cover;
         }
 
         .rounded-md-4 {

@@ -4,7 +4,7 @@ const vippsController = require('../controllers/vippsController');
 const { notifyTelegram } = require('../modules/telegramBot');
 const { authVippsWebhook } = require('../modules/vippsModules');
 
-router.get('/vipps-token/:token', vippsController.getVippsToken);
+router.post('/vipps-token', vippsController.getVippsToken);
 router.post('/create-vipps-payment-intent', notifyTelegram, vippsController.createVippsPaymentIntent);
 router.post('/create-vipps-payment-intent-widget', notifyTelegram, vippsController.createVippsPaymentIntentWidget);
 router.post('/create-vipps-payment-intent-product', notifyTelegram, vippsController.createVippsPaymentIntentProduct);
