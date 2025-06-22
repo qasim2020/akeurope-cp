@@ -9,10 +9,6 @@ const Donor = require('../models/Donor');
 const VippsChargeRequest = require('../models/VippsChargeRequest');
 const { slugToString } = require('../modules/helpers');
 
-const { saveLog } = require('./logAction');
-const { logTemplates } = require('./logTemplates');
-const { generateInvoice, saveFileRecord } = require('./invoice');
-const { sendThankYouMailToCustomer } = require('./emails');
 const { sendErrorToTelegram, sendTelegramMessage } = require('./telegramBot');
 const { vippsStatusMap } = require('../modules/helpers');
 
@@ -124,6 +120,26 @@ const getVippsCharge = async (chargeId) => {
     const charge = response.data;
 
     return charge;
+};
+
+const getPaidVippsCharges = async (orderId) => {
+    const token = await getVippsToken();
+    const headers = await vippsGetHeader(token);
+    const dbOrder = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
+
+    const responseCharges = await axios.get(
+        `${process.env.VIPPS_API_URL}/recurring/v3/agreements/${dbOrder.vippsAgreementId}/charges`,
+        headers,
+    );
+    const charges = responseCharges.data;
+
+    if (!Array.isArray(charges) || charges.length === 0) {
+        throw new Error('No charges found for this agreement.');
+    }
+
+    charges.sort((b, a) => new Date(b.due) - new Date(a.due)).filter( charge => charge.status === 'CHARGED');
+
+    return charges;
 };
 
 const getVippsLatestCharge = async (orderId) => {
@@ -651,5 +667,7 @@ module.exports = {
     createRecurringCharge,
     handleFailedCharge,
     getNextVippsTriggerDate,
+    getVippsLatestCharge,
     getVippsCharge,
+    getPaidVippsCharges
 };

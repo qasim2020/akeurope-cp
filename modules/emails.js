@@ -1,4 +1,5 @@
 const emailConfig = require('../config/emailConfig.js');
+const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const File = require('../models/File');
 const Project = require('../models/Project');
@@ -16,9 +17,11 @@ const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 const { getPaymentByOrderId, getLatestSubscriptionByOrderId } = require('../modules/orders');
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
-const { slugToString, formatTime } = require('./helpers');
+const { slugToString, formatTime, formatDate } = require('./helpers');
 const { sendTelegramMessage, sendErrorToTelegram } = require('./telegramBot');
 const { formatPhoneNumber } = require('../modules/twilio');
+const { getVippsLatestCharge, getPaidVippsCharges } = require('../modules/vippsModules');
+const { createDynamicModel } = require('../models/createDynamicModel.js');
 
 async function getFileWithToken(orderId, category) {
     let file = await File.findOne({ 'links.entityId': orderId, category }).sort({ createdAt: -1 });
@@ -100,14 +103,14 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     }
 };
 
-const sendThankYouForSponsoringBeneficiaryMessage = async (phone) => {
+const sendMonthlyOrderText = async (phone) => {
     try {
         phone = formatPhoneNumber(phone);
 
         if (!/^\+?[1-9]\d{7,14}$/.test(phone)) {
             throw new Error('Invalid phone number format');
         }
-        
+
         const message =
             `Thank you for supporting Alkhidmat Europe in sponsoring these beneficiaries.\n\n` +
             `You can stay updated on your beneficiaries by logging into our donor portal:\n\n` +
@@ -133,7 +136,71 @@ const sendThankYouForSponsoringBeneficiaryMessage = async (phone) => {
     }
 };
 
-const sendThankYouForSponsoringBeneficiaryEmail = async (order, customer) => {
+const sendVippsMonthlyOrderEmail = async (order, customer) => {
+    const { portalUrl, newUser } = await getPortalUrl(customer);
+
+    let transporter = nodemailer.createTransport(emailConfig);
+
+    const templatePath = path.join(__dirname, '../views/emails/vippsMonthlyOrderEmail.handlebars');
+    const templateSource = await fs.readFile(templatePath, 'utf8');
+    const compiledTemplate = handlebars.compile(templateSource);
+
+    const charges = await getPaidVippsCharges(order._id);
+    const currentCharge = charges[0];
+    const chargesArray = charges.map(charge => {
+        return {
+            createdAt: formatDate(charge.due),
+            amount: charge.amount / 100
+        };
+    });
+    const amount = currentCharge.amount / 100;
+
+    const entries = [];
+
+    const totalCost = chargesArray.reduce((total, item) => total + item.amount, 0);
+    await Order.updateOne({_id: order._id}, {$set: { totalCost: totalCost}});
+    order.totalCost = totalCost;
+
+    for (const project of order.projects) {
+        const project_detail = await Project.findOne({ slug: project.slug }).lean();
+        const model = await createDynamicModel(project.slug);
+        for (const entry of project.entries) {
+            const entry_detail = await model.findById(entry.entryId).lean();
+            entry_detail.projectName = project_detail.name;
+            entries.push(entry_detail);
+        }
+    };
+
+    const to = process.env.ENV === 'test' ? 'qasimali24@gmail.com' : customer.email;
+
+    const mailOptions = {
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
+        to,
+        subject: `Payment Received - ${amount} NOK`,
+        html: compiledTemplate({
+            name: customer.name,
+            entries,
+            order,
+            amount,
+            chargesArray,
+            portalUrl,
+            newUser,
+        }),
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        await sendTelegramMessage(`✅ *Email Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* vippsMonthlyOrderEmail.handlebars`);
+        console.log('Thank you email sent!');
+        return true;
+    } catch (err) {
+        console.log(`Failed to send email: ${err.message}`);
+        sendErrorToTelegram(err.message);
+        return true;
+    }
+};
+
+const sendVippsMonthlyOverlayEmail = async (order, customer) => {
     const { portalUrl, newUser } = await getPortalUrl(customer);
 
     let transporter = nodemailer.createTransport(emailConfig);
@@ -162,7 +229,7 @@ const sendThankYouForSponsoringBeneficiaryEmail = async (order, customer) => {
         console.log(`Failed to send email: ${err.message}`);
         sendErrorToTelegram(err.message);
         return true;
-    } 
+    }
 };
 
 const sendThankYouMessage = async (phone) => {
@@ -198,7 +265,7 @@ const sendThankYouMessage = async (phone) => {
     }
 };
 
-const sendThankYouEmail = async (order, customer) => {
+const sendVippsOneTimeOrderEmail = async (order, customer) => {
     const { portalUrl, newUser } = await getPortalUrl(customer);
 
     let transporter = nodemailer.createTransport(emailConfig);
@@ -227,11 +294,42 @@ const sendThankYouEmail = async (order, customer) => {
         console.log(`Failed to send email: ${err.message}`);
         sendErrorToTelegram(err.message);
         return true;
-    } 
+    }
 };
 
+const sendVippsOneTimeOverlayEmail = async (order, customer) => {
+    const { portalUrl, newUser } = await getPortalUrl(customer);
 
-const sendEmailReceipt = async (order, customer) => {
+    let transporter = nodemailer.createTransport(emailConfig);
+
+    const templatePath = path.join(__dirname, '../views/emails/thankYouEmail.handlebars');
+    const templateSource = await fs.readFile(templatePath, 'utf8');
+    const compiledTemplate = handlebars.compile(templateSource);
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: customer.email,
+        subject: `Payment Received - ${order.totalCost || order.total} ${order.currency}`,
+        html: compiledTemplate({
+            name: customer.name,
+            portalUrl,
+            newUser,
+        }),
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        await sendTelegramMessage(`✅ *Email Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* thankYouEmail.handlebars`);
+        console.log('Thank you email sent!');
+        return true;
+    } catch (err) {
+        console.log(`Failed to send email: ${err.message}`);
+        sendErrorToTelegram(err.message);
+        return true;
+    }
+};
+
+const sendVippsProductEmail = async (order, customer) => {
     const { portalUrl, newUser } = await getPortalUrl(customer);
 
     let transporter = nodemailer.createTransport(emailConfig);
@@ -263,7 +361,7 @@ const sendEmailReceipt = async (order, customer) => {
         console.log(`Failed to send email: ${err.message}`);
         sendErrorToTelegram(err.message);
         return true;
-    } 
+    }
 };
 
 const sendInvoiceToCustomer = async (order, customer) => {
@@ -348,9 +446,8 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: customer.email,
-        subject: `Subscription Renewed Alkhidmat Europe - ${order.totalCostSingleMonth || order.total} ${
-            order.currency
-        } ${slugToString(order.projectSlug)}`,
+        subject: `Subscription Renewed Alkhidmat Europe - ${order.totalCostSingleMonth || order.total} ${order.currency
+            } ${slugToString(order.projectSlug)}`,
         html: compiledTemplate({
             name: customer.name,
             invoiceNreceipt: true,
@@ -497,15 +594,21 @@ const sendCustomerInvite = async (customer) => {
 };
 
 module.exports = {
+    // stripe emails
     sendInvoiceAndReceiptToCustomer,
     sendInvoiceToCustomer,
     sendReceiptToCustomer,
-    sendCustomerInvite,
     sendStripeRenewelInvoiceToCustomer,
-    sendThankYouForSponsoringBeneficiaryEmail,
-    sendThankYouForSponsoringBeneficiaryMessage,
+    // vipps emails
+    sendVippsOneTimeOrderEmail,
+    sendVippsOneTimeOverlayEmail,
+    sendVippsProductEmail,
+    sendVippsMonthlyOverlayEmail,
+    sendVippsMonthlyOrderEmail,
+    // sms
+    sendMonthlyOrderText,
     sendThankYouMessage,
-    sendThankYouEmail,
-    sendEmailReceipt,
+    // other
+    sendCustomerInvite,
     getInviteToken,
 };

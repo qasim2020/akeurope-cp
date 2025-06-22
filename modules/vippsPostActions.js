@@ -5,13 +5,12 @@ const Subscription = require('../models/Subscription');
 
 const { saveLog } = require('../modules/logAction');
 const { logTemplates } = require('../modules/logTemplates');
-const { generateInvoice, saveFileRecord } = require('../modules/invoice');
 const {
-    sendEmailReceipt,
-    sendThankYouMessage,
-    sendThankYouEmail,
-    sendThankYouForSponsoringBeneficiaryEmail,
-    sendThankYouForSponsoringBeneficiaryMessage,
+    sendVippsProductEmail,
+    sendVippsOneTimeOrderEmail,
+    sendVippsOneTimeOverlayEmail,
+    sendVippsMonthlyOrderEmail,
+    sendVippsMonthlyOverlayEmail,
 } = require('../modules/emails');
 const { sendErrorToTelegram } = require('../modules/telegramBot');
 const {
@@ -22,7 +21,6 @@ const {
     updateDonorAgreement,
 } = require('../modules/vippsModules');
 const { cleanOrder } = require('../modules/orders');
-const { vippsStatusMap } = require('../modules/helpers');
 const { updateOrderMonthsVsVippsCharges } = require('../modules/orders');
 const { removeUnorderedProducts } = require('../modules/productActions');
 
@@ -110,8 +108,7 @@ const successfulOneTimePayment = async (orderId) => {
                 actor: customer,
             }),
         );
-        await sendThankYouForSponsoringBeneficiaryEmail(order, customer);
-        await sendThankYouForSponsoringBeneficiaryMessage(updatedDonor.tel);
+        await sendVippsOneTimeOrderEmail(order, customer);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message);
@@ -150,8 +147,7 @@ const successfulOneTimePaymentProducts = async (orderId) => {
                 actor: customer,
             }),
         );
-        await sendEmailReceipt(order, customer);
-        await sendThankYouMessage(updatedDonor.tel);
+        await sendVippsProductEmail(order, customer);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message);
@@ -189,8 +185,7 @@ const successfulOneTimePaymentOverlay = async (orderId) => {
                 actor: customer,
             }),
         );
-        await sendThankYouEmail(order, customer);
-        await sendThankYouMessage(updatedDonor.tel);
+        await sendVippsOneTimeOverlayEmail(order, customer);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message);
@@ -235,8 +230,7 @@ const successfulSubscriptionPayment = async (orderId) => {
                 actor: customer,
             }),
         );
-        await sendThankYouForSponsoringBeneficiaryEmail(order, customer);
-        await sendThankYouForSponsoringBeneficiaryMessage(updatedDonor.tel); 
+        await sendVippsMonthlyOrderEmail(order, customer);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message || 'Error in successfulsubscriptionpayment - please check');
@@ -276,8 +270,7 @@ const successfulSubscriptionPaymentOverlay = async (orderId) => {
                 actor: customer,
             }),
         );
-        await sendThankYouEmail(order, customer);
-        await sendThankYouMessage(updatedDonor.tel);
+        await sendVippsMonthlyOverlayEmail(order, customer);
     } catch (error) {
         console.log(error);
         sendErrorToTelegram(error.message || 'Error in successfulsubscriptionpaymentoverlay - please check');
