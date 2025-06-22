@@ -139,6 +139,10 @@ const handleVippsEvent = async (event, paymentId) => {
 
 exports.getVippsToken = async (req, res) => {
     try {
+        const security = req.params.token;
+        if (security !== process.env.VIPPS_TEST_TOKEN) {
+            throw new Error('Invalid token');
+        }
         const token = await getVippsToken();
         res.status(200).send(token);
     } catch (error) {
