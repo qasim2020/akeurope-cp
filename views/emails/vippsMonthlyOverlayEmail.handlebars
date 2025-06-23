@@ -11,7 +11,7 @@
         </div>
         <p style="color: #333333; line-height: 1.3rem;">Assalam o Alaikum, dear {{name}},</p>
         <p style="color: #333333; line-height: 1.3rem;">
-            We have received your monthly subscription of {{amount}} NOK against Order # {{order.orderNo}}.
+            We have received your monthly subscription of {{amount}} NOK in {{projectName}} (Order # {{order.orderNo}}).
             {{#if multipleCharges}}
             Your donation history in this order is as under.
             {{/if}}
@@ -41,29 +41,10 @@
                 </tr>
             </tfoot>
         </table>
-        <p style="color: #333333; line-height: 1.3rem;">
-            Following beneficiary(s) are linked to your email address.
-        </p>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-            <thead>
-                <tr style="background-color: #f5f5f5;">
-                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #dddddd;">Project</th>
-                    <th style="text-align: right; padding: 8px; border-bottom: 1px solid #dddddd;">Beneficiary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each entries}}
-                <tr>
-                    <td style="padding: 8px; color: #333333;">{{this.projectName}}</td>
-                    <td style="padding: 8px; text-align: right; color: #333333;">{{this.name}}</td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
+
         {{#if newUser}}
         <p style="color: #333333; line-height: 1.3rem; margin-bottom: 4px; margin-top: 10px;">
-            You can view your beneficiary profile(s) that includes photo, current status and video / photo updates on below link.
-            Please note, below link will expire in 24 hours. You can generate a new link after it is expired with your email.
+            You can view your profile details, payment history and beneficiaries in our customer portal at below link. Please note, below link will expire in 24 hours. You can generate a new link after it is expired with your email.
         </p>
         <a href="{{portalUrl}}"
             style="display: inline-block; padding: 10px 20px; margin-top: 5px; margin-bottom: 10px; margin-right:20px; background-color: #007A78; color: #ffffff; text-decoration: none; border-radius: 4px;">
@@ -71,7 +52,7 @@
         </a>
         {{else}}
         <p style="color: #333333; line-height: 1.3rem; margin-bottom: 4px; margin-top: 10px;">
-            You can view full beneficiary profile(s) that includes photo, status updates and video / photo updates on below link.
+            You can view your profile details, payment history and beneficiaries in our customer portal at below link. 
         </p>
         <a href="{{portalUrl}}"
             style="display: inline-block; padding: 10px 20px; margin-top: 5px; margin-bottom: 10px; margin-right:20px; background-color: #007A78; color: #ffffff; text-decoration: none; border-radius: 4px;">

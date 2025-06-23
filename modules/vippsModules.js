@@ -86,25 +86,25 @@ const getRecentVippsCharges = async (orderId) => {
 };
 
 function getNextVippsTriggerDate(orderCreationDate) {
-  const createdAt = new Date(orderCreationDate);
-  const now = new Date();
+    const createdAt = new Date(orderCreationDate);
+    const now = new Date();
 
-  const monthlyChargeDates = [];
-  let next = new Date(createdAt);
+    const monthlyChargeDates = [];
+    let next = new Date(createdAt);
 
-  // Generate each monthly charge date up to now + 30 days
-  while (next <= now) {
-    monthlyChargeDates.push(new Date(next));
-    next.setMonth(next.getMonth() + 1);
+    // Generate each monthly charge date up to now + 30 days
+    while (next <= now) {
+        monthlyChargeDates.push(new Date(next));
+        next.setMonth(next.getMonth() + 1);
 
-    // Handle month overflow (e.g., Jan 31 -> Feb 28)
-    if (next.getDate() !== createdAt.getDate()) {
-      const lastDayOfMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
-      next.setDate(Math.min(createdAt.getDate(), lastDayOfMonth));
+        // Handle month overflow (e.g., Jan 31 -> Feb 28)
+        if (next.getDate() !== createdAt.getDate()) {
+            const lastDayOfMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+            next.setDate(Math.min(createdAt.getDate(), lastDayOfMonth));
+        }
     }
-  }
 
-  return monthlyChargeDates;
+    return monthlyChargeDates;
 }
 
 const getVippsCharge = async (chargeId) => {
@@ -137,9 +137,11 @@ const getPaidVippsCharges = async (orderId) => {
         throw new Error('No charges found for this agreement.');
     }
 
-    charges.sort((b, a) => new Date(b.due) - new Date(a.due)).filter( charge => charge.status === 'CHARGED');
+    const sortedCharged = charges
+        .sort((a, b) => new Date(b.due) - new Date(a.due))
+        .filter(charge => charge.status === 'CHARGED');
 
-    return charges;
+    return sortedCharged;
 };
 
 const getVippsLatestCharge = async (orderId) => {

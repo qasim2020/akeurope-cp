@@ -1,5 +1,6 @@
-const emailConfig = require('../config/emailConfig.js');
+const emailConfig = require('../config/emailConfig');
 const Order = require('../models/Order');
+const Subscription = require('../models/Subscription');
 const Customer = require('../models/Customer');
 const File = require('../models/File');
 const Project = require('../models/Project');
@@ -77,7 +78,7 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: `Invoice & Receipt from Akeurope - ${order.totalCost || order.total} ${order.currency}`,
         html: compiledTemplate({
@@ -146,7 +147,7 @@ const sendVippsMonthlyOrderEmail = async (order, customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const charges = await getPaidVippsCharges(order._id);
-    const currentCharge = charges[0];
+    const currentCharge = charges[charges.length - 1];
     const chargesArray = charges.map(charge => {
         return {
             createdAt: formatDate(charge.due),
@@ -160,6 +161,7 @@ const sendVippsMonthlyOrderEmail = async (order, customer) => {
     const totalCost = chargesArray.reduce((total, item) => total + item.amount, 0);
     await Order.updateOne({_id: order._id}, {$set: { totalCost: totalCost}});
     order.totalCost = totalCost;
+    const multipleCharges = chargesArray.length > 0;
 
     for (const project of order.projects) {
         const project_detail = await Project.findOne({ slug: project.slug }).lean();
@@ -183,6 +185,7 @@ const sendVippsMonthlyOrderEmail = async (order, customer) => {
             order,
             amount,
             chargesArray,
+            multipleCharges,
             portalUrl,
             newUser,
         }),
@@ -205,16 +208,40 @@ const sendVippsMonthlyOverlayEmail = async (order, customer) => {
 
     let transporter = nodemailer.createTransport(emailConfig);
 
-    const templatePath = path.join(__dirname, '../views/emails/thankYouBeneficiary.handlebars');
+    const templatePath = path.join(__dirname, '../views/emails/vippsMonthlyOverlayEmail.handlebars');
     const templateSource = await fs.readFile(templatePath, 'utf8');
     const compiledTemplate = handlebars.compile(templateSource);
 
+    const charges = await getPaidVippsCharges(order._id);
+    const currentCharge = charges[charges.length - 1];
+    const chargesArray = charges.map(charge => {
+        return {
+            createdAt: formatDate(charge.due),
+            amount: charge.amount / 100
+        };
+    });
+    const amount = currentCharge.amount / 100;
+    
+    const projectName = slugToString(order.projectSlug);
+
+    const totalCost = chargesArray.reduce((total, item) => total + item.amount, 0);
+    await Subscription.updateOne({_id: order._id}, {$set: { totalCost: totalCost}});
+    order.totalCost = totalCost;
+    const multipleCharges = chargesArray.length > 0;
+
+    const to = process.env.ENV === 'test' ? 'qasimali24@gmail.com' : customer.email;
+
     const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: customer.email,
-        subject: `Payment Received - ${order.totalCost || order.total} ${order.currency}`,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
+        to,
+        subject: `Payment Received - ${amount} NOK`,
         html: compiledTemplate({
             name: customer.name,
+            order,
+            projectName,
+            amount,
+            chargesArray,
+            multipleCharges,
             portalUrl,
             newUser,
         }),
@@ -275,7 +302,7 @@ const sendVippsOneTimeOrderEmail = async (order, customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: `Payment Received - ${order.totalCost || order.total} ${order.currency}`,
         html: compiledTemplate({
@@ -307,7 +334,7 @@ const sendVippsOneTimeOverlayEmail = async (order, customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: `Payment Received - ${order.totalCost || order.total} ${order.currency}`,
         html: compiledTemplate({
@@ -341,7 +368,7 @@ const sendVippsProductEmail = async (order, customer) => {
     order.createdAt = formatTime(order.createdAt);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: `Order Receipt - ${order.totalCost || order.total} ${order.currency}`,
         html: compiledTemplate({
@@ -393,7 +420,7 @@ const sendInvoiceToCustomer = async (order, customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: `Invoice from Akeurope - ${order.totalCost}`,
         html: compiledTemplate({
@@ -444,7 +471,7 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: `Subscription Renewed Alkhidmat Europe - ${order.totalCostSingleMonth || order.total} ${order.currency
             } ${slugToString(order.projectSlug)}`,
@@ -496,7 +523,7 @@ const sendReceiptToCustomer = async (order, customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: `Payment Receipt from Alkhidmat Europe - ${order.totalCostSingleMonth || order.total} ${order.currency}`,
         html: compiledTemplate({
@@ -568,7 +595,7 @@ const sendCustomerInvite = async (customer) => {
     const compiledTemplate = handlebars.compile(templateSource);
 
     const mailOptions = {
-        from: process.env.EMAIL_USER,
+        from: `"Alkhidmat Europe" <${process.env.EMAIL_USER}>`,
         to: customer.email,
         subject: 'Registration Link for Akeurope Partner Portal',
         html: compiledTemplate({

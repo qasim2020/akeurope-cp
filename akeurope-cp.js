@@ -135,19 +135,19 @@ app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res)
 //     res.render(`emails/${templateName}`, data);
 // });
 
-app.get('/testing/:orderNo', async (req, res) => {
-    try {
-        const orderNo = req.params.orderNo;
-        const order = await Order.findOne({orderNo}).lean();
-        const customer = await Customer.findById(order.customerId).lean();
-        const { sendVippsMonthlyOrderEmail } = require('./modules/emails');
-        await sendVippsMonthlyOrderEmail(order, customer);
-        res.status(200).send('Done');
-    } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message);
-    }
-});
+// app.get('/testing/:orderNo', async (req, res) => {
+//     try {
+//         const orderNo = req.params.orderNo;
+//         const order = await Subscription.findOne({orderNo}).lean();
+//         const customer = await Customer.findById(order.customerId).lean();
+//         const { sendVippsMonthlyOverlayEmail } = require('./modules/emails');
+//         await sendVippsMonthlyOverlayEmail(order, customer);
+//         res.status(200).send('Done');
+//     } catch (error) {
+//         console.log(error);
+//         res.status(400).send(error.message);
+//     }
+// });
 
 app.get('/', (req, res) => {
     if (req.session.user) {
