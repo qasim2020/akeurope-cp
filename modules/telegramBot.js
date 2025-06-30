@@ -54,13 +54,13 @@ const notifyTelegram = async (req, res, next) => {
             chat_id: TELEGRAM_CHAT_ID,
             text: `\`\`\`URL-with-Body: \n ${req.originalUrl} ${JSON.stringify(req.body, 0, 2)}\`\`\``,
             parse_mode: 'MarkdownV2',
-        }).catch((err) => console.error('Failed to send Telegram message:', err));
+        }).catch((err) => console.error('Failed to send Telegram message:', err.response?.data?.description));
     } else {
         axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
             text: `\`\`\`URL: ${req.originalUrl}\`\`\``,
             parse_mode: 'MarkdownV2',
-        }).catch((err) => console.error('Failed to send Telegram message:', err));
+        }).catch((err) => console.error('Failed to send Telegram message:', err.response?.data?.description));
     }
 
     next();
@@ -89,8 +89,8 @@ const notifyTelegramStripe = async (req, res, next) => {
 
         next();
     } catch (err) {
-        console.error('Error in Stripe Webhook Middleware:', err);
-        res.status(500).send('Error processing webhook');
+        console.log(err.response);
+        console.error('Failed to send Telegram message:', err.response?.data?.description)
     }
 };
 
@@ -102,15 +102,15 @@ const sendTelegramMessage = async (message) => {
             return;
         }
 
-        const formattedMessage = `📢 *Notification*\n\n${message}`;
+        const formattedMessage = `📢 Notification\n\n${message}`;
 
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_ID,
             text: formattedMessage,
-            parse_mode: 'Markdown'
         });
     } catch (err) {
-        console.error('Error sending Telegram message:', err);
+        console.log(err.response);
+        console.error('Failed to send Telegram message:', err.response?.data?.description)
     }
 };
 
@@ -120,10 +120,10 @@ const sendTelegramMessageInGazaGroup = async (message) => {
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             chat_id: TELEGRAM_CHAT_GAZA_ID,
             text: formattedMessage,
-            parse_mode: 'Markdown'
         });
     } catch (err) {
-        console.error('Error sending Telegram message:', err);
+        console.log(err.response);
+        console.error('Failed to send Telegram message:', err.response?.data?.description);
     }
 };
 
