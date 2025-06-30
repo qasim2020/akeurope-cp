@@ -10,7 +10,10 @@ function runGlobal(countryCode) {
 
     if (countryCode === 'NO') {
         $('.vipps-number').css({ display: 'none' });
-    };
+        $('.vipps-banner').css({ display: "block" });
+    } else {
+        $('.vipps-banner').css({ display: "none" }); 
+    }
 
     $('.donate').on('click', function (e) {
         $('.donation-overlay').css({ display: 'flex' });
@@ -154,7 +157,7 @@ function showOverlay(elem) {
 
     const slug = $(elem).attr('partnerSlug') || $(elem).attr('projectSlug');
     const $iframe = $(`#iframe-${slug}`);
-    
+
     $iframe[0].contentWindow.postMessage('goingVisible', '*');
 
     $('#iframe-loading-overlay').remove();
