@@ -48,14 +48,17 @@ async function handleRecurringVippsPayments() {
       continue;
     }
     const agreement = donor.vippsAgreements.find((a) => a.id === order.vippsAgreementId);
-    if (agreement.status !== 'ACTIVE') {
-      message.push(`${order.orderNo}: Agreement cancelled. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
-      continue;
-    }
+
 
     const paidCharges = await getVippsSubscriptionsByOrderId(order.vippsAgreementId);
     const calculatedChargeMonths = getNextVippsTriggerDate(order.createdAt);
     const requiredCharges = calculatedChargeMonths.length;
+
+    if (agreement.status !== 'ACTIVE') {
+      message.push(`${order.orderNo} · ${agreement.id}: Agreement cancelled. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
+      continue;
+    }
+
     if (requiredCharges > paidCharges.length) {
       const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
       const alreadyRequestedVipps = await VippsChargeRequest.findOne({
