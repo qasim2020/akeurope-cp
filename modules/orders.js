@@ -628,7 +628,7 @@ const formatOrderWidget = async (order) => {
         for (const entry of project.entries) {
             entry.detail = await entryModel.findOne(
                 { _id: entry.entryId },
-                { name: 1, _id: 1, dateOfBirth: 1, ser: 1 } 
+                { name: 1, _id: 1, dateOfBirth: 1, ser: 1, class: 1, gender: 1, institute: 1, classCategory: 1, schoolName: 1 } 
             ).lean();
             entry.lastPaid = await getPreviousOrdersForEntry(entry.entryId, order._id);
             if (entry.lastPaid) {

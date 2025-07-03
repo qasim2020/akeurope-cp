@@ -248,9 +248,7 @@ const getVippsChargeNUserInfo = async (orderId) => {
 const getOrderChargesInVipps = async (orderId) => {
     const order = (await Order.findById(orderId).lean()) || (await Subscription.findById(orderId).lean());
     const donor = await Donor.findOne({ 'vippsCharges.externalId': order._id.toString() }).lean();
-
     const matchedCharges = donor?.vippsCharges?.filter((charge) => charge.externalId === order._id.toString()) || [];
-
     return matchedCharges;
 };
 

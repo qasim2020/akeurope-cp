@@ -9,18 +9,29 @@
             {{#if entry.detail.dob}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dob}}</div>
             {{/if}}
+            {{#if entry.detail.gender}}
+            <div class="text-muted">Gender: {{entry.detail.gender}}</div>
+            {{/if}}
+            {{#if entry.detail.class}}
+            <div class="text-muted">
+                Institute:
+                {{#if entry.detail.classCategory}}{{entry.detail.classCategory}}, {{/if}}
+                {{#if entry.detail.institute}}{{entry.detail.institute}}{{/if}}
+                {{#if entry.detail.schoolName}}{{entry.detail.schoolName}}{{/if}}
+            </div>
+            {{/if}}
+
             {{#each entry.costs as |cost|}}
             {{#if (gt cost.totalCost 0)}}
 
             {{#if cost.prevOrder}}
             <div class="d-flex p-3 rounded-3 mt-2 border popover-card cursor-pointer">
-                <span class="me-2" data-bs-toggle="popover" data-bs-placement="top"
-                    {{#if (eq cost.prevOrder.status 'draft')}}
+                <span class="me-2" data-bs-toggle="popover" data-bs-placement="top" {{#if (eq
+                    cost.prevOrder.status 'draft' )}}
                     data-bs-content="Already selected in <span class='text-blue'>{{capitalizeFirstLetter cost.prevOrder.status}}-{{cost.prevOrder.orderNo}}</span>. Please try in 1 hour."
                     {{else}}
                     data-bs-content="Already selected in <span class='text-blue'>{{capitalizeFirstLetter cost.prevOrder.status}}-{{cost.prevOrder.orderNo}}</span>."
-                    {{/if}}
-                    data-bs-html="true">
+                    {{/if}} data-bs-html="true">
                     <span class="ti ti-lock"></span>
                 </span>
                 <div class="text-start">
@@ -70,6 +81,17 @@
             {{#if entry.detail.dob}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dob}}</div>
             {{/if}}
+            {{#if entry.detail.gender}}
+            <div class="text-muted">Gender: {{entry.detail.gender}}</div>
+            {{/if}}
+            {{#if entry.detail.class}}
+            <div class="text-muted">
+                Institute:
+                {{#if entry.detail.classCategory}}{{entry.detail.classCategory}}, {{/if}}
+                {{#if entry.detail.institute}}{{entry.detail.institute}}{{/if}}
+                {{#if entry.detail.schoolName}}{{entry.detail.schoolName}}{{/if}}
+            </div>
+            {{/if}}
             {{#each entry.costs as |cost|}}
             {{#if (gt cost.totalCost 0)}}
             {{#if (eq cost.totalCost cost.totalOrderedCost)}}
@@ -112,6 +134,17 @@
             {{/if}}
             {{#if entry.detail.dob}}
             <div class="text-muted">Age: {{getAgeInYearsAndMonths entry.detail.dob}}</div>
+            {{/if}}
+            {{#if entry.detail.gender}}
+            <div class="text-muted">Gender: {{entry.detail.gender}}</div>
+            {{/if}}
+            {{#if entry.detail.class}}
+            <div class="text-muted">
+                Institute:
+                {{#if entry.detail.classCategory}}{{entry.detail.classCategory}}, {{/if}}
+                {{#if entry.detail.institute}}{{entry.detail.institute}}{{/if}}
+                {{#if entry.detail.schoolName}}{{entry.detail.schoolName}}{{/if}}
+            </div>
             {{/if}}
             {{#each entry.costs as |cost|}}
             {{#if (gt cost.totalCost 0)}}
