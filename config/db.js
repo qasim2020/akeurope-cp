@@ -54,18 +54,9 @@ async function handleRecurringVippsPayments() {
     const now = new Date();
     const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
 
-    // console.log({
-    //   createdAt: order.createdAt,
-    //   requiredCharges,
-    //   calculatedChargeMonths,
-    //   paidCharges: paidCharges.length,
-    // })
 
-    if (agreement.status !== 'ACTIVE') {
-      // message.push(`${order.orderNo} x ${agreement.id}: Agreement cancelled. \nName = ${customer.name} \nEmail = ${donor.email} \ntel = ${customer.tel} \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
-      continue;
-    }
-
+    if (agreement.status !== 'ACTIVE') continue;
+    
     if (requiredCharges > paidCharges.length) {
       const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
       const alreadyRequestedVipps = await VippsChargeRequest.findOne({
@@ -75,6 +66,7 @@ async function handleRecurringVippsPayments() {
       if (alreadyRequestedVipps) {
         message.push(`${order.orderNo}: Charge response awaited from vipps. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nChargeId: ${alreadyRequestedVipps.chargeId} \nRequested At: ${alreadyRequestedVipps.createdAt.toISOString().split('T')[0]} `);
       } else {
+        if (requiredCharges.length - paidCharges.length > 1) continue;
         if (process.env.ENV === 'test') {
           message.push(`${order.orderNo}: Test environment - Not creating a charge \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
         } else {
