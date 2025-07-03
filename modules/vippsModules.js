@@ -85,26 +85,37 @@ const getRecentVippsCharges = async (orderId) => {
     return recentCharges;
 };
 
-function getNextVippsTriggerDate(orderCreationDate) {
+function getVippsTriggerDates(orderCreationDate) {
     const createdAt = new Date(orderCreationDate);
     const now = new Date();
+    const futureLimit = new Date();
+    futureLimit.setDate(futureLimit.getDate() + 30); // Now + 30 days
 
-    const monthlyChargeDates = [];
+    const vippsTriggerDates = [];
     let next = new Date(createdAt);
 
-    // Generate each monthly charge date up to now + 30 days
-    while (next <= now) {
-        monthlyChargeDates.push(new Date(next));
-        next.setMonth(next.getMonth() + 1);
-
+    while (next <= futureLimit) {
+        const chargeDate = new Date(next);
+        
         // Handle month overflow (e.g., Jan 31 -> Feb 28)
-        if (next.getDate() !== createdAt.getDate()) {
-            const lastDayOfMonth = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
-            next.setDate(Math.min(createdAt.getDate(), lastDayOfMonth));
+        const originalDay = createdAt.getDate();
+        const lastDayOfMonth = new Date(chargeDate.getFullYear(), chargeDate.getMonth() + 1, 0).getDate();
+        chargeDate.setDate(Math.min(originalDay, lastDayOfMonth));
+
+        // Calculate trigger date (2 days before charge)
+        const triggerDate = new Date(chargeDate);
+        triggerDate.setDate(triggerDate.getDate() - 2);
+
+        // Only push trigger dates in the past up to 30 days in future
+        if (triggerDate <= futureLimit) {
+            vippsTriggerDates.push(triggerDate);
         }
+
+        // Move to next month
+        next.setMonth(next.getMonth() + 1);
     }
 
-    return monthlyChargeDates;
+    return vippsTriggerDates;
 }
 
 const getVippsCharge = async (chargeId) => {
@@ -668,7 +679,7 @@ module.exports = {
     makeVippsReceipt,
     createRecurringCharge,
     handleFailedCharge,
-    getNextVippsTriggerDate,
+    getVippsTriggerDates,
     getVippsLatestCharge,
     getVippsCharge,
     getPaidVippsCharges

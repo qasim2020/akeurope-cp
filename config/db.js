@@ -6,7 +6,7 @@ const Donor = require('../models/Donor');
 const Customer = require('../models/Customer');
 const VippsChargeRequest = require('../models/VippsChargeRequest');
 const { getVippsSubscriptionsByOrderId } = require('../modules/vippsPartner');
-const { createRecurringCharge, getNextVippsTriggerDate } = require('../modules/vippsModules');
+const { createRecurringCharge, getVippsTriggerDates } = require('../modules/vippsModules');
 const { vippsChargeCaptured } = require('../modules/vippsWebhookHandler');
 const { sendErrorToTelegram, sendTelegramMessage } = require('../modules/telegramBot');
 
@@ -50,11 +50,11 @@ async function handleRecurringVippsPayments() {
     const agreement = donor.vippsAgreements.find((a) => a.id === order.vippsAgreementId);
 
     const paidCharges = await getVippsSubscriptionsByOrderId(order.vippsAgreementId);
-    const calculatedChargeMonths = getNextVippsTriggerDate(order.createdAt);
+    const calculatedChargeMonths = getVippsTriggerDates(order.createdAt);
     const requiredCharges = calculatedChargeMonths.length;
 
     if (agreement.status !== 'ACTIVE') {
-      message.push(`${order.orderNo} x ${agreement.id}: Agreement cancelled. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
+      message.push(`${order.orderNo} x ${agreement.id}: Agreement cancelled. \nName = ${customer.name} \nEmail = ${donor.email} \ntel = ${customer.tel} \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
       continue;
     }
 
