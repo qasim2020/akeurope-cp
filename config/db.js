@@ -38,7 +38,7 @@ async function handleRecurringVippsPayments() {
   const combined = [...orders, ...subscriptions].sort((a, b) => a.orderNo - b.orderNo);
   const combinedOrderNos = combined.map(order => order.orderNo);
   let message = [];
-  message.push(`Found ${combined.length} orders on vipps-charges; ${combinedOrderNos.join(', ')}`);
+  message.push(`Found ${combined.length} orders on vipps-charges`);
   for (const order of combined) {
 
     const customer = await Customer.findById(order.customerId).lean();
@@ -51,10 +51,11 @@ async function handleRecurringVippsPayments() {
 
     const paidCharges = await getVippsSubscriptionsByOrderId(order.vippsAgreementId);
     const calculatedChargeMonths = getVippsTriggerDates(order.createdAt);
-    const requiredCharges = calculatedChargeMonths.length;
+    const now = new Date();
+    const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
 
     if (agreement.status !== 'ACTIVE') {
-      message.push(`${order.orderNo} x ${agreement.id}: Agreement cancelled. \nName = ${customer.name} \nEmail = ${donor.email} \ntel = ${customer.tel} \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
+      // message.push(`${order.orderNo} x ${agreement.id}: Agreement cancelled. \nName = ${customer.name} \nEmail = ${donor.email} \ntel = ${customer.tel} \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
       continue;
     }
 
@@ -65,7 +66,7 @@ async function handleRecurringVippsPayments() {
         createdAt: { $gte: sixDaysAgo }
       }).lean();
       if (alreadyRequestedVipps) {
-        message.push(`${order.orderNo}: Charge response awaited from vipps. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nChargeId: ${alreadyRequestedVipps.chargeId} \nRequested At: ${alreadyRequestedVipps.createdAt} `);
+        message.push(`${order.orderNo}: Charge response awaited from vipps. \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nChargeId: ${alreadyRequestedVipps.chargeId} \nRequested At: ${alreadyRequestedVipps.createdAt.toISOString().split('T')[0]} `);
       } else {
         if (process.env.ENV === 'test') {
           message.push(`${order.orderNo}: Test environment - Not creating a charge \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
@@ -79,7 +80,8 @@ async function handleRecurringVippsPayments() {
         }
       }
     } else {
-      message.push(`${order.orderNo}: No action needed \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
+      const nextChargeDate = calculatedChargeMonths[calculatedChargeMonths.length - 1];
+      message.push(`${order.orderNo}: No action needed \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nNext Charge Date: ${nextChargeDate.toISOString().split('T')[0]}`);
     }
   }
 
