@@ -88,7 +88,7 @@ async function handleRecurringVippsPayments() {
       }
     } else {
       const nextChargeDate = calculatedChargeMonths[calculatedChargeMonths.length - 1];
-      message.push(`${order.orderNo}: No action needed \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nNext Charge Date: ${nextChargeDate.toISOString().split('T')[0]}`);
+      message.push(`${order.orderNo}: No action needed \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length} \nNext Trigger Date: ${nextChargeDate.toISOString().split('T')[0]}`);
     }
   }
 

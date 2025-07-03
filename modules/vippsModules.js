@@ -100,7 +100,7 @@ function getVippsTriggerDates(orderCreationDate) {
         const lastDay = new Date(year, month + 1, 0).getDate();
         const chargeDate = new Date(year, month, Math.min(originalDay, lastDay));
         const triggerDate = new Date(chargeDate);
-        triggerDate.setDate(triggerDate.getDate() - 1);
+        triggerDate.setDate(triggerDate.getDate() - 2);
         
         if (triggerDate > futureLimit) break;
         
