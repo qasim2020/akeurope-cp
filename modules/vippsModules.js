@@ -87,34 +87,32 @@ const getRecentVippsCharges = async (orderId) => {
 
 function getVippsTriggerDates(orderCreationDate) {
     const createdAt = new Date(orderCreationDate);
-    const now = new Date();
     const futureLimit = new Date();
-    futureLimit.setDate(futureLimit.getDate() + 30); // Now + 30 days
-
+    futureLimit.setDate(futureLimit.getDate() + 30);
     const vippsTriggerDates = [];
-    let next = new Date(createdAt);
-
-    while (next <= futureLimit) {
-        const chargeDate = new Date(next);
-        
-        // Handle month overflow (e.g., Jan 31 -> Feb 28)
-        const originalDay = createdAt.getDate();
-        const lastDayOfMonth = new Date(chargeDate.getFullYear(), chargeDate.getMonth() + 1, 0).getDate();
-        chargeDate.setDate(Math.min(originalDay, lastDayOfMonth));
-
-        // Calculate trigger date (2 days before charge)
+    const originalDay = createdAt.getDate();
+    
+    let current = new Date(createdAt);
+    
+    while (true) {
+        const year = current.getFullYear();
+        const month = current.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const chargeDate = new Date(year, month, Math.min(originalDay, lastDay));
         const triggerDate = new Date(chargeDate);
-        triggerDate.setDate(triggerDate.getDate() - 2);
-
-        // Only push trigger dates in the past up to 30 days in future
-        if (triggerDate <= futureLimit) {
-            vippsTriggerDates.push(triggerDate);
-        }
-
-        // Move to next month
-        next.setMonth(next.getMonth() + 1);
+        triggerDate.setDate(triggerDate.getDate() - 1);
+        
+        if (triggerDate > futureLimit) break;
+        
+        vippsTriggerDates.push(triggerDate);
+        
+        // Fix: Set to the 1st of next month, then adjust to originalDay
+        current = new Date(year, month + 1, 1);
+        // Then set the day, but don't let it overflow to next month
+        const nextMonthLastDay = new Date(year, month + 2, 0).getDate();
+        current.setDate(Math.min(originalDay, nextMonthLastDay));
     }
-
+    
     return vippsTriggerDates;
 }
 

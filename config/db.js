@@ -54,6 +54,13 @@ async function handleRecurringVippsPayments() {
     const now = new Date();
     const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
 
+    // console.log({
+    //   createdAt: order.createdAt,
+    //   requiredCharges,
+    //   calculatedChargeMonths,
+    //   paidCharges: paidCharges.length,
+    // })
+
     if (agreement.status !== 'ACTIVE') {
       // message.push(`${order.orderNo} x ${agreement.id}: Agreement cancelled. \nName = ${customer.name} \nEmail = ${donor.email} \ntel = ${customer.tel} \nRequiredCharges = ${requiredCharges} | Paid Charges = ${paidCharges.length}`);
       continue;
