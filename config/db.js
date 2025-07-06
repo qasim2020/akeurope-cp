@@ -24,13 +24,11 @@ const connectDB = async () => {
 };
 
 async function handleRecurringVippsPayments() {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const query = {
     monthlySubscription: true,
     vippsAgreementId: { $exists: true },
     customerId: { $ne: process.env.TEMP_CUSTOMER_ID },
-    createdAt: { $lt: thirtyDaysAgo }
   };
 
   const orders = await Order.find(query).select('_id orderNo vippsAgreementId createdAt customerId').lean();
@@ -53,7 +51,6 @@ async function handleRecurringVippsPayments() {
     const calculatedChargeMonths = getVippsTriggerDates(order.createdAt);
     const now = new Date();
     const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
-
 
     if (agreement.status !== 'ACTIVE') continue;
     
