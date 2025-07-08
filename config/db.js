@@ -52,6 +52,10 @@ async function handleRecurringVippsPayments() {
     const now = new Date();
     const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     if (agreement.status !== 'ACTIVE') continue;
     
     if (requiredCharges > paidCharges.length) {
