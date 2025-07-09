@@ -52,10 +52,6 @@ async function handleRecurringVippsPayments() {
     const now = new Date();
     const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
 
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
     if (agreement.status !== 'ACTIVE') continue;
     
     if (requiredCharges > paidCharges.length) {
@@ -110,7 +106,7 @@ mongoose.connection.on('open', async () => {
     } catch (error) {
       console.error('Error handling expired vipps orders:', error);
     }
-  }, 6 * 60 * 60 * 1000);
+  }, 24 * 60 * 60 * 1000);
 });
 
 module.exports = connectDB;
