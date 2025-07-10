@@ -11,7 +11,7 @@ const CustomerSchema = new mongoose.Schema({
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
     emailStatus: { type: String },
     emailStatusUpdates: { type: Boolean, default: true },
-    phoneStatusUpdates: { type: Boolean, default: true },
+    phoneStatusUpdates: { type: Boolean, default: false },
     tel: { type: String},
     anonymous: { type: String},
     countryCode: { type: String},
