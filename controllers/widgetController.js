@@ -11,7 +11,7 @@ const Customer = require('../models/Customer');
 const Donor = require('../models/Donor');
 
 const { calculateOrder, addPaymentsToOrder, formatOrderWidget, cleanOrder } = require('../modules/orders');
-const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder } = require('../modules/ordersFetchEntries');
+const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder, getDonorPickEntries } = require('../modules/ordersFetchEntries');
 const { runQueriesOnOrder } = require('../modules/orderUpdates');
 const {
     successfulOneTimePayment,
@@ -108,6 +108,7 @@ exports.overlay = async (req, res) => {
         res.render('overlays/paymentModal', {
             layout: false,
             data: {
+                env: process.env.ENV,
                 project,
                 donor,
                 publicKey,
@@ -209,7 +210,7 @@ exports.createNewOrder = async (req, res) => {
         req.query.currency = country.currency.code;
         req.query.select = 3;
 
-        const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
+        const { project, allEntries } = await getDonorPickEntries(req, checkProject);
 
         const updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 1);
 
@@ -273,9 +274,9 @@ exports.updateOrder = async (req, res) => {
         if (req.query.addEntries) {
             const currentEntries = order.projects.flatMap((project) => project.entries);
             req.query.orderId = new mongoose.Types.ObjectId();
-            req.query.select = currentEntries.length + 3;
+            req.query.select = 3;
 
-            const { project, allEntries } = await getOldestPaidEntries(req, checkProject);
+            const { project, allEntries } = await getDonorPickEntries(req, checkProject);
 
             const newEntries = allEntries
                 .filter((newEntry) => {

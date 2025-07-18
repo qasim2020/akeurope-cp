@@ -140,15 +140,14 @@ const getPreviousOrdersForEntry = async (entryId, orderId) => {
     if (!orderId) {
         throw new Error('order id is required');
     }
-    const lastPaidOrders = await Order.aggregate([
+    const otherOrders = await Order.aggregate([
         { $unwind: '$projects' },
         { $unwind: '$projects.entries' },
         {
             $match: {
                 _id: { $ne: orderId },
                 'projects.entries.entryId': entryId,
-                // 'projects.entries.totalCost': { $gt: 0 },
-                // status: 'paid',
+                status: { $ne: 'expired' },
             },
         },
         {
@@ -180,9 +179,9 @@ const getPreviousOrdersForEntry = async (entryId, orderId) => {
         { $sort: { lastPaid: 1 } },
     ]);
 
-    const lastPaid = lastPaidOrders.length > 0 ? lastPaidOrders : null;
+    const lastSelected = otherOrders.length > 0 ? otherOrders : null;
 
-    return lastPaid;
+    return lastSelected;
 };
 
 const getNonFullySubscribedEntries = async (orderId, project, alreadySelectedEntries, searchQuery) => {
@@ -267,9 +266,7 @@ const getNonFullySubscribedEntries = async (orderId, project, alreadySelectedEnt
                 }
             }
             if (isFullySubscribed) break;
-
             if (orderExpired) break;
-            if (isFullySubscribed) break;
         }
 
         if (!isFullySubscribed) {
@@ -370,15 +367,96 @@ const getExpiredOrdersEntries = async (project, searchQuery, alreadySelectedEntr
 
     const validExpiredEntries = expiredEntries.filter(entry => {
         if (!entry.dateOfBirth) return false;
-        
+
         const birthDate = new Date(entry.dateOfBirth);
         const ageInYears = (currentDate - birthDate) / (365.25 * 24 * 60 * 60 * 1000);
-        
+
         return ageInYears < 17;
     });
 
     return validExpiredEntries;
 };
+
+const getDonorPickEntries = async (req, project) => {
+    const slug = project.slug;
+    const { select } = req.query;
+    const Entry = await createDynamicModel(slug);
+
+    const selectCount = parseInt(select) || 50;
+
+    const occupiedEntryIds = await Order.distinct('projects.entries.entryId', {
+        'projects.slug': slug,
+        status: { $in: ['paid', 'draft', 'aborted', 'pending payment', 'processing'] }
+    });
+
+    let projectUnavailableEntryIds;
+    if (project.type === 'orphan') {
+        const sponsorshipField = project.fields.find(f => f.subscription)?.name;
+        const cutoffDate = new Date();
+        cutoffDate.setFullYear(cutoffDate.getFullYear() - 17);
+        cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+        projectUnavailableEntryIds = await Entry.find({
+            dateOfBirth: {
+                $lte: cutoffDate
+            },
+        }).select('_id').lean();
+    } else if (project.type === 'scholarship') {
+        const sponsorshipEndDateField = project.fields.find(f => f.sStop)?.name;
+        const now = new Date();
+        const oneMonthFromNow = new Date();
+        oneMonthFromNow.setMonth(now.getMonth() + 1);
+        projectUnavailableEntryIds = await Entry.find({
+            [sponsorshipEndDateField]: { $lt: oneMonthFromNow },
+        }).select(`_id`).lean();
+    }
+
+    const unavailableEntryIds = [
+        ...occupiedEntryIds.map(id => id.toString()),
+        ...projectUnavailableEntryIds.map(val => val._id.toString()),
+    ];
+
+    const expiredOrderEntries = await Order.distinct('projects.entries.entryId', {
+        'projects.slug': project.slug,
+        status: 'expired'
+    });
+
+    const expiredOrderEntryIds = expiredOrderEntries.map(val => val._id.toString());
+
+    let entries = [];
+
+    if (selectCount > expiredOrderEntryIds.length) {
+        const remainingCount = selectCount - expiredOrderEntryIds.length;
+
+        const expiredEntries = await Entry.find({
+            _id: { $in: expiredOrderEntryIds, $nin: unavailableEntryIds }
+        }).lean();
+
+        const additionalEntries = await Entry.find({
+            _id: { $nin: [...unavailableEntryIds, ...expiredOrderEntryIds] }
+        })
+            .limit(remainingCount)
+            .lean();
+
+        entries = [...expiredEntries, ...additionalEntries];
+
+    } else {
+        entries = await Entry.find({
+            _id: { $in: expiredOrderEntryIds, $nin: unavailableEntryIds }
+        })
+            .limit(selectCount)
+            .lean();
+    }
+    
+    for (let i = entries.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [entries[i], entries[j]] = [entries[j], entries[i]];
+    }
+
+    return {
+        project,
+        allEntries: entries,
+    };
+}
 
 const getOldestPaidEntries = async (req, project, pickDraft = true) => {
     const DynamicModel = await createDynamicModel(project.slug);
@@ -417,7 +495,7 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
     const alreadySelectedEntries = alreadySelectedEntriesResult[0]?.entryIds || [];
 
     const expiredOrdersEntries = await getExpiredOrdersEntries(project, searchQuery, alreadySelectedEntries);
-    
+
     let entriesToPay = [];
     let remainingCount = selectCount;
 
@@ -425,7 +503,7 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
         const expiredToTake = Math.min(expiredOrdersEntries.length, remainingCount);
         entriesToPay = expiredOrdersEntries.slice(0, expiredToTake);
         remainingCount -= expiredToTake;
-        
+
         const expiredEntryIds = entriesToPay.map(entry => entry._id);
         alreadySelectedEntries.push(...expiredEntryIds);
     }
@@ -444,10 +522,10 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
             })
                 .limit(notSelectedToTake)
                 .lean();
-            
+
             entriesToPay = [...entriesToPay, ...notSelectedEntries];
             remainingCount -= notSelectedToTake;
-            
+
             const newEntryIds = notSelectedEntries.map(entry => entry._id);
             alreadySelectedEntries.push(...newEntryIds);
         }
@@ -477,7 +555,7 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
                         oldOrders: payments.oldOrders,
                     };
                 });
-                
+
                 entriesToPay = [...entriesToPay, ...halfPaidEntries];
                 remainingCount -= halfPaidToTake;
             }
@@ -491,7 +569,7 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
                         oldOrders: payments.oldOrders,
                     };
                 });
-                
+
                 entriesToPay = [...entriesToPay, ...paidEntries];
             }
         }
@@ -503,26 +581,9 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
     };
 };
 
-
 const makeSubscriptionArrayForOrder = (project, entry) => {
     const subArray = project.fields
-        .filter((field) => {
-            const isSubscriptionValid = field.subscription && entry[field.name];
-
-            if (!entry.oldOrders || !isSubscriptionValid) {
-                return isSubscriptionValid;
-            }
-
-            const isAlreadyOrdered = entry.oldOrders.some((order) => {
-                return (
-                    order.selectedSubscriptions &&
-                    order.selectedSubscriptions.includes(field.name) &&
-                    new Date(order.expiry) > new Date()
-                );
-            });
-
-            return isSubscriptionValid && isAlreadyOrdered == false;
-        })
+        .filter((field) => field.subscription && entry[field.name])
         .map((field) => field.name);
     return subArray;
 };
@@ -619,7 +680,7 @@ const getEntriesByCustomerId = async (req, customerId) => {
                             },
                         },
                         unit: 'day',
-                        amount: 2, 
+                        amount: 2,
                     },
                 },
             },
@@ -634,7 +695,7 @@ const getEntriesByCustomerId = async (req, customerId) => {
 
     const validEntriesByProject = orders.flatMap((order) =>
         order.projects.flatMap((project) =>
-            project.entries.map((entry) => ( entry.totalCost > 0 ? {
+            project.entries.map((entry) => (entry.totalCost > 0 ? {
                 projectSlug: project.slug,
                 entryId: entry.entryId,
                 orderNo: order.orderNo,
@@ -646,7 +707,7 @@ const getEntriesByCustomerId = async (req, customerId) => {
                 renewalDate: order.monthlySubscription
                     ? new Date(new Date(order.createdAt).getTime() + project.months * 30 * 24 * 60 * 60 * 1000)
                     : null,
-            }: null)).filter(entry => entry != null),
+            } : null)).filter(entry => entry != null),
         ),
     );
 
@@ -662,7 +723,7 @@ const getEntriesByCustomerId = async (req, customerId) => {
     const totalPages = Math.ceil(total / limit);
 
     const paginatedEntriesByProject = paginate(validEntriesByProject, page, limit);
-    
+
     const mergedEntriesByProject = await paginatedEntriesByProject.reduce(async (accPromise, entry) => {
         const acc = await accPromise;
 
@@ -725,7 +786,7 @@ const getEntriesByCustomerId = async (req, customerId) => {
     };
 };
 
-const paginateActiveSubscriptions = (req,entries) => {
+const paginateActiveSubscriptions = (req, entries) => {
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -756,4 +817,5 @@ module.exports = {
     getEntriesByCustomerId,
     paginateActiveSubscriptions,
     getExpiredOrdersEntries,
+    getDonorPickEntries,
 };

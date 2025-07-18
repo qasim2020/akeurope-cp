@@ -908,6 +908,19 @@
         // START WIDGET
 
         let widgetStarted = false;
+        
+        $(async function () {
+
+            const testMode = '{{data.env}}' === 'test' ? true : false;
+
+            console.log(testMode, '{{data.env}}');
+
+            if (testMode) {
+                await startWidget();
+                widgetStarted = true;
+            }
+
+        })
 
         window.addEventListener('message', async function (event) {
             if (event.data === 'goingVisible') {
