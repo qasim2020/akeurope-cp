@@ -422,17 +422,22 @@ const getDonorPickEntries = async (req, project) => {
 
     const expiredOrderEntryIds = expiredOrderEntries.map(val => val._id.toString());
 
+    const expiredFresh = expiredOrderEntryIds.filter(
+        id => !unavailableEntryIds.includes(id)
+    );
+
     let entries = [];
 
-    if (selectCount > expiredOrderEntryIds.length) {
-        const remainingCount = selectCount - expiredOrderEntryIds.length;
+    if (selectCount > expiredFresh.length) {
 
         const expiredEntries = await Entry.find({
-            _id: { $in: expiredOrderEntryIds, $nin: unavailableEntryIds }
+            _id: { $in: expiredFresh, $nin: unavailableEntryIds }
         }).lean();
 
+        const remainingCount = selectCount - expiredEntries.length;
+
         const additionalEntries = await Entry.find({
-            _id: { $nin: [...unavailableEntryIds, ...expiredOrderEntryIds] }
+            _id: { $nin: [...unavailableEntryIds, ...expiredFresh] }
         })
             .limit(remainingCount)
             .lean();
@@ -446,8 +451,8 @@ const getDonorPickEntries = async (req, project) => {
             .limit(selectCount)
             .lean();
     }
-    
-    console.log({selectCount, expiredEntries: expiredOrderEntries.length, entriesLength: entries.length});
+
+    console.log({ selectCount, expiredEntries: expiredOrderEntries.length, expiredFresh, entriesLength: entries.length });
 
     for (let i = entries.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
