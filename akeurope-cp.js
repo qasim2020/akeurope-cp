@@ -153,7 +153,7 @@ app.get('/', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
     } else {
-        res.redirect('/login');
+        return res.redirect('/login');
     }
 });
 

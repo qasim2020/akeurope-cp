@@ -298,6 +298,88 @@ const getNonFullySubscribedEntries = async (orderId, project, alreadySelectedEnt
     return { nonFullySubscribed, fullySubscribed };
 };
 
+const getExpiredOrdersEntries = async (project, searchQuery, alreadySelectedEntries) => {
+    if (project.slug !== 'gaza_orphans') {
+        return [];
+    }
+
+    const DynamicModel = await createDynamicModel(project.slug);
+    const currentDate = new Date();
+    const oneDayFromNow = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
+
+    const expiredOrdersAggregation = await Order.aggregate([
+        {
+            $match: {
+                status: 'expired',
+                'projects.slug': project.slug
+            }
+        },
+        {
+            $unwind: '$projects'
+        },
+        {
+            $match: {
+                'projects.slug': project.slug
+            }
+        },
+        {
+            $unwind: '$projects.entries'
+        },
+        {
+            $addFields: {
+                sponsorshipEndDate: {
+                    $dateAdd: {
+                        startDate: '$createdAt',
+                        unit: 'month',
+                        amount: '$projects.months'
+                    }
+                }
+            }
+        },
+        {
+            $match: {
+                sponsorshipEndDate: { $gt: oneDayFromNow }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                entryIds: { $addToSet: '$projects.entries.entryId' }
+            }
+        }
+    ]);
+
+    const expiredOrderEntryIds = expiredOrdersAggregation[0]?.entryIds || [];
+
+    if (expiredOrderEntryIds.length === 0) {
+        return [];
+    }
+
+    const availableExpiredEntryIds = expiredOrderEntryIds.filter(
+        entryId => !alreadySelectedEntries.some(selectedId => selectedId.toString() === entryId.toString())
+    );
+
+    if (availableExpiredEntryIds.length === 0) {
+        return [];
+    }
+
+    const expiredEntries = await DynamicModel.find({
+        _id: { $in: availableExpiredEntryIds },
+        ...searchQuery
+    }).lean();
+
+    const validExpiredEntries = expiredEntries.filter(entry => {
+        if (!entry.dateOfBirth) return false;
+        
+        const birthDate = new Date(entry.dateOfBirth);
+        const ageInYears = (currentDate - birthDate) / (365.25 * 24 * 60 * 60 * 1000);
+        
+        return ageInYears < 17;
+    });
+
+    return validExpiredEntries;
+};
+
 const getOldestPaidEntries = async (req, project, pickDraft = true) => {
     const DynamicModel = await createDynamicModel(project.slug);
     const collectionName = DynamicModel.collection.name;
@@ -334,90 +416,85 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
 
     const alreadySelectedEntries = alreadySelectedEntriesResult[0]?.entryIds || [];
 
-    const countNotSelected = await DynamicModel.countDocuments({
-        _id: { $nin: alreadySelectedEntries },
-        ...searchQuery,
-    });
-
+    const expiredOrdersEntries = await getExpiredOrdersEntries(project, searchQuery, alreadySelectedEntries);
+    
     let entriesToPay = [];
+    let remainingCount = selectCount;
 
-    if (countNotSelected > selectCount) {
-        entriesToPay = await DynamicModel.find({
-            _id: { $nin: alreadySelectedEntries },
-            ...searchQuery,
-        })
-            .limit(selectCount)
-            .lean();
-        return {
-            project,
-            allEntries: entriesToPay,
-        };
+    if (expiredOrdersEntries.length > 0) {
+        const expiredToTake = Math.min(expiredOrdersEntries.length, remainingCount);
+        entriesToPay = expiredOrdersEntries.slice(0, expiredToTake);
+        remainingCount -= expiredToTake;
+        
+        const expiredEntryIds = entriesToPay.map(entry => entry._id);
+        alreadySelectedEntries.push(...expiredEntryIds);
     }
 
-    if (!pickDraft) {
-        entriesToPay = await DynamicModel.find({
+    if (remainingCount > 0) {
+        const countNotSelected = await DynamicModel.countDocuments({
             _id: { $nin: alreadySelectedEntries },
             ...searchQuery,
-        })
-            .limit(selectCount)
-            .lean();
-        return {
-            project,
-            allEntries: entriesToPay,
-        };
-    }
+        });
 
-    const { nonFullySubscribed: lastIncompleteOrders, fullySubscribed: lastOrders } = await getNonFullySubscribedEntries(
-        req.query.orderId,
-        project,
-        alreadySelectedEntries,
-        searchQuery,
-    );
-
-    let paidEntryIds = lastOrders.map((order) => order.entryId);
-    let halfPaidEntryIds = lastIncompleteOrders.map((order) => order.entryId);
-
-    const countHalfPaid = await DynamicModel.countDocuments({
-        _id: { $in: halfPaidEntryIds },
-        ...searchQuery,
-    });
-
-    const countNotPaid = countNotSelected;
-
-    if (countNotPaid <= selectCount) {
-        let entriesWithPayments = [];
-        let entriesWithHalfPayments = [];
-        let entriesWithOutPayments = [];
-        const pickFromNotPaid = countNotPaid;
-        const pickFromHalfPaid = selectCount - countNotPaid >= countHalfPaid ? countHalfPaid : selectCount - countNotPaid;
-        const pickFromPaid = selectCount - (pickFromNotPaid + pickFromHalfPaid);
-        if (pickFromNotPaid > 0) {
-            entriesWithOutPayments = await DynamicModel.find({
-                _id: { $nin: [...paidEntryIds, ...halfPaidEntryIds] },
+        if (countNotSelected > 0) {
+            const notSelectedToTake = Math.min(countNotSelected, remainingCount);
+            const notSelectedEntries = await DynamicModel.find({
+                _id: { $nin: alreadySelectedEntries },
                 ...searchQuery,
             })
-                .limit(pickFromNotPaid)
+                .limit(notSelectedToTake)
                 .lean();
+            
+            entriesToPay = [...entriesToPay, ...notSelectedEntries];
+            remainingCount -= notSelectedToTake;
+            
+            const newEntryIds = notSelectedEntries.map(entry => entry._id);
+            alreadySelectedEntries.push(...newEntryIds);
         }
-        if (pickFromHalfPaid > 0) {
-            const shuffledOrders = lastIncompleteOrders.sort(() => Math.random() - 0.5);
-            entriesWithHalfPayments = shuffledOrders.slice(0, pickFromHalfPaid).map((payments) => {
-                return {
-                    ...payments.entry,
-                    oldOrders: payments.oldOrders,
-                };
+
+        if (remainingCount > 0 && pickDraft) {
+            const { nonFullySubscribed: lastIncompleteOrders, fullySubscribed: lastOrders } = await getNonFullySubscribedEntries(
+                req.query.orderId,
+                project,
+                alreadySelectedEntries.filter(id => !entriesToPay.some(entry => entry._id.toString() === id.toString())),
+                searchQuery,
+            );
+
+            const halfPaidEntryIds = lastIncompleteOrders.map((order) => order.entryId);
+            const paidEntryIds = lastOrders.map((order) => order.entryId);
+
+            const countHalfPaid = await DynamicModel.countDocuments({
+                _id: { $in: halfPaidEntryIds },
+                ...searchQuery,
             });
+
+            if (countHalfPaid > 0 && remainingCount > 0) {
+                const halfPaidToTake = Math.min(countHalfPaid, remainingCount);
+                const shuffledIncompleteOrders = lastIncompleteOrders.sort(() => Math.random() - 0.5);
+                const halfPaidEntries = shuffledIncompleteOrders.slice(0, halfPaidToTake).map((payments) => {
+                    return {
+                        ...payments.entry,
+                        oldOrders: payments.oldOrders,
+                    };
+                });
+                
+                entriesToPay = [...entriesToPay, ...halfPaidEntries];
+                remainingCount -= halfPaidToTake;
+            }
+
+            if (remainingCount > 0) {
+                const paidToTake = Math.min(lastOrders.length, remainingCount);
+                const shuffledOrders = lastOrders.sort(() => Math.random() - 0.5);
+                const paidEntries = shuffledOrders.slice(0, paidToTake).map((payments) => {
+                    return {
+                        ...payments.entry,
+                        oldOrders: payments.oldOrders,
+                    };
+                });
+                
+                entriesToPay = [...entriesToPay, ...paidEntries];
+            }
         }
-        if (pickFromPaid > 0) {
-            const shuffledOrders = lastOrders.sort(() => Math.random() - 0.5);
-            entriesWithPayments = shuffledOrders.slice(0, pickFromPaid).map((payments) => {
-                return {
-                    ...payments.entry,
-                    oldOrders: payments.oldOrders,
-                };
-            });
-        }
-        entriesToPay = [...entriesWithOutPayments, ...entriesWithHalfPayments, ...entriesWithPayments];
     }
 
     return {
@@ -425,6 +502,7 @@ const getOldestPaidEntries = async (req, project, pickDraft = true) => {
         allEntries: entriesToPay,
     };
 };
+
 
 const makeSubscriptionArrayForOrder = (project, entry) => {
     const subArray = project.fields
@@ -677,4 +755,5 @@ module.exports = {
     validateQuery,
     getEntriesByCustomerId,
     paginateActiveSubscriptions,
+    getExpiredOrdersEntries,
 };
