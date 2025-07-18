@@ -4,20 +4,24 @@
 
     <div class="card-header border-0 flex-column align-items-start">
         {{#if (gt list.totalEntries 1)}}
-        <h3 class="card-title">Active Beneficiaries ({{list.totalEntries}})</h3>
+        <h3 class="card-title">Active Beneficiaries ({{list.totalEntries}})</h3>        
         <div class="text-secondary">
-            Below orphans/ beneficiaries have been linked to your profile. 
-            We are trying to build a live orphan reporting system that makes us all, our donors/ employees/ sponsor organizations, work hands in hands. 
-            Please reach out to us for your valuable feedback on whatsapp (Abdul Wahab +47 929 21 200).
-            You may click on an orphan's photo to see their details.
+            Below orphans/ beneficiaries have been linked to your profile.
+            Click on a photo to see beneficiary details.
+            We are trying to build a live reporting system that makes us all, our donors/ employees/ sponsor
+            organizations/ beneficiaries, work hands in hands.
+            Please reach out to us for your valuable feedback on whatsapp (Qasim Ali +47 92 91 6580 | Hamid Farooq +47
+            4015 0015 | Abdul Wahab +47 4578 2299).
         </div>
         {{else}}
         <h3 class="card-title">Active Beneficiary</h3>
         <div class="text-secondary">
-            Below orphan/ beneficiary has been linked to your profile. 
-            We are trying to build a live orphan reporting system that makes us all, our donors/ employees/ sponsor organizations, work hands in hands. 
-            Please reach out to us for your valuable feedback on whatsapp (Abdul Wahab +47 929 21 200).
-            You may click on an orphan's photo to see their details.
+            Below orphan/ beneficiary has been linked to your profile.
+            Click on a photo to see beneficiary details.
+            We are trying to build a live reporting system that makes us all, our donors/ employees/ sponsor
+            organizations/ beneficiaries, work hands in hands.
+            Please reach out to us for your valuable feedback on whatsapp (Qasim Ali +47 92 91 6580 | Hamid Farooq +47
+            4015 0015 | Abdul Wahab +47 4578 2299).
         </div>
         {{/if}}
     </div>
@@ -40,7 +44,8 @@
             </li>
             {{#each list.pagesArray}}
             <li class="page-item {{#if (eq list.currentPage this)}}active{{/if}}">
-                <a class="page-link cursor-pointer" my-href="/get-active-subscriptions/{{../../data.customer._id}}?page={{this}}"
+                <a class="page-link cursor-pointer"
+                    my-href="/get-active-subscriptions/{{../../data.customer._id}}?page={{this}}"
                     onclick="getActiveSubscriptions(this)">{{this}}</a>
             </li>
             {{/each}}
