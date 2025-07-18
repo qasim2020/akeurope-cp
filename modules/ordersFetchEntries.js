@@ -447,6 +447,8 @@ const getDonorPickEntries = async (req, project) => {
             .lean();
     }
     
+    console.log({selectCount, expiredEntries: expiredOrderEntries.length, entriesLength: entries.length});
+
     for (let i = entries.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [entries[i], entries[j]] = [entries[j], entries[i]];
