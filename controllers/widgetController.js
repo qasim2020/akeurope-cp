@@ -11,7 +11,7 @@ const Customer = require('../models/Customer');
 const Donor = require('../models/Donor');
 
 const { calculateOrder, addPaymentsToOrder, formatOrderWidget, cleanOrder } = require('../modules/orders');
-const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder, getDonorPickEntries } = require('../modules/ordersFetchEntries');
+const { getOldestPaidEntries, makeProjectForWidgetOrder, makeEntriesForWidgetOrder, getDonorPickEntries, getProjectUnavailableEntryIds } = require('../modules/ordersFetchEntries');
 const { runQueriesOnOrder } = require('../modules/orderUpdates');
 const {
     successfulOneTimePayment,
@@ -30,6 +30,7 @@ const {
     createPaymentIntentModule,
 } = require('../modules/stripe');
 const { Tracker } = require('../models/Tracker');
+const { createDynamicModel } = require('../models/createDynamicModel');
 
 exports.widgets = async (req, res) => {
     try {
@@ -212,6 +213,19 @@ exports.createNewOrder = async (req, res) => {
 
         const { project, allEntries } = await getDonorPickEntries(req, checkProject);
 
+        if (allEntries.length < 3) {
+            const remainingCount = 3 - allEntries.length;
+            const slug = checkProject.slug;
+            const Entry = await createDynamicModel(slug);
+            const projectUnavailableEntryIds = await getProjectUnavailableEntryIds(slug);
+            const skippedEntries = await Entry.find({
+                _id: { $nin: projectUnavailableEntryIds }
+            })
+                .limit(remainingCount)
+                .lean();
+            allEntries.push(...skippedEntries);
+        }
+
         const updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 1);
 
         const cloudlfareIp = req.headers['cf-connecting-ip'];
@@ -277,6 +291,19 @@ exports.updateOrder = async (req, res) => {
             req.query.select = 3;
 
             const { project, allEntries } = await getDonorPickEntries(req, checkProject);
+
+            if (allEntries.length < 3) {
+                const remainingCount = currentEntries.length + 3;
+                const slug = checkProject.slug;
+                const Entry = await createDynamicModel(slug);
+                const projectUnavailableEntryIds = await getProjectUnavailableEntryIds(slug);
+                const skippedEntries = await Entry.find({
+                    _id: { $nin: projectUnavailableEntryIds }
+                })
+                    .limit(remainingCount)
+                    .lean();
+                allEntries.push(...skippedEntries);
+            }
 
             const newEntries = allEntries
                 .filter((newEntry) => {

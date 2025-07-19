@@ -377,6 +377,33 @@ const getExpiredOrdersEntries = async (project, searchQuery, alreadySelectedEntr
     return validExpiredEntries;
 };
 
+const getProjectUnavailableEntryIds = async (slug) => {
+    const project = await Project.findOne({slug}).lean();
+    const Entry = await createDynamicModel(slug);
+    let projectUnavailableEntryIds;
+    if (project.type === 'orphan') {
+        const sponsorshipField = project.fields.find(f => f.subscription)?.name;
+        const cutoffDate = new Date();
+        cutoffDate.setFullYear(cutoffDate.getFullYear() - 17);
+        cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+        projectUnavailableEntryIds = await Entry.find({
+            dateOfBirth: {
+                $lte: cutoffDate
+            },
+        }).select('_id').lean();
+    } else if (project.type === 'scholarship') {
+        const sponsorshipEndDateField = project.fields.find(f => f.sStop)?.name;
+        const now = new Date();
+        const oneMonthFromNow = new Date();
+        oneMonthFromNow.setMonth(now.getMonth() + 1);
+        projectUnavailableEntryIds = await Entry.find({
+            [sponsorshipEndDateField]: { $lt: oneMonthFromNow },
+        }).select(`_id`).lean();
+    }
+    const unavailableEntryIds = projectUnavailableEntryIds.map(val => val._id.toString());
+    return unavailableEntryIds;
+}
+
 const getDonorPickEntries = async (req, project) => {
     const slug = project.slug;
     const { select } = req.query;
@@ -451,8 +478,6 @@ const getDonorPickEntries = async (req, project) => {
             .limit(selectCount)
             .lean();
     }
-
-    console.log({ selectCount, expiredEntries: expiredOrderEntries.length, expiredFresh, entriesLength: entries.length });
 
     for (let i = entries.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -825,4 +850,5 @@ module.exports = {
     paginateActiveSubscriptions,
     getExpiredOrdersEntries,
     getDonorPickEntries,
+    getProjectUnavailableEntryIds
 };
