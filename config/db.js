@@ -53,7 +53,7 @@ async function handleRecurringVippsPayments() {
     const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
 
     if (agreement.status !== 'ACTIVE') continue;
-    
+
     if (requiredCharges > paidCharges.length) {
       const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
       const alreadyRequestedVipps = await VippsChargeRequest.findOne({
@@ -95,18 +95,35 @@ async function fixMissedChargeCapture() {
   }
 }
 
+function scheduleDailyTask(taskFn, hour = 5, minute = 0) {
+    const now = new Date();
+    const nextRun = new Date();
+
+    nextRun.setHours(hour, minute, 0, 0);
+
+    if (nextRun <= now) {
+        // If time already passed today, schedule for tomorrow
+        nextRun.setDate(nextRun.getDate() + 1);
+    }
+
+    const delay = nextRun - now;
+
+    console.log(`Scheduled task will run after ${(delay / 60 / 60 / 1000).toFixed(2)} hours`);
+
+    setTimeout(() => {
+        taskFn(); // First run at 5 AM
+        setInterval(taskFn, 24 * 60 * 60 * 1000); // Then every 24 hours
+    }, delay);
+}
+
 mongoose.connection.on('open', async () => {
-  console.log('handle recurring payments started...');
-
-  await handleRecurringVippsPayments();
-
-  setInterval(async () => {
+  scheduleDailyTask(async () => {
     try {
       await handleRecurringVippsPayments();
     } catch (error) {
-      console.error('Error handling expired vipps orders:', error);
+      console.error('Error running scheduled donor updates:', error);
     }
-  }, 24 * 60 * 60 * 1000);
+  }, 1, 0);
 });
 
 module.exports = connectDB;
