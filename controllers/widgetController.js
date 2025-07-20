@@ -212,6 +212,8 @@ exports.createNewOrder = async (req, res) => {
         req.query.select = 3;
 
         const { project, allEntries } = await getDonorPickEntries(req, checkProject);
+        
+        let updatedProject;
 
         if (allEntries.length < 3) {
             const remainingCount = 3 - allEntries.length;
@@ -224,9 +226,10 @@ exports.createNewOrder = async (req, res) => {
                 .limit(remainingCount)
                 .lean();
             allEntries.push(...skippedEntries);
+            updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 0);
+        } else {
+            updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 1);
         }
-
-        const updatedProject = makeProjectForWidgetOrder(project, allEntries, 6, 1);
 
         const cloudlfareIp = req.headers['cf-connecting-ip'];
 
