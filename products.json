@@ -1,7 +1,300 @@
 {
     "qurbani": {
         "currency": "NOK",
+        "products": []
+    },
+    "water-pakistan": {
+        "currency": "NOK",
         "products": [
+            {
+                "name": "Small Hand Pump 🇵🇰",
+                "desc": "Execution Time: 3 Months. The Small Hand Pump is a manually operated water pump that provides clean drinking water in rural and remote areas. It is a cost-effective solution for households facing water scarcity. Installed at shallow depths, it ensures a steady groundwater supply with minimal maintenance. Built with durable materials, it is easy to operate and long-lasting. This pump helps prevent waterborne diseases by reducing reliance on contaminated sources. Ideal for 2–3 households, it improves hygiene and sanitation. The Small Hand Pump is a vital resource for safe and accessible drinking water.",
+                "id": "small-hand-pump-pak",
+                "variants": [
+                    {
+                        "name": "Small Hand Pump Single Share",
+                        "id": "small-hand-pump-single-share",
+                        "price": 200
+                    },
+                    {
+                        "name": "Small Hand Pump in KPK",
+                        "id": "small-hand-pump-kpk",
+                        "price": 800
+                    },
+                    {
+                        "name": "Small Hand Pump in Sindh",
+                        "id": "small-hand-pump-sindh",
+                        "price": 800
+                    },
+                    {
+                        "name": "Small Hand Pump in South Punjab",
+                        "id": "small-hand-pump-south-punjab",
+                        "price": 800
+                    },
+                    {
+                        "name": "Small Hand Pump in Central Punjab",
+                        "id": "small-hand-pump-cen-punjab",
+                        "price": 800
+                    },
+                    {
+                        "name": "Small Hand Pump in Balochistan",
+                        "id": "small-hand-pump-balochistan",
+                        "price": 800
+                    },
+                    {
+                        "name": "Small Hand Pump in GB",
+                        "id": "small-hand-pump-gb",
+                        "price": 800
+                    },
+                    {
+                        "name": "Small Hand Pump in ajk",
+                        "id": "small-hand-pump-ajk",
+                        "price": 800
+                    },
+                    {
+                        "name": "Small Hand Pump in Karachi",
+                        "id": "small-hand-pump-kri",
+                        "price": 800
+                    }
+                ]
+            },
+            {
+                "name": "Community Hand Pump 🇵🇰",
+                "desc": "Exection Time: 3 Months. The Community Hand Pump is a high-capacity manually operated water pump designed to serve multiple households in rural and underserved areas. It provides a reliable and sustainable supply of clean drinking water for small villages, mosques, and schools. Installed at greater depths than small hand pumps, it ensures access to safe groundwater with minimal maintenance. Built with durable materials, it can withstand frequent use by a larger number of people. This pump helps prevent waterborne diseases and reduces dependency on unsafe water sources. The Community Hand Pump is a practical and long-lasting solution for improving water accessibility and hygiene.",
+                "id": "cummunity-hand-pump-pak",
+                "variants": [
+                    {
+                        "name": "Community Hand Pump Single Share",
+                        "id": "community-hand-pump-single-share",
+                        "price": 200
+                    },
+                    {
+                        "name": "Community Hand Pump in KPK",
+                        "id": "community-hand-pump-kpk",
+                        "price": 4800
+                    },
+                    {
+                        "name": "Community Hand Pump in Sindh",
+                        "id": "community-hand-pump-sindh",
+                        "price": 4800
+                    },
+                    {
+                        "name": "Community Hand Pump in South Punjab",
+                        "id": "community-hand-pump-south-punjab",
+                        "price": 4800
+                    },
+                    {
+                        "name": "Community Hand Pump in Central Punjab",
+                        "id": "community-hand-pump-cen-punjab",
+                        "price": 4800
+                    },
+                    {
+                        "name": "Community Hand Pump in Balochistan",
+                        "id": "community-hand-pump-balochistan",
+                        "price": 4800
+                    },
+                    {
+                        "name": "Community Hand Pump in GB",
+                        "id": "community-hand-pump-gb",
+                        "price": 4800
+                    },
+                    {
+                        "name": "Community Hand Pump in AJK",
+                        "id": "community-hand-pump-ajk",
+                        "price": 4800
+                    },
+                    {
+                        "name": "Community Hand Pump in Karachi",
+                        "id": "community-hand-pump-kri",
+                        "price": 4800
+                    }
+                ]
+            },
+            {
+                "name": "Water Well 🇵🇰",
+                "desc": "Exection Time: 4 Months. The Water Well is a deep, manually or machine-dug well designed to provide a sustainable and long-term supply of clean water. It taps into underground water sources, ensuring a reliable and safe drinking water solution for entire communities. Built with durable materials, it requires minimal maintenance and can serve hundreds of people daily. This well helps prevent waterborne diseases by eliminating reliance on contaminated surface water. It supports not only drinking needs but also cooking, hygiene, and irrigation for small-scale farming. The Water Well is a vital infrastructure for ensuring long-term water security in underserved areas.",
+                "id": "water-well-pak",
+                "variants": [
+                    {
+                        "name": "Water Well Single Share",
+                        "id": "water-well-single-share",
+                        "price": 200
+                    },
+                    {
+                        "name": "Water Well in KPK",
+                        "id": "water-well-kpk",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Water Well in Balochistan",
+                        "id": "water-well-balochistan",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Water Well in Gilget Baltistan",
+                        "id": "water-well-gb",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Water Well in Azad Jammu & Kashmir",
+                        "id": "water-well-ajk",
+                        "price": 8600
+                    }
+                ]
+            },
+            {
+                "name": "Submersible Water Pump 🇵🇰",
+                "desc": "Exection Time: 4 Months. The Water Well is a deep, manually or machine-dug well designed to provide a sustainable and long-term supply of clean water. It taps into underground water sources, ensuring a reliable and safe drinking water solution for entire communities. Built with durable materials, it requires minimal maintenance and can serve hundreds of people daily. This well helps prevent waterborne diseases by eliminating reliance on contaminated surface water. It supports not only drinking needs but also cooking, hygiene, and irrigation for small-scale farming. The Water Well is a vital infrastructure for ensuring long-term water security in underserved areas.",
+                "id": "submersible-water-pump-pak",
+                "variants": [
+                    {
+                        "name": "Submersible Water Pump Single Share",
+                        "id": "submersible-water-pump-single-share",
+                        "price": 200
+                    },
+                    {
+                        "name": "Submersible Water Pump in KPK",
+                        "id": "submersible-water-pump-kpk",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Submersible Water Pump in Sindh",
+                        "id": "submersible-water-pump-sindh",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Submersible Water Pump in South Punjab",
+                        "id": "submersible-water-pump-south-punjab",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Submersible Water Pump in Central Punjab",
+                        "id": "submersible-water-pump-cen-punjab",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Submersible Water Pump in Balochistan",
+                        "id": "submersible-water-pump-balochistan",
+                        "price": 8600
+                    },
+                    {
+                        "name": "Submersible Water Pump in AJK",
+                        "id": "submersible-water-pump-ajk",
+                        "price": 8600
+                    }
+                ]
+            },
+            {
+                "name": "Solar Submersible Water Pump 🇵🇰",
+                "desc": "Exection Time: 4 Months. The Solar Submersible Water Pump is a sustainable solution that uses solar energy to extract clean water from deep underground sources. Ideal for remote and off-grid areas, it operates without electricity or fuel, reducing costs and ensuring a reliable water supply. Fully submerged, it provides safe water for drinking, sanitation, and irrigation. Built with durable materials, it requires minimal maintenance and offers long-term usability. This pump helps prevent waterborne diseases by reducing reliance on contaminated sources. The Solar Submersible Water Pump is an eco-friendly and cost-effective solution for water-scarce regions.",
+                "id": "solar-submersible-water-pump-pak",
+                "variants": [
+                    {
+                        "name": "Solar Submersible Water Pump Single Share",
+                        "id": "solar-submersible-water-pump-single-share",
+                        "price": 200
+                    },
+                    {
+                        "name": "Solar Submersible Water Pump in KPK",
+                        "id": "solar-submersible-water-pump-single-share",
+                        "price": 30000
+                    },
+                    {
+                        "name": "Solar Submersible Water Pump in Sindh",
+                        "id": "solar-submersible-water-pump-sindh",
+                        "price": 30000
+                    },
+                    {
+                        "name": "Solar Submersible Water Pump in South Punjab",
+                        "id": "solar-submersible-water-pump-south-punjab",
+                        "price": 30000
+                    },
+                    {
+                        "name": "Solar Submersible Water Pump in Central Punjab",
+                        "id": "solar-submersible-water-pump-cen-punjab",
+                        "price": 30000
+                    },
+                    {
+                        "name": "Solar Submersible Water Pump in Balochistan",
+                        "id": "solar-submersible-water-pump-balochistan",
+                        "price": 30000
+                    },
+                    {
+                        "name": "Solar Submersible Water Pump in Karachi",
+                        "id": "solar-submersible-water-pump-kci",
+                        "price": 30000
+                    }
+                ]
+            },
+            {
+                "name": "Gravity Flow Scheme 🇵🇰",
+                "desc": "Exection Time: 4 Months. The Gravity Flow Scheme is a sustainable water supply system that uses natural slopes to transport clean water without electricity or fuel. It is ideal for hilly and mountainous regions, providing a continuous water supply without the need for manual water collection, saving time and effort for communities. Built with durable pipelines and reservoirs, it ensures long-term usability with minimal maintenance. It provides a reliable source of safe drinking water, reducing the risk of waterborne diseases. The system also supports sanitation and irrigation needs, improving overall community well-being. By utilizing natural gravity, it operates as an eco-friendly and cost-effective solution for remote areas.",
+                "id": "gravity-flow-scheme-pak",
+                "variants": [
+                    {
+                        "name": "Gravity Flow Scheme Single Share",
+                        "id": "gravity-flow-scheme-single-share",
+                        "price": 200
+                    },
+                    {
+                        "name": "Gravity Flow Scheme in KPK",
+                        "id": "gravity-flow-scheme-kpk",
+                        "price": 30000
+                    },
+                    {
+                        "name": "Gravity Flow Scheme in Gilget Baltistan",
+                        "id": "gravity-flow-scheme-gb",
+                        "price": 30000
+                    },
+                    {
+                        "name": "Gravity Flow Scheme in AJK",
+                        "id": "gravity-flow-scheme-ajk",
+                        "price": 30000
+                    }
+                ]
+            },
+            {
+                "name": "Water Filteration Plant 🇵🇰",
+                "desc": "Exection Time: 6 Months. The Water Filtration Plant is a large-scale system designed to provide clean and safe drinking water by removing impurities, bacteria, and toxic substances. Ideal for densely populated areas, it serves communities, schools, hospitals, and mosques, reducing the risk of waterborne diseases. Built with durable components, it requires regular maintenance but offers significant improvements to overall living conditions. The Water Filtration Plant is a crucial investment in ensuring safe and accessible drinking water.",
+                "id": "water-filteration-plant-pak",
+                "variants": [
+                    {
+                        "name": "Water Filteration Plant Single Share",
+                        "id": "water-filteration-plant-single-share",
+                        "price": 200
+                    },
+                    {
+                        "name": "Water Filteration Plant in KPK",
+                        "id": "water-filteration-plant-kpk",
+                        "price": 98000
+                    },
+                    {
+                        "name": "Water Filteration Plant in South Punjab",
+                        "id": "water-filteration-plant-south-punjab",
+                        "price": 98000
+                    },
+                    {
+                        "name": "Water Filteration Plant in Central Punjab",
+                        "id": "water-filteration-plant-cen-punjab",
+                        "price": 98000
+                    },
+                    {
+                        "name": "Water Filteration Plant in Balochistan",
+                        "id": "water-filteration-plant-balochistan",
+                        "price": 98000
+                    },
+                    {
+                        "name": "Water Filteration Plant in AJK",
+                        "id": "water-filteration-plant-ajk",
+                        "price": 98000
+                    },
+                    {
+                        "name": "Water Filteration Plant in Karachi",
+                        "id": "water-filteration-plant-kci",
+                        "price": 98000
+                    }
+                ]
+            }
         ]
     },
     "random": {
