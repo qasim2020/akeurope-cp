@@ -8,7 +8,7 @@
         "products": [
             {
                 "name": "Small Hand Pump 🇵🇰",
-                "desc": "Execution Time: 3 Months. The Small Hand Pump is a manually operated water pump that provides clean drinking water in rural and remote areas. It is a cost-effective solution for households facing water scarcity. Installed at shallow depths, it ensures a steady groundwater supply with minimal maintenance. Built with durable materials, it is easy to operate and long-lasting. This pump helps prevent waterborne diseases by reducing reliance on contaminated sources. Ideal for 2–3 households, it improves hygiene and sanitation. The Small Hand Pump is a vital resource for safe and accessible drinking water.",
+                "desc": "Execution Time: 3 Months. Install a Manually operated water pump. Cost-effective solution for households facing water scarcity.",
                 "id": "small-hand-pump-pak",
                 "variants": [
                     {
@@ -60,7 +60,7 @@
             },
             {
                 "name": "Community Hand Pump 🇵🇰",
-                "desc": "Exection Time: 3 Months. The Community Hand Pump is a high-capacity manually operated water pump designed to serve multiple households in rural and underserved areas. It provides a reliable and sustainable supply of clean drinking water for small villages, mosques, and schools. Installed at greater depths than small hand pumps, it ensures access to safe groundwater with minimal maintenance. Built with durable materials, it can withstand frequent use by a larger number of people. This pump helps prevent waterborne diseases and reduces dependency on unsafe water sources. The Community Hand Pump is a practical and long-lasting solution for improving water accessibility and hygiene.",
+                "desc": "Exection Time: 3 Months. Install a Community Hand Pump setup designed to serve multiple households.",
                 "id": "cummunity-hand-pump-pak",
                 "variants": [
                     {
@@ -112,7 +112,7 @@
             },
             {
                 "name": "Water Well 🇵🇰",
-                "desc": "Exection Time: 4 Months. The Water Well is a deep, manually or machine-dug well designed to provide a sustainable and long-term supply of clean water. It taps into underground water sources, ensuring a reliable and safe drinking water solution for entire communities. Built with durable materials, it requires minimal maintenance and can serve hundreds of people daily. This well helps prevent waterborne diseases by eliminating reliance on contaminated surface water. It supports not only drinking needs but also cooking, hygiene, and irrigation for small-scale farming. The Water Well is a vital infrastructure for ensuring long-term water security in underserved areas.",
+                "desc": "Exection Time: 4 Months. Install a deep, manually or machine-dug well designed to provide a sustainable supply of clean water and support irrigation for small-scale farming.",
                 "id": "water-well-pak",
                 "variants": [
                     {
@@ -144,7 +144,7 @@
             },
             {
                 "name": "Submersible Water Pump 🇵🇰",
-                "desc": "Exection Time: 4 Months. The Water Well is a deep, manually or machine-dug well designed to provide a sustainable and long-term supply of clean water. It taps into underground water sources, ensuring a reliable and safe drinking water solution for entire communities. Built with durable materials, it requires minimal maintenance and can serve hundreds of people daily. This well helps prevent waterborne diseases by eliminating reliance on contaminated surface water. It supports not only drinking needs but also cooking, hygiene, and irrigation for small-scale farming. The Water Well is a vital infrastructure for ensuring long-term water security in underserved areas.",
+                "desc": "Exection Time: 4 Months. Install a high-powered pump that pulls water from deep underground water source. Ideal sustainable solution.",
                 "id": "submersible-water-pump-pak",
                 "variants": [
                     {
@@ -186,7 +186,7 @@
             },
             {
                 "name": "Solar Submersible Water Pump 🇵🇰",
-                "desc": "Exection Time: 4 Months. The Solar Submersible Water Pump is a sustainable solution that uses solar energy to extract clean water from deep underground sources. Ideal for remote and off-grid areas, it operates without electricity or fuel, reducing costs and ensuring a reliable water supply. Fully submerged, it provides safe water for drinking, sanitation, and irrigation. Built with durable materials, it requires minimal maintenance and offers long-term usability. This pump helps prevent waterborne diseases by reducing reliance on contaminated sources. The Solar Submersible Water Pump is an eco-friendly and cost-effective solution for water-scarce regions.",
+                "desc": "Exection Time: 4 Months. Install a solar powered submersible water pump. Will be installed in locations where electricity is not available.",
                 "id": "solar-submersible-water-pump-pak",
                 "variants": [
                     {
@@ -228,7 +228,7 @@
             },
             {
                 "name": "Gravity Flow Scheme 🇵🇰",
-                "desc": "Exection Time: 4 Months. The Gravity Flow Scheme is a sustainable water supply system that uses natural slopes to transport clean water without electricity or fuel. It is ideal for hilly and mountainous regions, providing a continuous water supply without the need for manual water collection, saving time and effort for communities. Built with durable pipelines and reservoirs, it ensures long-term usability with minimal maintenance. It provides a reliable source of safe drinking water, reducing the risk of waterborne diseases. The system also supports sanitation and irrigation needs, improving overall community well-being. By utilizing natural gravity, it operates as an eco-friendly and cost-effective solution for remote areas.",
+                "desc": "Exection Time: 4 Months. Install a gravity flow scheme that uses natural slopes to transport clean water without electricity. Ideal for hilly and mountainous regions.",
                 "id": "gravity-flow-scheme-pak",
                 "variants": [
                     {
@@ -255,7 +255,7 @@
             },
             {
                 "name": "Water Filteration Plant 🇵🇰",
-                "desc": "Exection Time: 6 Months. The Water Filtration Plant is a large-scale system designed to provide clean and safe drinking water by removing impurities, bacteria, and toxic substances. Ideal for densely populated areas, it serves communities, schools, hospitals, and mosques, reducing the risk of waterborne diseases. Built with durable components, it requires regular maintenance but offers significant improvements to overall living conditions. The Water Filtration Plant is a crucial investment in ensuring safe and accessible drinking water.",
+                "desc": "Exection Time: 6 Months. Install a water filteration plant. A large scale system designed to provide clean and safe water. Ideal for densely populated areas.",
                 "id": "water-filteration-plant-pak",
                 "variants": [
                     {

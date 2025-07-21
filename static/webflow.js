@@ -123,11 +123,14 @@ function attachIframe(elem, code) {
     const cover = encodeURIComponent($(elem).siblings('img').attr('src'));
     const desc = encodeURIComponent($(elem).siblings('.project-desc').html());
     let url;
+
     if (products === 'random') {
         url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?name=${name}&heading=${hdg}&cover=${cover}&description=${desc}&countryCode=${code}&webflow=true&products=${products}`;
     }
 
-    if (products === 'qurbani') {
+    const allowedProducts = ['qurbani', 'water-pakistan'];
+
+    if (allowedProducts.includes(products)) {
         url = `__CUSTOMER_PORTAL_URL__/overlay/${slug}?countryCode=${code}&webflow=true&products=${products}`;
     }
 

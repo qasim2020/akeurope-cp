@@ -873,6 +873,7 @@
         // START WIDGET
 
         const startWidget = async function () {
+            console.log('starting widget');
             let countryCode = '{{data.donor.countryCode}}';
             if (!countryCode) {
                 countryCode = "{{data.countryCode}}" || 'NO';

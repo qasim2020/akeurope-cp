@@ -54,8 +54,9 @@ exports.overlay = async (req, res) => {
         const portalUrl = process.env.CUSTOMER_PORTAL_URL;
         const countryCode = req.headers['cf-ipcountry'] || 'NO'
         if (req.query.webflow) {
+            const allowedProducts = ['qurbani', 'water-pakistan'];
 
-            if (req.query.products === 'qurbani') {
+            if (allowedProducts.includes(req.query.products)) {
                 res.render('overlays/productModal', {
                     layout: false,
                     data: {
@@ -64,7 +65,7 @@ exports.overlay = async (req, res) => {
                             slug: req.params.slug,
                             products: req.query.products,
                         },
-                        countryCode: countryCode,
+                        countryCode,
                         publicKey,
                         portalUrl,
                     },
@@ -212,7 +213,7 @@ exports.createNewOrder = async (req, res) => {
         req.query.select = 3;
 
         const { project, allEntries } = await getDonorPickEntries(req, checkProject);
-        
+
         let updatedProject;
 
         if (allEntries.length < 3) {
