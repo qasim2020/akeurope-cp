@@ -12,49 +12,44 @@
                 "id": "small-hand-pump-pak",
                 "variants": [
                     {
-                        "name": "Small Hand Pump Single Share",
-                        "id": "small-hand-pump-single-share",
-                        "price": 200
-                    },
-                    {
-                        "name": "Small Hand Pump in KPK",
+                        "name": "Khyber Pakhtunkhwa",
                         "id": "small-hand-pump-kpk",
-                        "price": 800
+                        "price": 1600
                     },
                     {
-                        "name": "Small Hand Pump in Sindh",
+                        "name": "Sindh",
                         "id": "small-hand-pump-sindh",
-                        "price": 800
+                        "price": 1600
                     },
                     {
-                        "name": "Small Hand Pump in South Punjab",
+                        "name": "South Punjab",
                         "id": "small-hand-pump-south-punjab",
-                        "price": 800
+                        "price": 1600
                     },
                     {
-                        "name": "Small Hand Pump in Central Punjab",
+                        "name": "Central Punjab",
                         "id": "small-hand-pump-cen-punjab",
-                        "price": 800
+                        "price": 1600
                     },
                     {
-                        "name": "Small Hand Pump in Balochistan",
+                        "name": "Balochistan",
                         "id": "small-hand-pump-balochistan",
-                        "price": 800
+                        "price": 1600
                     },
                     {
-                        "name": "Small Hand Pump in GB",
+                        "name": "Gilget Baltistan",
                         "id": "small-hand-pump-gb",
-                        "price": 800
+                        "price": 1600
                     },
                     {
-                        "name": "Small Hand Pump in ajk",
+                        "name": "Azad Jammu & Kashmir",
                         "id": "small-hand-pump-ajk",
-                        "price": 800
+                        "price": 1600
                     },
                     {
-                        "name": "Small Hand Pump in Karachi",
+                        "name": "Karachi",
                         "id": "small-hand-pump-kri",
-                        "price": 800
+                        "price": 1600
                     }
                 ]
             },
@@ -64,47 +59,42 @@
                 "id": "cummunity-hand-pump-pak",
                 "variants": [
                     {
-                        "name": "Community Hand Pump Single Share",
-                        "id": "community-hand-pump-single-share",
-                        "price": 200
-                    },
-                    {
-                        "name": "Community Hand Pump in KPK",
+                        "name": "Khyber Pakhtunkhwa",
                         "id": "community-hand-pump-kpk",
                         "price": 4800
                     },
                     {
-                        "name": "Community Hand Pump in Sindh",
+                        "name": "Sindh",
                         "id": "community-hand-pump-sindh",
                         "price": 4800
                     },
                     {
-                        "name": "Community Hand Pump in South Punjab",
+                        "name": "South Punjab",
                         "id": "community-hand-pump-south-punjab",
                         "price": 4800
                     },
                     {
-                        "name": "Community Hand Pump in Central Punjab",
+                        "name": "Central Punjab",
                         "id": "community-hand-pump-cen-punjab",
                         "price": 4800
                     },
                     {
-                        "name": "Community Hand Pump in Balochistan",
+                        "name": "Balochistan",
                         "id": "community-hand-pump-balochistan",
                         "price": 4800
                     },
                     {
-                        "name": "Community Hand Pump in GB",
+                        "name": "Gilget Baltistan",
                         "id": "community-hand-pump-gb",
                         "price": 4800
                     },
                     {
-                        "name": "Community Hand Pump in AJK",
+                        "name": "Azad Jammu & Kashmir",
                         "id": "community-hand-pump-ajk",
                         "price": 4800
                     },
                     {
-                        "name": "Community Hand Pump in Karachi",
+                        "name": "Karachi",
                         "id": "community-hand-pump-kri",
                         "price": 4800
                     }
@@ -116,27 +106,27 @@
                 "id": "water-well-pak",
                 "variants": [
                     {
-                        "name": "Water Well Single Share",
+                        "name": "Single Share",
                         "id": "water-well-single-share",
                         "price": 200
                     },
                     {
-                        "name": "Water Well in KPK",
+                        "name": "Khyber Pakhtunkhwa",
                         "id": "water-well-kpk",
                         "price": 8600
                     },
                     {
-                        "name": "Water Well in Balochistan",
+                        "name": "Balochistan",
                         "id": "water-well-balochistan",
                         "price": 8600
                     },
                     {
-                        "name": "Water Well in Gilget Baltistan",
+                        "name": "Gilget Baltistan",
                         "id": "water-well-gb",
                         "price": 8600
                     },
                     {
-                        "name": "Water Well in Azad Jammu & Kashmir",
+                        "name": "Azad Jammu & Kashmir",
                         "id": "water-well-ajk",
                         "price": 8600
                     }
@@ -148,37 +138,37 @@
                 "id": "submersible-water-pump-pak",
                 "variants": [
                     {
-                        "name": "Submersible Water Pump Single Share",
+                        "name": "Single Share",
                         "id": "submersible-water-pump-single-share",
                         "price": 200
                     },
                     {
-                        "name": "Submersible Water Pump in KPK",
+                        "name": "Khyber Pakhtunkhwa",
                         "id": "submersible-water-pump-kpk",
                         "price": 8600
                     },
                     {
-                        "name": "Submersible Water Pump in Sindh",
+                        "name": "Sindh",
                         "id": "submersible-water-pump-sindh",
                         "price": 8600
                     },
                     {
-                        "name": "Submersible Water Pump in South Punjab",
+                        "name": "South Punjab",
                         "id": "submersible-water-pump-south-punjab",
                         "price": 8600
                     },
                     {
-                        "name": "Submersible Water Pump in Central Punjab",
+                        "name": "Central Punjab",
                         "id": "submersible-water-pump-cen-punjab",
                         "price": 8600
                     },
                     {
-                        "name": "Submersible Water Pump in Balochistan",
+                        "name": "Balochistan",
                         "id": "submersible-water-pump-balochistan",
                         "price": 8600
                     },
                     {
-                        "name": "Submersible Water Pump in AJK",
+                        "name": "Azad Jammu & Kashmir",
                         "id": "submersible-water-pump-ajk",
                         "price": 8600
                     }
@@ -190,37 +180,37 @@
                 "id": "solar-submersible-water-pump-pak",
                 "variants": [
                     {
-                        "name": "Solar Submersible Water Pump Single Share",
+                        "name": "Single Share",
                         "id": "solar-submersible-water-pump-single-share",
                         "price": 200
                     },
                     {
-                        "name": "Solar Submersible Water Pump in KPK",
-                        "id": "solar-submersible-water-pump-single-share",
+                        "name": "Khyber Pakhtunkhwa",
+                        "id": "solar-submersible-water-pump-kpk",
                         "price": 30000
                     },
                     {
-                        "name": "Solar Submersible Water Pump in Sindh",
+                        "name": "Sindh",
                         "id": "solar-submersible-water-pump-sindh",
                         "price": 30000
                     },
                     {
-                        "name": "Solar Submersible Water Pump in South Punjab",
+                        "name": "South Punjab",
                         "id": "solar-submersible-water-pump-south-punjab",
                         "price": 30000
                     },
                     {
-                        "name": "Solar Submersible Water Pump in Central Punjab",
+                        "name": "Central Punjab",
                         "id": "solar-submersible-water-pump-cen-punjab",
                         "price": 30000
                     },
                     {
-                        "name": "Solar Submersible Water Pump in Balochistan",
+                        "name": "Balochistan",
                         "id": "solar-submersible-water-pump-balochistan",
                         "price": 30000
                     },
                     {
-                        "name": "Solar Submersible Water Pump in Karachi",
+                        "name": "Karachi",
                         "id": "solar-submersible-water-pump-kci",
                         "price": 30000
                     }
@@ -232,22 +222,22 @@
                 "id": "gravity-flow-scheme-pak",
                 "variants": [
                     {
-                        "name": "Gravity Flow Scheme Single Share",
+                        "name": "Single Share",
                         "id": "gravity-flow-scheme-single-share",
                         "price": 200
                     },
                     {
-                        "name": "Gravity Flow Scheme in KPK",
+                        "name": "Khyber Pakhtunkhwa",
                         "id": "gravity-flow-scheme-kpk",
                         "price": 30000
                     },
                     {
-                        "name": "Gravity Flow Scheme in Gilget Baltistan",
+                        "name": "Gilget Baltistan",
                         "id": "gravity-flow-scheme-gb",
                         "price": 30000
                     },
                     {
-                        "name": "Gravity Flow Scheme in AJK",
+                        "name": "Azad Jammu & Kashmir",
                         "id": "gravity-flow-scheme-ajk",
                         "price": 30000
                     }
@@ -259,37 +249,37 @@
                 "id": "water-filteration-plant-pak",
                 "variants": [
                     {
-                        "name": "Water Filteration Plant Single Share",
+                        "name": "Single Share",
                         "id": "water-filteration-plant-single-share",
                         "price": 200
                     },
                     {
-                        "name": "Water Filteration Plant in KPK",
+                        "name": "Khyber Pakhtunkhwa",
                         "id": "water-filteration-plant-kpk",
                         "price": 98000
                     },
                     {
-                        "name": "Water Filteration Plant in South Punjab",
+                        "name": "South Punjab",
                         "id": "water-filteration-plant-south-punjab",
                         "price": 98000
                     },
                     {
-                        "name": "Water Filteration Plant in Central Punjab",
+                        "name": "Central Punjab",
                         "id": "water-filteration-plant-cen-punjab",
                         "price": 98000
                     },
                     {
-                        "name": "Water Filteration Plant in Balochistan",
+                        "name": "Balochistan",
                         "id": "water-filteration-plant-balochistan",
                         "price": 98000
                     },
                     {
-                        "name": "Water Filteration Plant in AJK",
+                        "name": "Azad Jammu & Kashmir",
                         "id": "water-filteration-plant-ajk",
                         "price": 98000
                     },
                     {
-                        "name": "Water Filteration Plant in Karachi",
+                        "name": "Karachi",
                         "id": "water-filteration-plant-kci",
                         "price": 98000
                     }
