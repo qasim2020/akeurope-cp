@@ -894,10 +894,10 @@
             await drawTotalCosts(order);
             await refreshDropdowns();
             initializePopovers();
-
             $('[name=email]').val('{{data.donor.email}}');
             $('[name=firstName]').val('{{data.donor.firstName}}');
             $('[name=lastName]').val('{{data.donor.lastName}}');
+            window.parent.postMessage(order, "*");
         };
 
         window.onload = startWidget;
@@ -1623,7 +1623,6 @@
             });
         });
 
-
         // PRODUCT SPECIFIC METHODS
 
         const addToOrder = async (elem) => {
@@ -1677,6 +1676,15 @@
             return { orderId, variantId };
         }
 
+        window.addEventListener('message', (event) => {
+            if (event.origin !== 'https://alkhidmat.webflow.io' && event.origin !== 'https://akeurope.org') return;
+
+            if (event.data.action === 'addVariant') {
+                const { productId, variant } = event.data;
+                // Add variant to the product
+                console.log(`Add variant to ${productId}:`, variant);
+            }
+        });
     </script>
 
 </body>

@@ -8,11 +8,17 @@ async function initOverlay() {
 
 function runGlobal(countryCode) {
 
+    const products = $('body').attr('productSlug');
+    const productsOpened = products !== 'random' && products !== '';
+    if (productsOpened) {
+        attachProductTable(products);
+    }
+
     if (countryCode === 'NO') {
         $('.vipps-number').css({ display: 'none' });
         $('.vipps-banner').css({ display: "block" });
     } else {
-        $('.vipps-banner').css({ display: "none" }); 
+        $('.vipps-banner').css({ display: "none" });
     }
 
     $('.donate').on('click', function (e) {
@@ -249,4 +255,91 @@ async function tracker() {
             console.error(error);
         }
     })
+}
+
+function attachProductTable(page) {
+
+    $('body').prepend(`
+        <style>
+            button.product-btn {
+                display: flex;
+                align-items: center;
+                background-color: var(--base-color-brand--orange);
+                color: var(--base-color-neutral--white);
+                text-align: center;
+                border-radius: 1.5rem;
+                padding: 13px 14px;
+                font-size: 1rem;
+                font-weight: 900;
+                line-height: 0;
+                text-decoration: none;
+                margin-bottom: 4px;
+                height: fit-content;
+            }
+            button.product-btn > svg {
+                margin-right: 2px;
+                margin-left: -2px;
+            }
+            button.product-btn > .pricing {
+                font-size: 0.6rem;
+                padding-left: 4px;
+            }
+        </style>
+    `)
+
+    const pageTable = $('body').find('.products-table');
+
+    const attachProducts = function (order) {
+        for (const product of order.products) {
+            const wrapper = $(`#${product.id}`);
+            let btns = [];
+            for (const variant of product.variants) {
+                btns.push(`
+                    <button class="product-btn" data-id="${variant.id}">
+                        <svg  xmlns="http://www.w3.org/2000/svg"  width="12"  height="12"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                        ${variant.name} 
+                        <span class="pricing">${variant.price} ${order.currency}</span>
+                    </button>`);
+            };
+            const html = btns.join('');
+            wrapper.html(html);
+        }
+        $('.product-btn').on('click', function (elem) {
+            // add this variant to order
+            const iframeEl = $(`#iframe-${page}`)[0]; // DOM element
+
+            const message = {
+                action: 'addVariant',
+                productId: 'abc123',
+                variant: {
+                    name: 'Color',
+                    value: 'Red'
+                }
+            };
+
+            const targetOrigin = new URL(iframeEl.src).origin;
+
+            iframeEl.contentWindow.postMessage(message, targetOrigin);
+
+            // open overlay
+        });
+    }
+
+    $(window).on('message', function (event) {
+        const e = event.originalEvent;
+        if (e.data?.products) {
+            const order = e.data;
+
+            const iframes = document.getElementsByTagName('iframe');
+            for (const iframe of iframes) {
+                if (iframe.contentWindow === e.source) {
+                    console.log('Message from this iframe:', iframe);
+                    break;
+                }
+            }
+
+            // attachProducts(order);
+        }
+    });
+
 }

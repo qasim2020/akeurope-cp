@@ -12,6 +12,11 @@
                 "id": "small-hand-pump-pak",
                 "variants": [
                     {
+                        "name": "Single Share",
+                        "id": "small-hand-pump-single-share",
+                        "price": 200
+                    },
+                    {
                         "name": "Khyber Pakhtunkhwa",
                         "id": "small-hand-pump-kpk",
                         "price": 1600
@@ -58,6 +63,11 @@
                 "desc": "Exection Time: 3 Months. Install a Community Hand Pump setup designed to serve multiple households.",
                 "id": "cummunity-hand-pump-pak",
                 "variants": [
+                    {
+                        "name": "Single Share",
+                        "id": "community-hand-pump-single-share",
+                        "price": 200
+                    },
                     {
                         "name": "Khyber Pakhtunkhwa",
                         "id": "community-hand-pump-kpk",

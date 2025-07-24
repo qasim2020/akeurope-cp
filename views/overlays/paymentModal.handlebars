@@ -913,8 +913,6 @@
 
             const testMode = '{{data.env}}' === 'test' ? true : false;
 
-            console.log(testMode, '{{data.env}}');
-
             if (testMode) {
                 await startWidget();
                 widgetStarted = true;
