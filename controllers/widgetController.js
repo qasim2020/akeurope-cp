@@ -360,6 +360,7 @@ exports.updateOrder = async (req, res) => {
                 subscriptions: req.query.subscriptions,
             };
             order = await runQueriesOnOrder(req, res, false);
+            if (!order && !order.projects) throw new Error('Refresh window - order has expired.');
             const calculatedOrder = await calculateOrder(order);
             await addPaymentsToOrder(calculatedOrder);
             const updatedOrder = await Order.findById(order._id).lean();
