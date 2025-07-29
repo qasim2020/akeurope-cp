@@ -106,6 +106,7 @@ app.use('/tabler', express.static(path.join(__dirname, 'node_modules', '@tabler'
 app.use('/static', express.static(path.join(__dirname, 'static')));
 
 app.use(authRoutes);
+app.use(vippsRoutes);
 app.use(dashboardRoutes);
 app.use(onboardingRoutes);
 app.use(invoiceRoutes);
@@ -116,7 +117,6 @@ app.use(filesRoutes);
 app.use(widgetRoutes);
 app.use(overlayRoutes);
 app.use(productRoutes);
-app.use(vippsRoutes);
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
     res.sendFile(path.join(__dirname, 'static', '.well-known', 'apple-developer-merchantid-domain-association'));

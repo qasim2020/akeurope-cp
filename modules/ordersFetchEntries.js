@@ -2,6 +2,7 @@ const { generateSearchQuery } = require('../modules/generateSearchQuery');
 const { createDynamicModel } = require('../models/createDynamicModel');
 
 const Order = require('../models/Order');
+const Sponsorship = require('../models/Sponsorship');
 const Project = require('../models/Project');
 const mongoose = require('mongoose');
 const { errorMonitor } = require('connect-mongo');
@@ -378,7 +379,7 @@ const getExpiredOrdersEntries = async (project, searchQuery, alreadySelectedEntr
 };
 
 const getProjectUnavailableEntryIds = async (slug) => {
-    const project = await Project.findOne({slug}).lean();
+    const project = await Project.findOne({ slug }).lean();
     const Entry = await createDynamicModel(slug);
     let projectUnavailableEntryIds;
     if (project.type === 'orphan') {
@@ -818,6 +819,79 @@ const getEntriesByCustomerId = async (req, customerId) => {
     };
 };
 
+const getPreviousSponsorships = async (req, customerId) => {
+    const now = new Date();
+
+    if (customerId && typeof customerId === 'string' && mongoose.isValidObjectId(customerId)) {
+        customerId = new mongoose.Types.ObjectId(customerId);
+    }
+
+    const validEntriesByProject = await Sponsorship.find({
+        customerId: customerId,
+        stoppedAt: { $exists: true }
+    }).sort({ stoppedAt: -1 }).lean();
+
+    const paginate = (array, page, pageSize) => {
+        const start = (page - 1) * pageSize;
+        return array.slice(start, start + pageSize);
+    };
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const total = validEntriesByProject.length;
+
+    const totalPages = Math.ceil(total / limit);
+
+    const paginatedEntriesByProject = paginate(validEntriesByProject, page, limit);
+
+    const mergedEntriesByProject = await paginatedEntriesByProject.reduce(async (accPromise, entry) => {
+        const acc = await accPromise;
+
+        const projectIndex = acc.findIndex((p) => p.projectSlug === entry.projectSlug);
+
+        const projectData = await Project.findOne({ slug: entry.projectSlug }).lean();
+        const model = await createDynamicModel(entry.projectSlug);
+        const entryData = await model.findById(entry.entryId).lean();
+
+        const entryObject = {
+            ...entry,
+            project: projectData,
+            projectSlug: entry.projectSlug,
+            entry: entryData,
+        };
+
+        if (projectIndex === -1) {
+            acc.push({
+                projectSlug: entry.projectSlug,
+                project: projectData,
+                model: model,
+                entries: [entryObject],
+            });
+        } else {
+            acc[projectIndex].entries.push(entryObject);
+        }
+
+        return acc;
+    }, Promise.resolve([]));
+
+    const output = mergedEntriesByProject.map((project) => {
+        const { model, ...cleanProject } = project;
+        return cleanProject;
+    });
+
+    return {
+        subscriptions: output,
+        pagesArray: generatePagination(totalPages, page),
+        currentPage: page,
+        totalPages,
+        totalEntries: total,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+        nextPage: page + 1,
+        prevPage: page - 1,
+    };
+}
+
 const paginateActiveSubscriptions = (req, entries) => {
 
     const page = parseInt(req.query.page) || 1;
@@ -847,6 +921,7 @@ module.exports = {
     getPreviousOrdersForEntry,
     validateQuery,
     getEntriesByCustomerId,
+    getPreviousSponsorships,
     paginateActiveSubscriptions,
     getExpiredOrdersEntries,
     getDonorPickEntries,

@@ -17,7 +17,6 @@ const roles = {
         'updateFiles',
         'editSelf',
         'viewSelf',
-
         'viewWidgets',
         'bulk-select'
     ],

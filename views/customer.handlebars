@@ -216,9 +216,25 @@
       method: 'GET',
       success: function (response) {
         $('#subscriptions-container').replaceWith(response);
+        initializePopovers();
       },
       error: function (error) {
         $('#subscriptions-container').html(error.responseText);
+      }
+    })
+  }
+
+  const getPrevSponsorships = function (elem, href) {
+    href = href || $(elem).attr("my-href");
+    $.ajax({
+      url: href,
+      method: 'GET',
+      success: function (response) {
+        $('#sponsorships-container').replaceWith(response);
+        initializePopovers();
+      },
+      error: function (error) {
+        $('#sponsorships-container').html(error.responseText);
       }
     })
   }

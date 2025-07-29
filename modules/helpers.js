@@ -394,7 +394,26 @@ const roundToNearest = (amount) => {
     return Math.ceil(amount / 10000) * 10000;
 }
 
+const convertDaysToMonths = function (days) {
+  const daysInMonth = 30.44; 
+  const daysInYear = 365.25; 
+
+  const years = Math.floor(days / daysInYear);
+  days %= daysInYear;
+
+  const months = Math.floor(days / daysInMonth);
+  days = Math.floor(days % daysInMonth);
+
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years > 1 ? 's' : ''}`);
+  if (months > 0) parts.push(`${months} month${months > 1 ? 's' : ''}`);
+  if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+
+  return parts.length > 0 ? parts.join(', ').replace(/,([^,]*)$/, ' and$1') : '0 days';
+}
+
 module.exports = {
+    convertDaysToMonths,
     roundToNearest,
     vippsStatusMap,
     dynamicRound,

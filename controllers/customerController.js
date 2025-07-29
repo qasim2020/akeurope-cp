@@ -18,7 +18,7 @@ const { logTemplates } = require('../modules/logTemplates');
 const { getChanges } = require('../modules/getChanges');
 const { visibleProjectDateFields } = require('../modules/projectEntries');
 const { getLatestSubscriptionByOrderId, getSubscriptionsByOrderId, getPaymentByOrderId } = require('../modules/orders');
-const { getEntriesByCustomerId, paginateActiveSubscriptions } = require('../modules/ordersFetchEntries');
+const { getEntriesByCustomerId, getPreviousSponsorships } = require('../modules/ordersFetchEntries');
 const { getVippsPaymentByOrderId, getVippsSubscriptionsByOrderId } = require('../modules/vippsPartner');
 
 const Donor = require('../models/Donor');
@@ -70,11 +70,13 @@ exports.updateCustomer = async (req, res) => {
     try {
         const { name, organization, address, tel } = req.body;
 
-        console.log({tel});
+        console.log({ tel });
 
-        await Donor.updateOne({email: req.session.user.email}, {$set: {
-            tel,
-        }})
+        await Donor.updateOne({ email: req.session.user.email }, {
+            $set: {
+                tel,
+            }
+        })
 
         const updatedFields = {
             name,
@@ -117,7 +119,7 @@ exports.getLogs = async (req, res) => {
     });
 };
 
-exports.activeSubscriptions = async (req,res) => {
+exports.activeSubscriptions = async (req, res) => {
     try {
         if (req.params.customerId != req.session.user._id.toString()) {
             res.status(401).render('error', {
@@ -128,10 +130,35 @@ exports.activeSubscriptions = async (req,res) => {
         }
         const activeSubscriptions = await getEntriesByCustomerId(req, req.params.customerId);
         const customer = await Customer.findById(req.session.user._id).lean();
-        res.render('partials/showCustomerSubscriptions',{
+        res.render('partials/showCustomerSubscriptions', {
             layout: false,
             data: {
                 activeSubscriptions,
+                customer,
+            }
+        })
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Could not fetch subscriptions', error });
+    }
+}
+
+exports.previousSponsorships = async (req, res) => {
+    try {
+        if (req.params.customerId != req.session.user._id.toString()) {
+            res.status(401).render('error', {
+                heading: 'Unauthorized',
+                error: 'You are not authorized to view this page',
+            });
+            return;
+        }
+        const customer = await Customer.findById(req.params.customerId).lean();
+        const previousSponsorships = await getPreviousSponsorships(req, customer._id);
+        res.render('partials/showCustomerSubscriptions', {
+            layout: false,
+            data: {
+                previousSponsorships,
                 customer,
             }
         })
@@ -158,7 +185,7 @@ exports.customer = async (req, res) => {
         customer.tel = customer.tel || donor?.tel;
 
         const projects = await Project.find({ status: 'active' }).lean();
-        
+
         let visibleDateFields = [];
 
         if (!projects) {
@@ -167,23 +194,25 @@ exports.customer = async (req, res) => {
             visibleDateFields = await visibleProjectDateFields(projects[0]);
         }
 
-        const orders = await Order.find({customerId: customer._id}).sort({_id: -1}).lean();
+        const orders = await Order.find({ customerId: customer._id }).sort({ _id: -1 }).lean();
 
         for (const order of orders) {
             order.stripeInfo = await getPaymentByOrderId(order._id) || await getSubscriptionsByOrderId(order._id);
-            order.vippsInfo = (await getVippsPaymentByOrderId(order.vippsReference)) || 
+            order.vippsInfo = (await getVippsPaymentByOrderId(order.vippsReference)) ||
                 (await getVippsSubscriptionsByOrderId(order.vippsAgreementId));
         };
 
         const activeSubscriptions = await getEntriesByCustomerId(req, customer._id);
 
-        const subscriptions = await Subscription.find({customerId: customer._id}).sort({_id: -1}).lean();
+        const subscriptions = await Subscription.find({ customerId: customer._id }).sort({ _id: -1 }).lean();
 
         for (const subscription of subscriptions) {
             subscription.stripeInfo = await getPaymentByOrderId(subscription._id) || await getSubscriptionsByOrderId(subscription._id);
-            subscription.vippsInfo = (await getVippsPaymentByOrderId(subscription.vippsReference)) || 
+            subscription.vippsInfo = (await getVippsPaymentByOrderId(subscription.vippsReference)) ||
                 (await getVippsSubscriptionsByOrderId(subscription.vippsAgreementId));
         };
+
+        const previousSponsorships = await getPreviousSponsorships(req, customer._id);
 
         res.render('customer', {
             layout: 'dashboard',
@@ -203,6 +232,7 @@ exports.customer = async (req, res) => {
                 orders,
                 activeSubscriptions,
                 subscriptions,
+                previousSponsorships,
             },
         });
     } catch (error) {

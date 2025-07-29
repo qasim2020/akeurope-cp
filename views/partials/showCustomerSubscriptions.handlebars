@@ -1,10 +1,19 @@
 {{#if (gt data.activeSubscriptions.totalEntries 0)}}
 <div id="subscriptions-container">
     {{#with data.activeSubscriptions as |list|}}
-
-    <div class="card-header border-0 flex-column align-items-start">
+    <div class="card-header border-0 flex-column align-items-start position-relative">
+        <div class="card-stamp">
+            <div class="card-stamp-icon bg-blue">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-brand-telegram">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
+                </svg>
+            </div>
+        </div>
         {{#if (gt list.totalEntries 1)}}
-        <h3 class="card-title">Active Beneficiaries ({{list.totalEntries}})</h3>        
+        <h3 class="card-title">Active Beneficiaries ({{list.totalEntries}})</h3>
         <div class="text-secondary">
             Below orphans/ beneficiaries have been linked to your profile.
             Click on a photo to see beneficiary details.
@@ -81,6 +90,102 @@
                 <img class="img-fluid rounded-circle border border-1" alt="{{ben.entry.name}}"
                     src="{{circleCloudinaryUrl (or ben.entry.photo (or ben.entry.photoOfChild ben.entry.photoOfOrphan))}}">
             </a>
+            {{/each}}
+        </div>
+        {{/each}}
+    </div>
+    {{/with}}
+</div>
+{{/if}}
+
+{{#if (gt data.previousSponsorships.totalEntries 0)}}
+<div id="sponsorships-container" class="border-top border-1">
+    {{#with data.previousSponsorships as |list|}}
+    <div class="card-header border-0 flex-column align-items-start position-relative">
+        <div class="card-stamp">
+            <div class="card-stamp-icon bg-green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-comet">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M15.5 18.5l-3 1.5l.5 -3.5l-2 -2l3 -.5l1.5 -3l1.5 3l3 .5l-2 2l.5 3.5z" />
+                    <path d="M4 4l7 7" />
+                    <path d="M9 4l3.5 3.5" />
+                    <path d="M4 9l3.5 3.5" />
+                </svg>
+            </div>
+        </div>
+        {{#if (gt list.totalEntries 1)}}
+        <h3 class="card-title">Previous Sponsorships ({{list.totalEntries}})</h3>
+        <div class="text-secondary">
+            Below are the orphans/beneficiaries you have previously sponsored, including both ended sponsorships and
+            expired orders.
+            Thank you for your past contributions to their lives. These sponsorships have ended, but you can see the
+            impact you made during your sponsorship period. You can see your sponsorship detail on each child by clicking/ hovering over the child's photo.
+        </div>
+        {{else}}
+        <h3 class="card-title">Previous Sponsorship</h3>
+        <div class="text-secondary">
+            Below is the orphan/beneficiary you have previously sponsored. Thank you for your past contribution to their
+            life.
+            This sponsorship has ended, but you can see the impact you made during your sponsorship period by clicking/ hovering over the photo below.
+        </div>
+        {{/if}}
+    </div>
+
+    {{#if (gt list.totalPages 1)}}
+    <div class="card-header border-top d-flex align-items-center">
+        <p class="m-0 text-secondary">Page <span>{{list.currentPage}}</span> of <span>{{list.totalPages}}</span></p>
+        <ul class="pagination m-0 ms-auto">
+            <li class="page-item {{#if (eq list.hasPrevPage false)}}disabled{{/if}}">
+                <a class="page-link cursor-pointer" tabindex="-1" aria-disabled="true"
+                    my-href="/get-previous-sponsorships/{{../data.customer._id}}?page={{dec list.currentPage}}"
+                    onclick="getPrevSponsorships(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M15 6l-6 6l6 6"></path>
+                    </svg>
+                </a>
+            </li>
+            {{#each list.pagesArray}}
+            <li class="page-item {{#if (eq list.currentPage this)}}active{{/if}}">
+                <a class="page-link cursor-pointer"
+                    my-href="/get-previous-sponsorships/{{../../data.customer._id}}?page={{this}}"
+                    onclick="getPrevSponsorships(this)">{{this}}</a>
+            </li>
+            {{/each}}
+            <li class="page-item {{#if (eq list.hasNextPage false)}}disabled{{/if}}">
+                <a class="page-link cursor-pointer" tabindex="-1" aria-disabled="true"
+                    my-href="/get-previous-sponsorships/{{../data.customer._id}}?page={{inc list.currentPage}}"
+                    onclick="getPrevSponsorships(this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M9 6l6 6l-6 6"></path>
+                    </svg>
+                </a>
+            </li>
+        </ul>
+    </div>
+    {{/if}}
+
+    <div class="p-3 {{#if (eq list.totalEntries 1)}}pt-0{{/if}}">
+        {{#each list.subscriptions}}
+        <div project-slug="{{this.project.slug}}" class="fs-5 text-uppercase mb-4 badge">{{this.project.name}}</div>
+        <div class="row">
+            {{#each this.entries as |ben|}}
+            <div data-bs-toggle="popover" data-bs-placement="top" data-bs-trigger="hover focus"
+                title="{{ben.entry.name}}" data-bs-html="true"
+                data-bs-content="<b>Duration</b>: {{convertDaysToMonths ben.daysSponsored}}, From {{formatDate ben.startedAt}} to {{formatDate ben.stoppedAt}}. <br> Sponsorship ended as <span class='fw-bold'>{{ben.reasonStopped}}</span>. <br> <b>Amount</b>: {{ben.totalPaid}}."
+                class="cursor-disabled col-md-3 col-6 mb-3 text-center position-relative">
+                <span class="position-absolute top-0 left-0 ti text-green ti-star-filled"
+                    style="padding-top: 3px"></span>
+                <img class="img-fluid rounded-circle border border-1" alt="{{ben.entry.name}}"
+                    src="{{circleCloudinaryUrl (or ben.entry.photo (or ben.entry.photoOfChild ben.entry.photoOfOrphan))}}">
+            </div>
             {{/each}}
         </div>
         {{/each}}
