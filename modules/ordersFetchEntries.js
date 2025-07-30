@@ -695,35 +695,7 @@ const getEntriesByCustomerId = async (req, customerId) => {
                 customerId: customerId,
                 status: 'paid',
             },
-        },
-        {
-            $addFields: {
-                maxMonths: { $max: '$projects.months' },
-            },
-        },
-        {
-            $addFields: {
-                expirationDate: {
-                    $dateAdd: {
-                        startDate: {
-                            $dateAdd: {
-                                startDate: '$createdAt',
-                                unit: 'month',
-                                amount: '$maxMonths',
-                            },
-                        },
-                        unit: 'day',
-                        amount: 2,
-                    },
-                },
-            },
-        },
-
-        {
-            $match: {
-                expirationDate: { $gt: new Date() },
-            },
-        },
+        }
     ]);
 
     const validEntriesByProject = orders.flatMap((order) =>
