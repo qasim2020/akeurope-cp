@@ -800,7 +800,7 @@ const getPreviousSponsorships = async (req, customerId) => {
 
     const validEntriesByProject = await Sponsorship.find({
         customerId: customerId,
-        stoppedAt: { $exists: true }
+        stoppedAt: { $ne: null }
     }).sort({ stoppedAt: -1 }).lean();
 
     const paginate = (array, page, pageSize) => {
