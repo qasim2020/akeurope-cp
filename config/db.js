@@ -53,7 +53,7 @@ async function handleRecurringVippsPayments() {
     const requiredCharges = calculatedChargeMonths.filter(date => date <= now).length;
 
     if (agreement.status !== 'ACTIVE') continue;
-
+    
     if (requiredCharges > paidCharges.length) {
       const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000);
       const alreadyRequestedVipps = await VippsChargeRequest.findOne({
