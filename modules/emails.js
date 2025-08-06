@@ -93,7 +93,9 @@ const sendInvoiceAndReceiptToCustomer = async (order, customer) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        await sendThankYouMessage(customer.tel, portalUrl);
+        if (process.env.ENV !== 'test') {
+            await sendThankYouMessage(customer.tel, portalUrl);
+        };
         await sendTelegramMessage(`✅ *Invoice & Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
         console.log('Invoice & receipt sent!');
         return true;
@@ -487,7 +489,9 @@ const sendStripeRenewelInvoiceToCustomer = async (order, customer) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        await sendThankYouMessage(customer.tel, portalUrl);
+        if (process.env.ENV !== 'test') {
+            await sendThankYouMessage(customer.tel, portalUrl);
+        }
         await sendTelegramMessage(`✅ *Invoice & Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
         return true;
     } catch (err) {
@@ -537,7 +541,9 @@ const sendReceiptToCustomer = async (order, customer) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        await sendThankYouMessage(customer.tel, portalUrl);
+        if (process.env.ENV !== 'test') {
+            await sendThankYouMessage(customer.tel, portalUrl);
+        }
         await sendTelegramMessage(`✅ *Receipt Sent!*\n\n` + `🆔 *To:* ${customer.email}\n` + `📅 *Message:* invoice.handlebars`);
         return true;
     } catch (err) {

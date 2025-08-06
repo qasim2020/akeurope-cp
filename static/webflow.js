@@ -338,7 +338,7 @@ function attachProductTable(page) {
                 }
             }
 
-            // attachProducts(order);
+            attachProducts(order);
         }
     });
 
