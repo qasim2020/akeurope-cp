@@ -3,3 +3,4 @@ node_modules
 invoices
 payments
 static/admin
+static/pdown.txt

@@ -105,6 +105,7 @@ app.use('/tabler', express.static(path.join(__dirname, 'node_modules', '@tabler'
 
 app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use('/data', express.static(path.join(__dirname, 'static')));
+app.use('/pdown', express.static(path.join(__dirname, 'static/pdown.txt')));
 
 app.use(authRoutes);
 app.use(vippsRoutes);
