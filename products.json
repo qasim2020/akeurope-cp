@@ -297,6 +297,48 @@
             }
         ]
     },
+    "floods-pakistan-2025": {
+        "currency": "NOK",
+        "products": [
+            {
+                "name": "🚨 Emergency Appeal 2025 🇵🇰",
+                "desc": "Provide immediate relief to flood victims in Pakistan. Your contribution will help provide food, shelter, and medical assistance to those affected by the floods.",
+                "id": "flood-victims-pakistan-2025",
+                "variants": [
+                    {
+                        "name": "Shelter Tent ⛺️",
+                        "id": "single-shelter-tent",
+                        "price": 1000
+                    },
+                    {
+                        "name": "Cooked Food Daig 🧑‍🍳️",
+                        "id": "cooked-food-daig",
+                        "price": 750
+                    },
+                    {
+                        "name": "Food Package 🍱",
+                        "id": "food-package",
+                        "price": 350
+                    },
+                    {
+                        "name": "Blanket 🛏 ️",
+                        "id": "blanket",
+                        "price": 150
+                    },
+                    {
+                        "name": "Tarpaulin Sheet 🏕️",
+                        "id": "tarpaulin-sheet",
+                        "price": 150
+                    },
+                    {
+                        "name": "Mosquito Net 🦟",
+                        "id": "mosquito-net",
+                        "price": 40
+                    }
+                ]
+            }
+        ]
+    },
     "random": {
         "currency": "NOK",
         "products": [

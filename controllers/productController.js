@@ -43,7 +43,7 @@ const {
 exports.createNewOrder = async (req, res) => {
     try {
         const { slug } = req.params;
-        if (slug !== 'qurbani' && slug !== 'water-pakistan') 
+        if (slug !== 'qurbani' && slug !== 'water-pakistan' && slug !== 'floods-pakistan-2025') 
             throw new Error(`Project "${slug}" not found`);
 
         if (!req.query.countryCode) throw new Error(`Currency is required!`);
