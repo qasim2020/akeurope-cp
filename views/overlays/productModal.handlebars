@@ -59,7 +59,7 @@
                         style="height: 40px">
                     <h2 class="fw-medium mb-2">{{data.project.slogan}}</h2>
                     <div class="flex-grow-1 w-100 h-100">
-                        {{> productEntries}}
+                        {{> productEntries}} 
                     </div>
                     <a href="{{data.portalUrl}}" target="_blank" class="d-none d-md-block mt-4 text-small">Manage your
                         donation</a>
@@ -1623,7 +1623,6 @@
             });
         });
 
-        // PRODUCT SPECIFIC METHODS
 
         const addToOrder = async (elem) => {
             try {
@@ -1676,15 +1675,145 @@
             return { orderId, variantId };
         }
 
-        window.addEventListener('message', (event) => {
-            if (event.origin !== 'https://alkhidmat.webflow.io' && event.origin !== 'https://akeurope.org') return;
 
-            if (event.data.action === 'addVariant') {
-                const { productId, variant } = event.data;
-                // Add variant to the product
-                console.log(`Add variant to ${productId}:`, variant);
+let iframeReadyMessageSent = false;
+const processedMessages = new Set();
+
+window.addEventListener('message', (event) => {
+    console.log('ProductModal received message:', event.data, 'from:', event.origin);
+    
+    const allowedOrigins = [
+        'https://alkhidmat.webflow.io', 
+        'https://akeurope.org', 
+    ];
+    
+    if (!allowedOrigins.includes(event.origin)) {
+        console.log('Message from unauthorized origin:', event.origin);
+        return;
+    }
+    
+    if (event.data.action === 'addVariantToOrder') {
+        const { variantId, projectSlug, variant } = event.data;
+        
+        const messageId = `${variantId}-${Date.now()}`;
+        
+        const duplicateKey = `${variantId}-${projectSlug}`;
+        if (processedMessages.has(duplicateKey)) {
+            console.log('Duplicate variant addition message ignored:', duplicateKey);
+            return;
+        }
+        processedMessages.add(duplicateKey);
+        setTimeout(() => processedMessages.delete(duplicateKey), 2000);
+        
+        console.log('Processing addVariantToOrder:', { variantId, projectSlug, variant });
+        
+        let variantElement = $(`.variant[variant-id="${variantId}"]`);
+        console.log('Found variant by variant-id:', variantElement.length);
+         
+        if (variantElement.length === 0) {
+            variantElement = $(`.variant[data-id="${variantId}"]`);
+            console.log('Found variant by data-id:', variantElement.length);
+        }
+        
+        if (variantElement.length === 0) {
+            variantElement = $(`#${variantId}`);
+            console.log('Found variant by id:', variantElement.length);
+        }
+        
+        if (variantElement.length === 0) {
+            variantElement = $(`[*="${variantId}"]`).filter('.variant');
+            console.log('Found variant by any attribute:', variantElement.length);
+        }
+        
+        if (variantElement.length > 0) {
+            console.log('Found variant element:', variantElement);
+            
+            let addButton = variantElement.find('.ti-plus').closest('button, .btn, .add-btn');
+            
+            if (addButton.length === 0) {
+                addButton = variantElement.find('button:contains("+")');
             }
-        });
+            
+            if (addButton.length === 0) {
+                addButton = variantElement.find('.add-to-cart, .add-variant, [onclick*="addToOrder"]');
+            }
+            
+            if (addButton.length === 0) {
+                addButton = variantElement.find('button').first();
+            }
+            
+            console.log('Found add button:', addButton.length, addButton);
+            
+            if (addButton.length > 0) {
+                if (addButton.prop('disabled') || addButton.hasClass('processing')) {
+                    console.log('Button already processing, skipping');
+                    return;
+                }
+                
+                addButton.prop('disabled', true).addClass('processing');
+                
+                console.log(`Auto-clicking add button for variant: ${variantId}`);
+                
+                try {
+                    if (typeof addToOrder === 'function') {
+                        addToOrder(addButton[0]);
+                    } else {
+                        addButton.click();
+                    }
+                    
+                    setTimeout(() => {
+                        addButton.prop('disabled', false).removeClass('processing');
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Error adding variant:', error);
+                    addButton.prop('disabled', false).removeClass('processing');
+                }
+            } else {
+                console.log(`Add button not found for variant: ${variantId}`);
+                console.log('Available buttons in variant:', variantElement.find('button'));
+            }
+        } else {
+            console.log(`Variant element not found: ${variantId}`);
+            console.log('Available variants:', $('.variant').map(function() { 
+                return $(this).attr('variant-id') || $(this).attr('data-id') || $(this).attr('id'); 
+            }).get());
+        }
+        
+        event.source.postMessage({
+            action: 'variantAdditionComplete',
+            variantId: variantId,
+            success: variantElement.length > 0,
+            messageId: messageId
+        }, event.origin);
+    }
+});
+function sendIframeReadyMessage() {
+    if (!iframeReadyMessageSent && window.parent !== window) {
+        console.log('Notifying parent that iframe is ready');
+        window.parent.postMessage('iframe-ready', '*');
+        iframeReadyMessageSent = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('ProductModal DOM ready');
+    sendIframeReadyMessage();
+});
+
+window.addEventListener('load', function() {
+    console.log('ProductModal window loaded');
+    if (!iframeReadyMessageSent) {
+        sendIframeReadyMessage();
+    }
+});
+
+setTimeout(function() {
+    if (!iframeReadyMessageSent) {
+        console.log('Fallback: sending iframe ready message');
+        sendIframeReadyMessage();
+    }
+}, 1000);
     </script>
 
 </body>

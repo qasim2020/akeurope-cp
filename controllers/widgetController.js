@@ -54,7 +54,7 @@ exports.overlay = async (req, res) => {
         const portalUrl = process.env.CUSTOMER_PORTAL_URL;
         const countryCode = req.headers['cf-ipcountry'] || 'NO'
         if (req.query.webflow) {
-            const allowedProducts = ['qurbani', 'water-pakistan'];
+            const allowedProducts = ['qurbani', 'water-pakistan', 'emergency-pak-flood-appeal-2025'];
 
             if (allowedProducts.includes(req.query.products)) {
                 res.render('overlays/productModal', {
