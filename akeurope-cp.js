@@ -104,6 +104,7 @@ app.use(flash());
 app.use('/tabler', express.static(path.join(__dirname, 'node_modules', '@tabler', 'core', 'dist')));
 
 app.use('/static', express.static(path.join(__dirname, 'static')));
+app.use('/data', express.static(path.join(__dirname, 'static')));
 
 app.use(authRoutes);
 app.use(vippsRoutes);
