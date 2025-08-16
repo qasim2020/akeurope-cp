@@ -19,13 +19,12 @@ function runGlobal(countryCode) {
     if (productsOpened) {
         attachProductTable(productSlug);
         initToastSystem()
-        initProductButtons()
     }
     
     if (countryCode === 'NO') {
         $('.vipps-number').hide();
         $('.vipps-banner').show();
-        runNorway();
+        runGlobal();
     } else {
         $('.vipps-banner').hide();
     }
@@ -56,54 +55,6 @@ function runGlobal(countryCode) {
     initProductButtons();
 }
 
-function runNorway() {
-    const $body = $('body');
-    
-    $('.donate, .donate-specific').on('click', function() {
-        const projectSlug = $body.attr('projectSlug');
-        $('#donation-overlay-no').css({display: 'flex'});
-        $('.projects-container').toggle(!projectSlug);
-        $('.frequency-container').toggle(!!projectSlug);
-    });
-
-    const updateNextButtonURL = () => {
-        $('.button-selector').text('...');
-        const currencySelected = 'NOK';
-        const freqSelected = $('.selected.freq-selector').text();
-        const isMonthly = freqSelected !== 'one time';
-        const attr = `${currencySelected}${isMonthly ? 'MONTHLY' : ''}`;
-        const connectedURL = $('.selected.project-selector-no').attr(attr);
-        $('.button-selector').attr({myURL: connectedURL});
-    };
-
-    const currentProj = $body.attr('projectSlug');
-    if (currentProj) {
-        const projectSelector = $(`.project-selector-no[projectSlug=${currentProj}]`);
-        projectSelector.addClass('selected');
-        $('.project-label').html(projectSelector.attr('projectName'));
-        updateNextButtonURL();
-    }
-
-    $('.project-selector-no').on('click', function() {
-        $('.project-selector-no').removeClass('selected');
-        $(this).addClass('selected');
-        $('.project-label').html($(this).attr('projectName'));
-        updateNextButtonURL();
-    });
-
-    $('.freq-selector').on('click', function() {
-        $('.freq-selector').removeClass('selected');
-        $(this).addClass('selected');
-        updateNextButtonURL();
-        $('.button-selector').click();
-        $(this).removeClass('selected');
-    });
-
-    $('.button-selector').on('click', function() {
-        const url = $(this).attr('myURL');
-        if (url) window.open(url, '_blank');
-    });
-}
 
 function initToastSystem() {
     if (!$('#toast-container').length) {
@@ -567,6 +518,13 @@ function setupToastHoverBehavior(toast, toastId) {
 
 
 function initProductButtons() {
+    $(document).off('click', '.product-btn');
+
+    if ($('.product-btn').length === 0) {
+        console.log(' system');
+        return;
+    }
+    
     $(document).off('click', '.product-btn');
     
     $(document).on('click', '.product-btn', function(e) {
