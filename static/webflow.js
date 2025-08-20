@@ -17,8 +17,8 @@ function runGlobal(countryCode) {
     const productsOpened = productSlug !== 'random' && productSlug !== '';
     
     if (productsOpened) {
-        attachProductTable(productSlug);
-        initToastSystem()
+        // attachProductTable(productSlug);
+        // initToastSystem()
     }
     
     if (countryCode === 'NO') {
@@ -31,9 +31,11 @@ function runGlobal(countryCode) {
 
     $('.donate').on('click', () => $('.donation-overlay').css({display: 'flex'}));
     
-    $('.donate-specific, .qurbani-btn, .orphan-btn').on('click', function() {
-        const buttonProjectSlug = projectSlug || $(this).attr('projectSlug') || 
-                           ($(this).hasClass('qurbani-btn') ? 'qurbani' : 'orphans-care');
+    $('.donate-specific, .qurbani-btn, .orphan-btn, .donate-floods').on('click', function() {
+        const buttonProjectSlug = 
+            projectSlug || 
+            $(this).attr('projectSlug') || 
+            ($(this).hasClass('qurbani-btn') ? 'qurbani' : 'orphans-care');
         const elem = $('#donation-overlay').find(`[projectSlug=${buttonProjectSlug}]`);
         showOverlay(elem);
     });
